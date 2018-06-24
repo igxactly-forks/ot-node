@@ -12,6 +12,12 @@ contract ContractHub {
 contract Storage {
 
 
+	event ProfileChange(address wallet);
+	event OfferChange(bytes32 offer_import_id);
+	event BidChange(bytes32 offer_import_id,uint index);
+	event EscrowChange(bytes32 import_id, address DH_wallet);
+	event PurchasedDataChange(bytes32 import_id, address DH_wallet);
+	event PurchaseChange(address DH_wallet, address DV_wallet, bytes32 import_id);
 
 	struct ProfileDefinition{
 		uint token_amount_per_byte_minute;
