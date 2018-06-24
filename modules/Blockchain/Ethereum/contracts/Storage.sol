@@ -19,6 +19,23 @@ contract Storage {
 	event PurchasedDataChange(bytes32 import_id, address DH_wallet);
 	event PurchaseChange(address DH_wallet, address DV_wallet, bytes32 import_id);
 
+	ContractHub public hub;
+
+	constructor(address hubAddress) public {
+		require(hubAddress != address(0));
+		hub = ContractHub(hubAddress);
+	}
+
+	modifier onlyContracts() {
+		require(
+			msg.sender == ContractHub.fingerprintAddress
+			|| msg.sender == ContractHub.tokenAddress
+			|| msg.sender == ContractHub.biddingAddress
+			|| msg.sender == ContractHub.escrowAddress
+			|| msg.sender == ContractHub.readingAddress);
+		_;
+	}
+
 	struct ProfileDefinition{
 		uint token_amount_per_byte_minute;
 		uint stake_amount_per_byte_minute;
@@ -37,13 +54,38 @@ contract Storage {
 
 	function setMyProfile(uint token_amount_per_byte_minute, uint stake_amount_per_byte_minute, 
 		uint read_stake_factor, uint max_escrow_time_in_minutes) public {
+		if(profile[msg.sender].token_amount_per_byte_minute != token_amount_per_byte_minute)
 		profile[msg.sender].token_amount_per_byte_minute = token_amount_per_byte_minute;
 		profile[msg.sender].stake_amount_per_byte_minute = stake_amount_per_byte_minute;
 		profile[msg.sender].read_stake_factor = read_stake_factor;
 		profile[msg.sender].max_escrow_time_in_minutes = max_escrow_time_in_minutes;
 	}
 
-	function setProfile()
+	function setProfile(
+		address wallet,
+		uint token_amount_per_byte_minute,
+		uint stake_amount_per_byte_minute,
+		uint read_stake_factor,
+		uint balance,
+		uint reputation,
+		uint number_of_escrows,
+		uint max_escrow_time_in_minutes,
+		bool active) 
+	public onlyContracts {
+		profile[wallet] = ProfileDefinition(
+		if(profile[wallet].token_amount_per_byte_minute != token_amount_per_byte_minute)
+			profile[wallet].token_amount_per_byte_minute = token_amount_per_byte_minute;
+
+			token_amount_per_byte_minute,
+			stake_amount_per_byte_minute,
+			read_stake_factor,
+			balance,
+			reputation,
+			number_of_escrows,
+			max_escrow_time_in_minutes,
+			active
+			);
+	}
 
 	struct OfferDefinition{
 		address DC_wallet;
@@ -124,12 +166,12 @@ contract Storage {
 		uint stake_factor;
 		// uint dispute_interval_in_minutes;
 
-		bytes32 commitment;
-		uint256 encrypted_block;
+		bytes32 commitment; //
+		uint256 encrypted_block; //
 
-		uint256 time_of_sending;
+		uint256 time_of_sending; //
 
-		PurchaseStatus purchase_status;
+		PurchaseStatus purchase_status; //
 	}
 	mapping(address => mapping(address => mapping(bytes32 => PurchaseDefinition))) public purchase; // purchase[DH_wallet][DV_wallet][import_id]
 
