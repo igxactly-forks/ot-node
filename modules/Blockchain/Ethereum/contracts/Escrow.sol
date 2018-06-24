@@ -84,11 +84,6 @@ library SafeMath {
  	function addEscrow(address wallet) public;
  }
 
- contract Reading {
- 	function addReadData(bytes32 import_id, address DH_wallet, address DC_wallet,
- 		bytes32 distribution_root_hash, uint256 checksum) public;
- 	function removeReadData(bytes32 import_id, address DH_wallet) public;
- }
 
  contract EscrowHolder is Ownable{
  	using SafeMath for uint256;
@@ -96,6 +91,7 @@ library SafeMath {
  	ERC20 public token;
  	Bidding public bidding;
  	Reading public reading;
+     StorageContract public Storage;
 
  	function EscrowHolder(address tokenAddress)
  	public{
@@ -197,7 +193,8 @@ library SafeMath {
  		this_escrow.last_confirmation_time = block.timestamp;
  		this_escrow.end_time = SafeMath.add(block.timestamp, this_escrow.total_time_in_seconds);
 
- 		reading.addReadData(import_id, DH_wallet, msg.sender, this_escrow.distribution_root_hash, this_escrow.checksum);
+ 		// reading.addReadData(import_id, DH_wallet, msg.sender, this_escrow.distribution_root_hash, this_escrow.checksum);
+          Storage.setPurchasedData(DC_wallet,distribution_root_hash,checksum);
 
  		this_escrow.escrow_status = EscrowStatus.active;
  		emit EscrowVerified(import_id, DH_wallet);
@@ -339,7 +336,7 @@ library SafeMath {
  			this_litigation.litigation_status = LitigationStatus.completed;
  			this_escrow.escrow_status = EscrowStatus.completed;
  			//TODO Transfer remaining escrow tokens
- 			reading.removeReadData(import_id, msg.sender);
+               Storage.setPurchasedData(0,0,0); // reading.removeReadData(import_id, msg.sender);			
  			bidding.increaseBalance(this_escrow.DC_wallet, this_escrow.stake_amount);
  			this_escrow.stake_amount = 0;
  			emit LitigationTimedOut(import_id, msg.sender);
@@ -406,9 +403,9 @@ library SafeMath {
 
      		this_litigation.litigation_status = LitigationStatus.completed;
      		this_escrow.escrow_status = EscrowStatus.completed;
-
-     		reading.removeReadData(import_id, DH_wallet);
-
+               
+               Storage.setPurchasedData(0,0,0); // reading.removeReadData(import_id, msg.sender);
+               
      		bidding.increaseBalance(msg.sender, this_escrow.stake_amount);
      		this_escrow.stake_amount = 0;
      	}

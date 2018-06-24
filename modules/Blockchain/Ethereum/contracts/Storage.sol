@@ -9,7 +9,7 @@ contract ContractHub {
 }
 
 
-contract Storage {
+contract StorageContract {
 
 
 	event ProfileChange(address wallet);
@@ -164,14 +164,14 @@ contract Storage {
 	struct PurchaseDefinition{
 		uint token_amount;
 		uint stake_factor;
-		// uint dispute_interval_in_minutes;
+		uint dispute_interval_in_minutes;
 
-		bytes32 commitment; //
-		uint256 encrypted_block; //
+		bytes32 commitment;
+		uint256 encrypted_block;
 
-		uint256 time_of_sending; //
+		uint256 time_of_sending;
 
-		PurchaseStatus purchase_status; //
+		PurchaseStatus purchase_status;
 	}
 	mapping(address => mapping(address => mapping(bytes32 => PurchaseDefinition))) public purchase; // purchase[DH_wallet][DV_wallet][import_id]
 
