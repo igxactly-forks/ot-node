@@ -317,22 +317,26 @@ contract BiddingTest {
 
 		require(s_active && !s_finalized);
 
-		(s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
-			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, 
-			s_first_bid_index, s_replication_factor,s_active, s_finalized) = Storage.
+		(b_DH_wallet, b_DH_node_id, b_token_amount_for_escrow, b_stake_amount_for_escrow, 
+			b_ranking, b_next_bid, b_active, b_chosen) = Storage.bid(import_id, bid_index);
+		require(b_DH_wallet == msg.sender && b_DH_node_id == DH_node_id);
 
-		require(this_bid.DH_wallet == msg.sender && this_bid.DH_node_id == DH_node_id);
+		(p_wallet, p_token_amount_per_byte_minute, p_stake_amount_per_byte_minute, p_read_stake_factor, 
+			p_balance, p_reputation, p_number_of_escrows, p_max_escrow_time_in_minutes, p_active) = Storage.profile(msg.sender);
 
 		//Check if the the DH meets the filters DC set for the offer
-		uint scope = this_offer.data_size_in_bytes * this_offer.total_escrow_time_in_minutes;
-		require(this_offer.total_escrow_time_in_minutes <= this_DH.max_escrow_time_in_minutes);
-		require(this_offer.max_token_amount_per_DH  >= this_DH.token_amount_per_byte_minute * scope);
-		require((this_offer.min_stake_amount_per_DH  <= this_DH.stake_amount_per_byte_minute * scope) && (this_DH.stake_amount_per_byte_minute * scope <= profile[msg.sender].balance));
+		uint scope = s_data_size_in_bytes * s_total_escrow_time_in_minutes;
+		require(s_total_escrow_time_in_minutes <= p_max_escrow_time_in_minutes);
+		require(s_max_token_amount_per_DH  >= p_token_amount_per_byte_minute * scope);
+		require((s_min_stake_amount_per_DH  <= p_stake_amount_per_byte_minute * scope) && (p_stake_amount_per_byte_minute * scope <= p_balance));
 
 		//Write the required data for the bid
-		this_bid.token_amount_for_escrow = this_DH.token_amount_per_byte_minute * scope;
-		this_bid.stake_amount_for_escrow = this_DH.stake_amount_per_byte_minute * scope;
-		this_bid.active = true;
+		Storage.setBid(import_id, i, b_DH_wallet, b_DH_node_id, 
+			p_token_amount_per_byte_minute.mul(scope), p_stake_amount_per_byte_minute.mul(scope),
+			0, 0, true, false);
+		// this_bid.token_amount_for_escrow = p_token_amount_per_byte_minute * scope;
+		// this_bid.stake_amount_for_escrow = p_stake_amount_per_byte_minute * scope;
+		// this_bid.active = true;
 	}
 
 	function getDistanceParameters(bytes32 import_id)
