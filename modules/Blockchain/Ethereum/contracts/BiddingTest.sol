@@ -44,6 +44,97 @@ contract EscrowHolder {
 	function initiateEscrow(address DC_wallet, address DH_wallet, bytes32 import_id, uint token_amount, uint stake_amount, uint total_time_in_minutes) public;
 }
 
+contract StorageContract {
+
+	struct ProfileDefinition{
+		uint token_amount_per_byte_minute;
+		uint stake_amount_per_byte_minute;
+
+		uint read_stake_factor;
+
+		uint balance;
+		uint reputation;
+		uint number_of_escrows;
+
+		uint max_escrow_time_in_minutes;
+
+		bool active;
+	}
+	mapping(address => ProfileDefinition) public profile; // profile[wallet]
+
+	function setProfile(
+		address wallet,
+		uint token_amount_per_byte_minute, uint stake_amount_per_byte_minute, uint read_stake_factor,
+		uint balance, uint reputation, uint number_of_escrows, uint max_escrow_time_in_minutes, bool active) 
+	public;
+
+	function setBalance(address wallet, uint newBalance);
+
+	struct OfferDefinition{
+		address DC_wallet;
+
+		//Parameters for DH filtering
+		uint max_token_amount_per_DH;
+		uint min_stake_amount_per_DH; 
+		uint min_reputation;
+
+		//Data holding parameters
+		uint total_escrow_time_in_minutes;
+		uint data_size_in_bytes;
+		uint litigation_interval_in_minutes;
+
+		//Parameters for the bidding ranking
+		bytes32 data_hash;
+		uint first_bid_index;
+
+		uint replication_factor;
+
+		bool active;
+		bool finalized;
+
+		// uint256 offer_creation_timestamp;
+
+		BidDefinition[] bid;
+	}
+	mapping(bytes32 => OfferDefinition) public offer; // offer[import_id]
+
+	function setOffer(
+		bytes32 import_id, address DC_wallet,
+		uint max_token_amount_per_DH, uint min_stake_amount_per_DH, uint min_reputation,
+		uint total_escrow_time_in_minutes, uint data_size_in_bytes, uint litigation_interval_in_minutes,
+		bytes32 data_hash, uint first_bid_index, uint replication_factor, bool active, bool finalized)
+	// uint256 offer_creation_timestamp)
+	public;
+
+	struct BidDefinition{
+		address DH_wallet;
+		bytes32 DH_node_id;
+
+		uint token_amount_for_escrow;
+		uint stake_amount_for_escrow;
+
+		uint256 ranking;
+
+		uint next_bid;
+
+		bool active;
+		bool chosen;
+	}
+
+	function setBid(
+		bytes32 import_id, uint256 bid_index,
+		address DH_wallet, bytes32 DH_node_id,
+		uint token_amount_for_escrow, uint stake_amount_for_escrow,
+		uint256 ranking, uint next_bid, bool active, bool chosen)
+	public;
+
+	function addBid(
+		bytes32 import_id, address DH_wallet, bytes32 DH_node_id, 
+		uint token_amount_for_escrow, uint stake_amount_for_escrow, 
+		uint256 ranking, uint next_bid, bool active, bool chosen)
+	public;
+
+}
 contract BiddingTest {
 	using SafeMath for uint256;
 
@@ -155,18 +246,21 @@ contract BiddingTest {
 		address[] predetermined_DH_wallet,
 		bytes32[] predetermined_DH_node_id)
 	public {
-		OfferDefinition storage this_offer = offer[import_id];
+		( , , , , , , , , ,s_active, ) = Storage.offer(import_id);
 
-		(s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
-		s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, 
-		s_first_bid_index, s_replication_factor,s_active, s_finalized) = Storage.offer(import_id);
-
+		require(s_active == false);
 		require(max_token_amount_per_DH > 0 && total_escrow_time_in_minutes > 0 && data_size_in_bytes > 0);
-		require(this_offer.active == false);
 
-		require(profile[msg.sender].balance >= max_token_amount_per_DH.mul(predetermined_DH_wallet.length.mul(2).add(1)));
-		profile[msg.sender].balance = profile[msg.sender].balance.sub(max_token_amount_per_DH.mul(predetermined_DH_wallet.length.mul(2).add(1)));
-		emit BalanceModified(msg.sender, profile[msg.sender].balance);
+        (, , , DC_balance, , , , ) = Storage.profile(DC_wallet);
+		require(DC_balance >= max_token_amount_per_DH.mul(predetermined_DH_wallet.length.mul(2).add(1)));
+		
+		DC_balance = DC_balance.sub(max_token_amount_per_DH.mul(predetermined_DH_wallet.length.mul(2).add(1)));
+		Storage.setBalance(msg.sender, DC_balance);
+		emit BalanceModified(msg.sender, DC_balance);
+
+		Storage.setOffer(msg.sender, max_token_amount_per_DH, min_stake_amount_per_DH, min_reputation,
+			total_escrow_time_in_minutes, data_size_in_bytes, data_hash, 
+			uint(-1), predetermined_DH_wallet.length, true, false);
 
 		this_offer.DC_wallet = msg.sender;
 
@@ -453,49 +547,23 @@ contract BiddingTest {
 
 	function withdrawToken(uint amount) public {
 		uint256 amount_to_transfer;
-		if(profile[msg.sender].balance >= amount){
+
+        (, , , balance, , , , ) = Storage.profile(msg.sender);
+
+		if(balance >= amount){
 			amount_to_transfer = amount;
-			profile[msg.sender].balance = profile[msg.sender].balance.sub(amount);
+			balance = balance.sub(amount);
 		}
 		else{ 
-			amount_to_transfer = profile[msg.sender].balance;
-			profile[msg.sender].balance = 0;
+			amount_to_transfer = balance;
+			balance = 0;
 		}
 		amount = 0;
 		if(amount_to_transfer > 0){
 			token.transfer(msg.sender, amount_to_transfer);
+			Storage.setBalance(msg.sender, balance);
 			emit BalanceModified(msg.sender, profile[msg.sender].balance);
 		} 
-	}
-
-	function increaseBalance(address wallet, uint amount) public onlyContracts {
-		profile[wallet].balance = profile[wallet].balance.add(amount);
-		emit BalanceModified(wallet, profile[wallet].balance);
-	}
-
-	function decreaseBalance(address wallet, uint amount) public onlyContracts {
-		require(profile[wallet].balance >= amount);
-		profile[wallet].balance = profile[wallet].balance.sub(amount);
-		emit BalanceModified(wallet, profile[wallet].balance);
-	}
-
-	function increaseReputation(address wallet, uint amount) public onlyContracts {
-		profile[wallet].reputation = profile[wallet].reputation.add(amount);
-		emit ReputationModified(wallet, profile[wallet].reputation);
-	}
-
-	function addEscrow(address wallet) public onlyContracts {
-		profile[wallet].number_of_escrows = profile[wallet].number_of_escrows.add(1);
-	}
-
-	function getBalance(address wallet)
-	public view returns (uint256) {
-		return profile[wallet].balance;
-	}
-
-	function getReadStakeFactor(address wallet)
-	public view returns (uint256) {
-		return profile[wallet].read_stake_factor;
 	}
 
 	function absoluteDifference(uint256 a, uint256 b) public pure returns (uint256) {
