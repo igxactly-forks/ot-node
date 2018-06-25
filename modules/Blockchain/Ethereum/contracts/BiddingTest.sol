@@ -157,6 +157,10 @@ contract BiddingTest {
 	public {
 		OfferDefinition storage this_offer = offer[import_id];
 
+		(s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
+		s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, 
+		s_first_bid_index, s_replication_factor,s_active, s_finalized) = Storage.offer(import_id);
+
 		require(max_token_amount_per_DH > 0 && total_escrow_time_in_minutes > 0 && data_size_in_bytes > 0);
 		require(this_offer.active == false);
 

@@ -153,8 +153,8 @@ contract Reading is Ownable{
 
        require(DH_balance >= stake_amount && DV_balance >= token_amount.add(stake_amount));
 
-       DV_balance.sub(token_amount);
-       DV_balance.sub(stake_amount);
+       DV_balance = DV_balance.sub(token_amount);
+       DV_balance = DV_balance.sub(stake_amount);
        Storage.setBalance(msg.sender, DH_balance);
 
        Storage.setPurchase(DH_wallet,msg.sender,import_id,token_amount,stake_factor,s_dispute_interval_in_minutes,0,0,0,PurchaseStatus.initiated);
@@ -175,7 +175,7 @@ contract Reading is Ownable{
     require(DH_balance >= stake_amount);
 
     // Allocate stake amount from DH and update his new balance
-    DH_balance.sub(stake_amount); 
+    DH_balance = DH_balance.sub(stake_amount); 
     Storage.setBalance(msg.sender, DH_balance);
 
     Storage.setPurchase(msg.sender,DV_wallet,import_id,s_token_amount,s_stake_factor,s_dispute_interval_in_minutes,commitment,s_encrypted_block,s_time_of_sending,Storage.PurchaseStatus.commited);
@@ -223,13 +223,13 @@ public {
     
     // Returns reading price and stake to DV
     (, , , DV_balance, , , , ) = Storage.profile(DV_wallet);
-    DV_balance.add(s_token_amount.add(stake_amount));
+    DV_balance = DV_balance.add(s_token_amount.add(stake_amount));
     Storage.setBalance(DV_wallet, DV_balance);
 
     // If DH sent stake, returns it to his balance
     if(s_purchase_status != Storage.PurchaseStatus.initiated){
         (, , , DH_balance, , , , ) = Storage.profile(DH_wallet);
-        DH_balance.add(stake_amount);
+        DH_balance = DH_balance.add(stake_amount);
         Storage.setBalance(DH_wallet, DH_balance);
     }
 
@@ -277,13 +277,13 @@ public {
 
     // Returns reading stake to DV
     (, , , DV_balance, , , , ) = Storage.profile(DV_wallet);
-    DV_balance.add(stake_amount);
+    DV_balance = DV_balance.add(stake_amount);
     Storage.setBalance(DV_wallet, DV_balance);
 
     // Returns reading stake to DH and sends tokens
     (, , , DH_balance, , , , ) = Storage.profile(msg.sender);
-    DH_balance.add(stake_amount);
-    DH_balance.add(s_token_amount);
+    DH_balance = DH_balance.add(stake_amount);
+    DH_balance = DH_balance.add(s_token_amount);
     Storage.setBalance(msg.sender, DH_balance);
 
     Storage.setPurchase(msg.sender,DV_wallet,import_id,s_token_amount,s_stake_factor,s_dispute_interval_in_minutes,s_commitment,encrypted_block,block.timestamp,Storage.PurchaseStatus.completed);
@@ -316,9 +316,9 @@ public {
     if(commitment_proof == true && checksum_hash_proof == true) {
         // Returns reading stake to DH and sends tokens and stake
         (, , , DH_balance, , , , ) = Storage.profile(msg.sender);
-        DH_balance.add(stake_amount);
-        DH_balance.add(stake_amount);
-        DH_balance.add(s_token_amount);
+        DH_balance = DH_balance.add(stake_amount);
+        DH_balance = DH_balance.add(stake_amount);
+        DH_balance = DH_balance.add(s_token_amount);
         Storage.setBalance(msg.sender, DH_balance);
         bidding.increaseBalance(msg.sender, this_purchase.token_amount.add(SafeMath.mul(this_purchase.token_amount,this_purchase.stake_factor)));
         emit PurchaseDisputeCompleted(import_id, msg.sender, DV_wallet, true);
@@ -326,9 +326,9 @@ public {
     else {
        // Returns reading stake to DH and sends tokens and stake
         (, , , DV_balance, , , , ) = Storage.profile(DV_wallet);
-        DV_balance.add(stake_amount);
-        DV_balance.add(stake_amount);
-        DV_balance.add(s_token_amount);
+        DV_balance = DV_balance.add(stake_amount);
+        DV_balance = DV_balance.add(stake_amount);
+        DV_balance = DV_balance.add(s_token_amount);
         Storage.setBalance(DV_wallet, DV_balance);
         bidding.increaseBalance(DV_wallet, this_purchase.token_amount.add(SafeMath.mul(this_purchase.token_amount,this_purchase.stake_factor)));
         emit PurchaseDisputeCompleted(import_id, msg.sender, DV_wallet, false);
