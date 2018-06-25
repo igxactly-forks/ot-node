@@ -93,6 +93,10 @@ contract StorageContract {
 		emit ProfileChange(wallet);
 	}
 
+	function setBalance(address wallet, uint newBalance) public onlyContracts {
+		if(profile[wallet].balance != newBalance) profile[wallet].balance = newBalance;
+	}
+
 	struct OfferDefinition{
 		address DC_wallet;
 
