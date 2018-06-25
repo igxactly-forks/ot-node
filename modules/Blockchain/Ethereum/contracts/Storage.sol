@@ -241,6 +241,20 @@ contract StorageContract {
 		emit BidChange(import_id,bid_index);
 	}
 
+	function addBid(
+		bytes32 import_id,
+		address DH_wallet,
+		bytes32 DH_node_id,
+		uint token_amount_for_escrow,
+		uint stake_amount_for_escrow,
+		uint256 ranking,
+		uint next_bid,
+		bool active,
+		bool chosen)
+	public onlyContracts {
+		offer[import_id].bid.push(new Bid(DH_wallet, DH_node_id, token_amount_for_escrow, stake_amount_for_escrow, ranking, next_bid, active, chosen))
+	}
+
 	enum EscrowStatus {inactive, initiated, confirmed, active, completed}
 	struct EscrowDefinition{
 		address DC_wallet;
