@@ -242,8 +242,8 @@ contract BiddingTest {
 	public{
 		// OfferDefinition storage this_offer = offer[import_id];
 		(s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
-			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, 
-			s_first_bid_index, s_replication_factor,s_timestamp,s_active, s_finalized) = Storage.offer(import_id);
+			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, s_first_bid_index, 
+			s_bid_array_length, s_replication_factor,s_timestamp,s_active, s_finalized) = Storage.offer(import_id);
 		
 		require(s_active && s_DC_wallet == msg.sender && s_finalized == false);
 		s_active = false;
@@ -263,8 +263,8 @@ contract BiddingTest {
 	function activatePredeterminedBid(bytes32 import_id, bytes32 DH_node_id, uint bid_index)
 	public{
 		(s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
-			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, 
-			s_first_bid_index, s_replication_factor,s_active, s_finalized) = Storage.offer(import_id);
+			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, s_first_bid_index, 
+			s_bid_array_length, s_replication_factor,s_timestamp,s_active, s_finalized) = Storage.offer(import_id);
 
 		require(s_active && !s_finalized);
 
@@ -294,8 +294,8 @@ contract BiddingTest {
 	public view returns (bytes32 node_hash, bytes32 data_hash, uint256 ranking, uint256 current_ranking, uint256 required_bid_amount, uint256 active_nodes_){
 		// OfferDefinition storage this_offer = offer[import_id];
 		(s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
-			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, 
-			s_first_bid_index, s_replication_factor,s_active, s_finalized) = Storage.offer(import_id);
+			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, s_first_bid_index, 
+			s_bid_array_length, s_replication_factor,s_timestamp,s_active, s_finalized) = Storage.offer(import_id);
 
 		node_hash = bytes32(uint128(keccak256(msg.sender)));
 		data_hash = bytes32(uint128(s_data_hash));
@@ -322,20 +322,27 @@ contract BiddingTest {
 
 	function addBid(bytes32 import_id, bytes32 DH_node_id)
 	public returns (uint distance){
-		require(offer[import_id].active && !offer[import_id].finalized);
+		// OfferDefinition storage this_offer = offer[import_id];
+		(s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
+			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, s_first_bid_index, 
+			s_bid_array_length, s_replication_factor,s_timestamp,s_active, s_finalized) = Storage.offer(import_id);
 
-		OfferDefinition storage this_offer = offer[import_id];
-		ProfileDefinition storage this_DH = profile[msg.sender];
+		require(s_active && !s_finalized);
+
+		// ProfileDefinition storage this_DH = profile[msg.sender];
+		(p_wallet, p_token_amount_per_byte_minute, p_stake_amount_per_byte_minute, p_read_stake_factor, 
+			p_balance, p_reputation, p_number_of_escrows, p_max_escrow_time_in_minutes, p_active) = Storage.profile(msg.sender);
+
 
 		//Check if the the DH meets the filters DC set for the offer
-		uint scope = this_offer.data_size_in_bytes * this_offer.total_escrow_time_in_minutes;
-		require(this_offer.total_escrow_time_in_minutes <= this_DH.max_escrow_time_in_minutes);
-		require(this_offer.max_token_amount_per_DH  >= this_DH.token_amount_per_byte_minute * scope);
-		require((this_offer.min_stake_amount_per_DH  <= this_DH.stake_amount_per_byte_minute * scope) && (this_DH.stake_amount_per_byte_minute * scope <= profile[msg.sender].balance));
-		require(this_offer.min_reputation 	 <= profile[msg.sender].reputation);
+		uint scope = s_data_size_in_bytes * s_total_escrow_time_in_minutes;
+		require(s_total_escrow_time_in_minutes <= p_max_escrow_time_in_minutes);
+		require(s_max_token_amount_per_DH  >= p_token_amount_per_byte_minute * scope);
+		require((s_min_stake_amount_per_DH  <= p_stake_amount_per_byte_minute * scope) && (p_stake_amount_per_byte_minute * scope <= p_balance));
+		require(s_min_reputation <= p_reputation);
 
 		//Create new bid in the list
-		uint this_bid_index = this_offer.bid.length;
+		uint this_bid_index ;
 		BidDefinition memory new_bid = BidDefinition(msg.sender, DH_node_id, this_DH.token_amount_per_byte_minute * scope, this_DH.stake_amount_per_byte_minute * scope, 0, uint(-1), true, false);
 		new_bid.distance = calculateRanking(import_id, msg.sender);
 
