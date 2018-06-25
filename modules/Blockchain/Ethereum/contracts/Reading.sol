@@ -128,27 +128,6 @@ contract Reading is Ownable{
 
     enum Storage.PurchaseStatus {inactive, initiated, commited, confirmed, sent, disputed, cancelled, completed}
 
-    struct PurchaseDefinition{
-        uint token_amount;
-        uint stake_factor;
-
-        bytes32 commitment;
-        uint256 encrypted_block;
-
-        uint256 time_of_sending;
-
-        Storage.PurchaseStatus purchase_status;
-    }
-
-    struct PurchasedDataDefinition {
-        address DC_wallet;
-        bytes32 distribution_root_hash;
-        uint256 checksum;
-    }
-
-    // mapping(bytes32 => mapping(address => PurchasedDataDefinition)) public purchased_data;
-    // mapping(address => mapping(address => mapping(bytes32 => PurchaseDefinition))) public purchase;
-
     event PurchaseInitiated(bytes32 import_id, address DH_wallet, address DV_wallet);
     event CommitmentSent(bytes32 import_id, address DH_wallet, address DV_wallet);
     event PurchaseConfirmed(bytes32 import_id, address DH_wallet, address DV_wallet);
@@ -157,35 +136,31 @@ contract Reading is Ownable{
     event PurchaseDisputed(bytes32 import_id, address DH_wallet, address DV_wallet);
     event PurchaseDisputeCompleted(bytes32 import_id, address DH_wallet, address DV_wallet, bool proof_was_correct);
 
-    function Reading(address escrow_address)
-    public {
-        require(escrow_address != address(0));
-        escrow = escrow_address;
-    }
+ 	constructor(address storage_address)
+ 	public {
+ 		require(storage_address != address(0));
+ 		Storage = StorageContract(storage_address);
+ 	}
 
-    function setBidding(address bidding_address)
-    public onlyOwner {
-        require(bidding_address != address(0));
-        bidding = Bidding(bidding_address);
-    }
+ 	function initiatePurchase(bytes32 import_id, address DH_wallet, uint token_amount) // TODO dodaj dispute time 
+ 	public {
+ 		// PurchaseDefinition storage this_purchase = purchase[DH_wallet][msg.sender][import_id];
+ 		(s_token_amount,s_stake_factor,s_dispute_interval_in_minutes, , , ,s_purchase_status) = Storage.purchase(DH_wallet,msg.sender,import_id);
+ 		
+ 		require(s_purchase_status == Storage.PurchaseStatus.inactive
+ 			|| 	s_purchase_status == Storage.PurchaseStatus.completed);
 
-    function initiatePurchase(bytes32 import_id, address DH_wallet, uint token_amount)
-    public {
+ 		( , , stake_factor, DH_balance, , , , ) = Storage.profile(DH_wallet);
+ 		( , , , DV_balance, , , , ) = Storage.profile(msg.sender);
 
+ 		uint256 stake_amount = token_amount.mul(stake_factor);
 
-        // PurchaseDefinition storage this_purchase = purchase[DH_wallet][msg.sender][import_id];
-        (s_token_amount,s_stake_factor,s_dispute_interval_in_minutes,s_commitment,encrypted_block,s_time_of_sending,s_purchase_status) = Storage.purchase(DH_wallet,msg.sender,import_id);
+ 		require(DH_balance >= stake_amount && DV_balance >= token_amount.add(stake_amount));
 
-        require(s_purchase_status == Storage.PurchaseStatus.inactive
-            || 	s_purchase_status == Storage.PurchaseStatus.completed);
+ 		bidding.decreaseBalance(msg.sender, token_amount.add(stake_amount)); // TODO Convert to Storage
 
-        uint256 DH_balance = bidding.getBalance(DH_wallet);
-        uint256 DV_balance = bidding.getBalance(msg.sender);
-        uint256 stake_factor = bidding.getReadStakeFactor(DH_wallet);
-        uint256 stake_amount = token_amount.mul(stake_factor);
-        require(DH_balance >= stake_amount && DV_balance >= token_amount.add(stake_amount));
+ 		Storage.setPurchase(DH_wallet,msg.sender,import_id,token_amount,stake_factor,s_dispute_interval_in_minutes,0,0,0,PurchaseStatus.initiated);
 
-        bidding.decreaseBalance(msg.sender, token_amount.add(stake_amount));
 
         // s_token_amount = token_amount;
         // s_stake_factor = stake_factor;
@@ -198,10 +173,8 @@ contract Reading is Ownable{
 
     function sendCommitment(bytes32 import_id, address DV_wallet, bytes32 commitment)
     public {
-
-
         // PurchaseDefinition storage this_purchase = purchase[msg.sender][DV_wallet][import_id];
-        (s_token_amount,s_stake_factor,s_dispute_interval_in_minutes,s_commitment,encrypted_block,s_time_of_sending,s_purchase_status) = Storage.purchase(msg.sender,DV_wallet,import_id);
+        (s_token_amount,s_stake_factor, s_dispute_interval_in_minutes, s_commitment,encrypted_block,s_time_of_sending,s_purchase_status) = Storage.purchase(msg.sender,DV_wallet,import_id);
 
         require(s_purchase_status == Storage.PurchaseStatus.initiated);
 
