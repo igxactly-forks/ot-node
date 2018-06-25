@@ -154,73 +154,20 @@ contract BiddingTest {
 		active_nodes = 0;
 	}
 
+	uint256 active_nodes = 0;
 
-	/*    ----------------------------- BIDDING -----------------------------     */
 
+	/*    ----------------------------- EVENTS -----------------------------     */
 
-	struct OfferDefinition{
-		address DC_wallet;
-
-		//Parameters for DH filtering
-		uint max_token_amount_per_DH;
-		uint min_stake_amount_per_DH; 
-		uint min_reputation;
-
-		//Data holding parameters
-		uint total_escrow_time_in_minutes;
-		uint data_size_in_bytes;
-
-		//Parameters for the bidding ranking
-		bytes32 data_hash;
-		uint first_bid_index;
-
-		uint replication_factor;
-
-		bool active;
-		bool finalized;
-
-		// uint256 offer_creation_timestamp;
-
-		BidDefinition[] bid;
-	}
-
-	struct ProfileDefinition{
-		//Offer Parameters
-		uint token_amount_per_byte_minute; //Per byte per minute
-		uint stake_amount_per_byte_minute; //Per byte per minute
-
-		uint read_stake_factor;
-
-		uint balance;
-		uint reputation;
-		uint number_of_escrows;
-
-		uint max_escrow_time_in_minutes;
-
-		bool active;
-	}
-
-	struct BidDefinition{
-		address DH_wallet;
-		bytes32 DH_node_id;
-
-		uint token_amount_for_escrow;
-		uint stake_amount_for_escrow;
-
-		uint256 distance;
-
-		uint next_bid;
-
-		bool active;
-		bool chosen;
-	}
 
 	event OfferCreated(bytes32 import_id, bytes32 DC_node_id, 
 		uint total_escrow_time_in_minutes, uint max_token_amount_per_DH, uint min_stake_amount_per_DH, uint min_reputation, 
 		uint data_size_in_bytes, bytes32 data_hash, uint litigation_interval_in_minutes);
 	event OfferCanceled(bytes32 import_id);
 	event AddedBid(bytes32 import_id, address DH_wallet, bytes32 DH_node_id, uint bid_index);
-	event AddedPredeterminedBid(bytes32 import_id, address DH_wallet, bytes32 DH_node_id, uint bid_index, uint total_escrow_time_in_minutes, uint max_token_amount_per_DH, uint min_stake_amount_per_DH, uint data_size_in_bytes);
+	event AddedPredeterminedBid(bytes32 import_id, address DH_wallet, bytes32 DH_node_id, uint bid_index, 
+		uint total_escrow_time_in_minutes, uint max_token_amount_per_DH, uint min_stake_amount_per_DH,
+		uint data_size_in_bytes, uint litigation_interval_in_minutes);
 	event FinalizeOfferReady(bytes32 import_id);
 	event BidTaken(bytes32 import_id, address DH_wallet);
 	event OfferFinalized(bytes32 import_id);
@@ -277,14 +224,18 @@ contract BiddingTest {
 			Storage.setBid(import_id, i, predetermined_DH_wallet[i], predetermined_DH_node_id[i], 0, 0, 0, 0, false, false);
 			// BidDefinition memory bid_def = BidDefinition(predetermined_DH_wallet[this_offer.bid.length], predetermined_DH_node_id[this_offer.bid.length], 0, 0, 0, 0, false, false);
 			// this_offer.bid.push(bid_def);
-			emit AddedPredeterminedBid(import_id, predetermined_DH_wallet[i], predetermined_DH_node_id[i], i, total_escrow_time_in_minutes, max_token_amount_per_DH, min_stake_amount_per_DH, data_size_in_bytes);
+			emit AddedPredeterminedBid(import_id, predetermined_DH_wallet[i], predetermined_DH_node_id[i], i, 
+				total_escrow_time_in_minutes, max_token_amount_per_DH, min_stake_amount_per_DH, 
+				data_size_in_bytes, litigation_interval_in_minutes);
 		}
 
 		Storage.setOffer(msg.sender, max_token_amount_per_DH, min_stake_amount_per_DH, min_reputation,
 			total_escrow_time_in_minutes, data_size_in_bytes, data_hash, 
 			uint(-1), predetermined_DH_wallet.length, block.timestamp, true, false);
 
-		emit OfferCreated(import_id, DC_node_id, total_escrow_time_in_minutes, max_token_amount_per_DH, min_stake_amount_per_DH, min_reputation, data_size_in_bytes, data_hash, litigation_interval_in_minutes);
+		emit OfferCreated(import_id, DC_node_id, total_escrow_time_in_minutes, 
+			max_token_amount_per_DH, min_stake_amount_per_DH, min_reputation,
+			data_size_in_bytes, data_hash, litigation_interval_in_minutes);
 	}
 
 	function cancelOffer(bytes32 import_id)
@@ -340,25 +291,30 @@ contract BiddingTest {
 	}
 
 	function getDistanceParameters(bytes32 import_id)
-	public view returns (bytes32 node_hash, bytes32 data_hash, uint256 distance, uint256 current_ranking, uint256 required_bid_amount, uint256 active_nodes_){
-		OfferDefinition storage this_offer = offer[import_id];
+	public view returns (bytes32 node_hash, bytes32 data_hash, uint256 ranking, uint256 current_ranking, uint256 required_bid_amount, uint256 active_nodes_){
+		// OfferDefinition storage this_offer = offer[import_id];
+		(s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
+			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, 
+			s_first_bid_index, s_replication_factor,s_active, s_finalized) = Storage.offer(import_id);
 
 		node_hash = bytes32(uint128(keccak256(msg.sender)));
-		data_hash = bytes32(uint128(this_offer.data_hash));
+		data_hash = bytes32(uint128(s_data_hash));
 
 
-		distance = calculateDistance(import_id, msg.sender);
-		required_bid_amount = this_offer.replication_factor.mul(2).add(1);
-		active_nodes_ = active_nodes;
+		ranking = calculateRanking(import_id, msg.sender);
+		required_bid_amount = s_replication_factor.mul(2).add(1);
+		active_nodes_ = active_nodes; // TODO Find a way to remove this
 
-		if(this_offer.first_bid_index == uint(-1)){
+		if(s_first_bid_index == uint(-1)){
 			current_ranking = 0;
 		}
 		else{
-			uint256 current_index = this_offer.first_bid_index;
+			uint256 current_index = s_first_bid_index;
 			current_ranking = 0;
-			while(this_offer.bid[current_index].next_bid != uint(-1) && this_offer.bid[current_index].distance >= distance){
+			(, , , , b_ranking, b_next_bid, , ) = Storage.bid(import_id, current_index);
+			while(b_next_bid != uint(-1) && b_ranking >= ranking){
 				current_index = this_offer.bid[current_index].next_bid;
+				(, , , , b_ranking, b_next_bid, , ) = Storage.bid(import_id, current_index);
 				current_ranking++;
 			}
 		}
@@ -381,7 +337,7 @@ contract BiddingTest {
 		//Create new bid in the list
 		uint this_bid_index = this_offer.bid.length;
 		BidDefinition memory new_bid = BidDefinition(msg.sender, DH_node_id, this_DH.token_amount_per_byte_minute * scope, this_DH.stake_amount_per_byte_minute * scope, 0, uint(-1), true, false);
-		new_bid.distance = calculateDistance(import_id, msg.sender);
+		new_bid.distance = calculateRanking(import_id, msg.sender);
 
 		distance = new_bid.distance;
 
@@ -637,7 +593,7 @@ contract BiddingTest {
 	// Constant values used for distance calculation
 	uint256 corrective_factor = 10**10;
 
-	function calculateDistance(bytes32 import_id, address DH_wallet)
+	function calculateRanking(bytes32 import_id, address DH_wallet)
 	public view returns (uint256 distance) {
 		OfferDefinition storage this_offer = offer[import_id];
 		ProfileDefinition storage this_DH = profile[DH_wallet];
