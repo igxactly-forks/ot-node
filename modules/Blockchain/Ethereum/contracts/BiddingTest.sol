@@ -406,11 +406,16 @@ contract BiddingTest {
 		// return this_bid_index;
 	}
 
-	function getBidIndex(bytes32 import_id, bytes32 DH_node_id) public view returns(uint){
-		OfferDefinition storage this_offer = offer[import_id];
-		uint256 i = 0;
-		while(i < this_offer.bid.length && (offer[import_id].bid[i].DH_wallet != msg.sender || offer[import_id].bid[i].DH_node_id != DH_node_id)) i = i + 1;
-		if( i == this_offer.bid.length) return uint(-1);
+	function getBidIndex(bytes32 import_id, bytes32 DH_node_id) public view returns(uint256 index){
+		// OfferDefinition storage this_offer = offer[import_id];
+		(s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
+			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, s_first_bid_index, 
+			s_bid_array_length, s_replication_factor,s_timestamp,s_active, s_finalized) = Storage.offer(import_id);
+
+		index = 0;
+		(t_DH_wallet, t_DH_node_id,  ,  ,  ,  ,  ,  ) = Storage.bid(import_id, i);
+		while(i < s_bid_array_length && (t_DH_wallet != msg.sender || t_DH_node_id != DH_node_id)) i = i + 1;
+		if( i == s_bid_array_length) return uint(-1);
 		else return i;
 	}
 
