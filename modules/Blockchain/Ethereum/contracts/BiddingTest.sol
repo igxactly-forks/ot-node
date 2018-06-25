@@ -421,8 +421,12 @@ contract BiddingTest {
 
 	function cancelBid(bytes32 import_id, uint bid_index)
 	public{
-		require(offer[import_id].bid[bid_index].DH_wallet == msg.sender);
-		offer[import_id].bid[bid_index].active = false;
+		(b_DH_wallet, b_DH_node_id, b_token_amount_for_escrow, b_stake_amount_for_escrow, 
+			b_ranking, b_next_bid, b_active, b_chosen) = Storage.bid(import_id, bid_index);
+		require(b_DH_wallet == msg.sender);
+		b_active = false;
+		Storage.setBid(b_DH_wallet, b_DH_node_id, b_token_amount_for_escrow, b_stake_amount_for_escrow, 
+			b_ranking, b_next_bid, b_active, b_chosen);
 	}
 
 	function chooseBids(bytes32 import_id) public returns (uint256[] chosen_data_holders){
