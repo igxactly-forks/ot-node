@@ -86,15 +86,13 @@ contract StorageContract {
 		//Parameters for the bidding ranking
 		bytes32 data_hash;
 		uint first_bid_index;
+		uint bid_array_length;
 
 		uint replication_factor;
-
+		
+		uint256 offer_creation_timestamp;
 		bool active;
 		bool finalized;
-
-		// uint256 offer_creation_timestamp;
-
-		BidDefinition[] bid;
 	}
 	mapping(bytes32 => OfferDefinition) public offer; // offer[import_id]
 
@@ -102,8 +100,8 @@ contract StorageContract {
 		bytes32 import_id, address DC_wallet,
 		uint max_token_amount_per_DH, uint min_stake_amount_per_DH, uint min_reputation,
 		uint total_escrow_time_in_minutes, uint data_size_in_bytes, uint litigation_interval_in_minutes,
-		bytes32 data_hash, uint first_bid_index, uint replication_factor, bool active, bool finalized)
-	// uint256 offer_creation_timestamp)
+		bytes32 data_hash, uint first_bid_index, uint bid_array_length, uint replication_factor,
+		bool active, bool finalized, uint256 offer_creation_timestamp)
 	public;
 
 	struct BidDefinition{
@@ -217,11 +215,9 @@ contract BiddingTest {
 		bool chosen;
 	}
 
-	uint256 public active_nodes;
-	mapping(bytes32 => OfferDefinition) public offer; //offer[import_id] import_id = keccak256(DC_wallet, DC_node_id, nonce)
-	mapping(address => ProfileDefinition) public profile; //profile[wallet]
-
-	event OfferCreated(bytes32 import_id, bytes32 DC_node_id, uint total_escrow_time_in_minutes, uint max_token_amount_per_DH, uint min_stake_amount_per_DH, uint min_reputation, uint data_size_in_bytes, bytes32 data_hash);
+	event OfferCreated(bytes32 import_id, bytes32 DC_node_id, 
+		uint total_escrow_time_in_minutes, uint max_token_amount_per_DH, uint min_stake_amount_per_DH, uint min_reputation, 
+		uint data_size_in_bytes, bytes32 data_hash, uint litigation_interval_in_minutes);
 	event OfferCanceled(bytes32 import_id);
 	event AddedBid(bytes32 import_id, address DH_wallet, bytes32 DH_node_id, uint bid_index);
 	event AddedPredeterminedBid(bytes32 import_id, address DH_wallet, bytes32 DH_node_id, uint bid_index, uint total_escrow_time_in_minutes, uint max_token_amount_per_DH, uint min_stake_amount_per_DH, uint data_size_in_bytes);
@@ -246,70 +242,87 @@ contract BiddingTest {
 		address[] predetermined_DH_wallet,
 		bytes32[] predetermined_DH_node_id)
 	public {
-		( , , , , , , , , ,s_active, ) = Storage.offer(import_id);
+		( , , , , , , , , , , s_active, ) = Storage.offer(import_id);
 
 		require(s_active == false);
 		require(max_token_amount_per_DH > 0 && total_escrow_time_in_minutes > 0 && data_size_in_bytes > 0);
 
-        (, , , DC_balance, , , , ) = Storage.profile(DC_wallet);
+		(, , , DC_balance, , , , ) = Storage.profile(DC_wallet);
 		require(DC_balance >= max_token_amount_per_DH.mul(predetermined_DH_wallet.length.mul(2).add(1)));
 		
 		DC_balance = DC_balance.sub(max_token_amount_per_DH.mul(predetermined_DH_wallet.length.mul(2).add(1)));
 		Storage.setBalance(msg.sender, DC_balance);
 		emit BalanceModified(msg.sender, DC_balance);
 
-		Storage.setOffer(msg.sender, max_token_amount_per_DH, min_stake_amount_per_DH, min_reputation,
-			total_escrow_time_in_minutes, data_size_in_bytes, data_hash, 
-			uint(-1), predetermined_DH_wallet.length, true, false);
+		// this_offer.DC_wallet = msg.sender;
 
-		this_offer.DC_wallet = msg.sender;
+		// this_offer.total_escrow_time_in_minutes = total_escrow_time_in_minutes;
+		// this_offer.max_token_amount_per_DH = max_token_amount_per_DH;
+		// this_offer.min_stake_amount_per_DH = min_stake_amount_per_DH;
+		// this_offer.min_reputation = min_reputation;
 
-		this_offer.total_escrow_time_in_minutes = total_escrow_time_in_minutes;
-		this_offer.max_token_amount_per_DH = max_token_amount_per_DH;
-		this_offer.min_stake_amount_per_DH = min_stake_amount_per_DH;
-		this_offer.min_reputation = min_reputation;
+		// this_offer.data_hash = data_hash;
+		// this_offer.data_size_in_bytes = data_size_in_bytes;
 
-		this_offer.data_hash = bytes32(uint256(data_hash) & (2**128-1));
-		this_offer.data_size_in_bytes = data_size_in_bytes;
+		// this_offer.replication_factor = predetermined_DH_wallet.length;
 
-		this_offer.replication_factor = predetermined_DH_wallet.length;
+		// this_offer.active = true;
+		// this_offer.finalized = false;
 
-		this_offer.active = true;
-		this_offer.finalized = false;
-
-		this_offer.first_bid_index = uint(-1);
+		// this_offer.first_bid_index = uint(-1);
 		// this_offer.offer_creation_timestamp = block.timestamp;
 
 		//Writing the predetermined DC into the bid list
-		while(this_offer.bid.length < predetermined_DH_wallet.length) {
-			BidDefinition memory bid_def = BidDefinition(predetermined_DH_wallet[this_offer.bid.length], predetermined_DH_node_id[this_offer.bid.length], 0, 0, 0, 0, false, false);
-			this_offer.bid.push(bid_def);
-			emit AddedPredeterminedBid(import_id, bid_def.DH_wallet, bid_def.DH_node_id, this_offer.bid.length - 1, total_escrow_time_in_minutes, max_token_amount_per_DH, min_stake_amount_per_DH, data_size_in_bytes);
+		for(uint256 i = 0; i < predetermined_DH_wallet.length; i++) {
+			Storage.setBid(import_id, i, predetermined_DH_wallet[i], predetermined_DH_node_id[i], 0, 0, 0, 0, false, false);
+			// BidDefinition memory bid_def = BidDefinition(predetermined_DH_wallet[this_offer.bid.length], predetermined_DH_node_id[this_offer.bid.length], 0, 0, 0, 0, false, false);
+			// this_offer.bid.push(bid_def);
+			emit AddedPredeterminedBid(import_id, predetermined_DH_wallet[i], predetermined_DH_node_id[i], i, total_escrow_time_in_minutes, max_token_amount_per_DH, min_stake_amount_per_DH, data_size_in_bytes);
 		}
 
-		emit OfferCreated(import_id, DC_node_id, total_escrow_time_in_minutes, max_token_amount_per_DH, min_stake_amount_per_DH, min_reputation, data_size_in_bytes, data_hash);
+		Storage.setOffer(msg.sender, max_token_amount_per_DH, min_stake_amount_per_DH, min_reputation,
+			total_escrow_time_in_minutes, data_size_in_bytes, data_hash, 
+			uint(-1), predetermined_DH_wallet.length, block.timestamp, true, false);
+
+		emit OfferCreated(import_id, DC_node_id, total_escrow_time_in_minutes, max_token_amount_per_DH, min_stake_amount_per_DH, min_reputation, data_size_in_bytes, data_hash, litigation_interval_in_minutes);
 	}
 
 	//TODO Decide when and under which conditions DC can cancel an offer
 	function cancelOffer(bytes32 import_id)
 	public{
-		OfferDefinition storage this_offer = offer[import_id];
-		require(this_offer.active && this_offer.DC_wallet == msg.sender
-			&& this_offer.finalized == false);
-		this_offer.active = false;
-		uint max_total_token_amount = this_offer.max_token_amount_per_DH.mul(this_offer.replication_factor.mul(2).add(1));
-		profile[msg.sender].balance = profile[msg.sender].balance.add(max_total_token_amount);
+		// OfferDefinition storage this_offer = offer[import_id];
+		(s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
+			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, 
+			s_first_bid_index, s_replication_factor,s_timestamp,s_active, s_finalized) = Storage.offer(import_id);
+
+
+		require(s_active && s_DC_wallet == msg.sender && s_finalized == false);
+		s_active = false;
+		uint max_total_token_amount = s_max_token_amount_per_DH.mul(s_replication_factor.mul(2).add(1));
+
+		// Returns the alloted token amount back to DC
+		(, , , DC_balance, , , , ) = Storage.profile(msg.sender);
+		DC_balance = DC_balance.add(max_total_token_amount);
+		Storage.setBalance(msg.sender, DH_balance);
 		emit BalanceModified(msg.sender, profile[msg.sender].balance);
+
+		Storage.setOffer(s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
+			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, 
+			s_first_bid_index, s_replication_factor,false, s_finalized);
 		emit OfferCanceled(import_id);
 	}
 
 	function activatePredeterminedBid(bytes32 import_id, bytes32 DH_node_id, uint bid_index)
 	public{
-		require(offer[import_id].active && !offer[import_id].finalized);
+		(s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
+			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, 
+			s_first_bid_index, s_replication_factor,s_active, s_finalized) = Storage.offer(import_id);
 
-		OfferDefinition storage this_offer = offer[import_id];
-		ProfileDefinition storage this_DH = profile[msg.sender];
-		BidDefinition storage this_bid = offer[import_id].bid[bid_index];
+		require(s_active && !s_finalized);
+
+		(s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
+			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, 
+			s_first_bid_index, s_replication_factor,s_active, s_finalized) = Storage.
 
 		require(this_bid.DH_wallet == msg.sender && this_bid.DH_node_id == DH_node_id);
 
@@ -325,15 +338,15 @@ contract BiddingTest {
 		this_bid.active = true;
 	}
 
-	function getDistanceParameters(bytes32 import_id, bytes32 DH_node_id)
+	function getDistanceParameters(bytes32 import_id)
 	public view returns (bytes32 node_hash, bytes32 data_hash, uint256 distance, uint256 current_ranking, uint256 required_bid_amount, uint256 active_nodes_){
 		OfferDefinition storage this_offer = offer[import_id];
 
-		node_hash = bytes32((2**128 - 1) & uint256(keccak256(msg.sender, DH_node_id)));
-		data_hash = this_offer.data_hash;
+		node_hash = bytes32(uint128(keccak256(msg.sender)));
+		data_hash = bytes32(uint128(this_offer.data_hash));
 
 
-		distance = calculateDistance(import_id, msg.sender, DH_node_id);
+		distance = calculateDistance(import_id, msg.sender);
 		required_bid_amount = this_offer.replication_factor.mul(2).add(1);
 		active_nodes_ = active_nodes;
 
@@ -367,7 +380,7 @@ contract BiddingTest {
 		//Create new bid in the list
 		uint this_bid_index = this_offer.bid.length;
 		BidDefinition memory new_bid = BidDefinition(msg.sender, DH_node_id, this_DH.token_amount_per_byte_minute * scope, this_DH.stake_amount_per_byte_minute * scope, 0, uint(-1), true, false);
-		new_bid.distance = calculateDistance(import_id, msg.sender, DH_node_id);
+		new_bid.distance = calculateDistance(import_id, msg.sender);
 
 		distance = new_bid.distance;
 
@@ -548,7 +561,7 @@ contract BiddingTest {
 	function withdrawToken(uint amount) public {
 		uint256 amount_to_transfer;
 
-        (, , , balance, , , , ) = Storage.profile(msg.sender);
+		(, , , balance, , , , ) = Storage.profile(msg.sender);
 
 		if(balance >= amount){
 			amount_to_transfer = amount;
@@ -623,7 +636,7 @@ contract BiddingTest {
 	// Constant values used for distance calculation
 	uint256 corrective_factor = 10**10;
 
-	function calculateDistance(bytes32 import_id, address DH_wallet, bytes32 DH_node_id)
+	function calculateDistance(bytes32 import_id, address DH_wallet)
 	public view returns (uint256 distance) {
 		OfferDefinition storage this_offer = offer[import_id];
 		ProfileDefinition storage this_DH = profile[DH_wallet];
@@ -638,11 +651,11 @@ contract BiddingTest {
 		else reputation = (log2(this_DH.reputation / this_DH.number_of_escrows) * corrective_factor / 115) / (corrective_factor / 100);
 		if(reputation == 0) reputation = 1;
 
-		uint256 hash_difference = absoluteDifference(uint256(this_offer.data_hash), (2**128 - 1) & uint256(keccak256(DH_wallet, DH_node_id)));
+		uint256 hash_difference = absoluteDifference(uint256(uint128(this_offer.data_hash)), uint256(uint128(keccak256(DH_wallet))));
 
-		uint256 hash_f = ((uint256(this_offer.data_hash) * (2**128)) / (hash_difference + uint256(this_offer.data_hash)));
+		uint256 hash_f = ((uint256(uint128(this_offer.data_hash)) * (2**128)) / (hash_difference + uint256(uint128(this_offer.data_hash))));
 		uint256 price_f = corrective_factor - ((corrective_factor * token_amount) / this_offer.max_token_amount_per_DH);
-		uint256 stake_f = ((corrective_factor - ((this_offer.min_stake_amount_per_DH * corrective_factor) / stake_amount)) * uint256(this_offer.data_hash)) / (hash_difference + uint256(this_offer.data_hash));
+		uint256 stake_f = ((corrective_factor - ((this_offer.min_stake_amount_per_DH * corrective_factor) / stake_amount)) * uint256(uint128(this_offer.data_hash))) / (hash_difference + uint256(uint128(this_offer.data_hash)));
 		uint256 rep_f = (corrective_factor - (this_offer.min_reputation * corrective_factor / reputation));
 		distance = ((hash_f * (corrective_factor + price_f + stake_f + rep_f)) / 4) / corrective_factor;
 	}

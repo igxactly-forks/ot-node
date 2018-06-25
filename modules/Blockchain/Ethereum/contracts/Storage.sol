@@ -113,15 +113,13 @@ contract StorageContract {
 		//Parameters for the bidding ranking
 		bytes32 data_hash;
 		uint first_bid_index;
+		uint bid_array_length;
 
 		uint replication_factor;
-
+		
+		uint256 offer_creation_timestamp;
 		bool active;
 		bool finalized;
-
-		// uint256 offer_creation_timestamp;
-
-		BidDefinition[] bid;
 	}
 	mapping(bytes32 => OfferDefinition) public offer; // offer[import_id]
 
@@ -136,10 +134,11 @@ contract StorageContract {
 		uint litigation_interval_in_minutes,
 		bytes32 data_hash,
 		uint first_bid_index,
+		uint bid_array_length,
 		uint replication_factor,
+		uint offer_creation_timestamp,
 		bool active,
-		bool finalized )
-	// uint256 offer_creation_timestamp)
+		bool finalized)
 	public onlyContracts {
 		if(offer[import_id].DC_wallet != DC_wallet)
 		offer[import_id].DC_wallet = DC_wallet;
@@ -147,36 +146,35 @@ contract StorageContract {
 		if(offer[import_id].max_token_amount_per_DH != max_token_amount_per_DH)
 		offer[import_id].max_token_amount_per_DH = max_token_amount_per_DH;
 
-
 		if(offer[import_id].min_stake_amount_per_DH != min_stake_amount_per_DH)
 		offer[import_id].min_stake_amount_per_DH = min_stake_amount_per_DH;
-
 
 		if(offer[import_id].min_reputation != min_reputation)
 		offer[import_id].min_reputation = min_reputation;
 
-
 		if(offer[import_id].total_escrow_time_in_minutes != total_escrow_time_in_minutes)
 		offer[import_id].total_escrow_time_in_minutes = total_escrow_time_in_minutes;
-
 
 		if(offer[import_id].data_size_in_bytes != data_size_in_bytes)
 		offer[import_id].data_size_in_bytes = data_size_in_bytes;
 
-
 		if(offer[import_id].litigation_interval_in_minutes != litigation_interval_in_minutes)
 		offer[import_id].litigation_interval_in_minutes = litigation_interval_in_minutes;
-
 
 		if(offer[import_id].data_hash != data_hash)
 		offer[import_id].data_hash = data_hash;
 
-
 		if(offer[import_id].first_bid_index != first_bid_index)
 		offer[import_id].first_bid_index = first_bid_index;
 
+		if(offer[import_id].bid_array_length != bid_array_length)
+		offer[import_id].bid_array_length = bid_array_length;
+
 		if(offer[import_id].replication_factor != replication_factor)
 		offer[import_id].replication_factor = replication_factor;
+
+		if(offer[import_id].offer_creation_timestamp != offer_creation_timestamp)
+		offer[import_id].offer_creation_timestamp = offer_creation_timestamp;
 
 		if(offer[import_id].active != active)
 		offer[import_id].active = active;
@@ -201,6 +199,7 @@ contract StorageContract {
 		bool active;
 		bool chosen;
 	}
+	mapping(bytes32 => mapping (uint256 => BidDefinition ) ) public bid; // bid[import_id][bid_index]
 
 	function setBid(
 		bytes32 import_id,
@@ -214,29 +213,29 @@ contract StorageContract {
 		bool active,
 		bool chosen )
 	public onlyContracts{
-		if(offer[import_id].bid[bid_index].DH_wallet != DH_wallet)
-		offer[import_id].bid[bid_index].DH_wallet = DH_wallet;
+		if(bid[import_id][bid_index].DH_wallet != DH_wallet)
+		bid[import_id][bid_index].DH_wallet = DH_wallet;
 
-		if(offer[import_id].bid[bid_index].DH_node_id != DH_node_id)
-		offer[import_id].bid[bid_index].DH_node_id = DH_node_id;
+		if(bid[import_id][bid_index].DH_node_id != DH_node_id)
+		bid[import_id][bid_index].DH_node_id = DH_node_id;
 
-		if(offer[import_id].bid[bid_index].token_amount_for_escrow != token_amount_for_escrow)
-		offer[import_id].bid[bid_index].token_amount_for_escrow = token_amount_for_escrow;
+		if(bid[import_id][bid_index].token_amount_for_escrow != token_amount_for_escrow)
+		bid[import_id][bid_index].token_amount_for_escrow = token_amount_for_escrow;
 
-		if(offer[import_id].bid[bid_index].stake_amount_for_escrow != stake_amount_for_escrow)
-		offer[import_id].bid[bid_index].stake_amount_for_escrow = stake_amount_for_escrow;
+		if(bid[import_id][bid_index].stake_amount_for_escrow != stake_amount_for_escrow)
+		bid[import_id][bid_index].stake_amount_for_escrow = stake_amount_for_escrow;
 
-		if(offer[import_id].bid[bid_index].ranking != ranking)
-		offer[import_id].bid[bid_index].ranking = ranking;
+		if(bid[import_id][bid_index].ranking != ranking)
+		bid[import_id][bid_index].ranking = ranking;
 
-		if(offer[import_id].bid[bid_index].next_bid != next_bid)
-		offer[import_id].bid[bid_index].next_bid = next_bid;
+		if(bid[import_id][bid_index].next_bid != next_bid)
+		bid[import_id][bid_index].next_bid = next_bid;
 
-		if(offer[import_id].bid[bid_index].active != active)
-		offer[import_id].bid[bid_index].active = active;
+		if(bid[import_id][bid_index].active != active)
+		bid[import_id][bid_index].active = active;
 
-		if(offer[import_id].bid[bid_index].chosen != chosen)
-		offer[import_id].bid[bid_index].chosen = chosen;
+		if(bid[import_id][bid_index].chosen != chosen)
+		bid[import_id][bid_index].chosen = chosen;
 
 		emit BidChange(import_id,bid_index);
 	}

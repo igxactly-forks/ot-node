@@ -27,10 +27,12 @@ library SafeMath {
 }
 
 contract Bidding{
-    function increaseBalance(address wallet, uint amount) public;
-    function decreaseBalance(address wallet, uint amount) public;
-    function getBalance(address wallet) public view returns (uint256);
+	function increaseBalance(address wallet, uint amount) public;
+	function decreaseBalance(address wallet, uint amount) public;
+	function increaseReputation(address wallet, uint amount) public;
+	function getBalance(address wallet) public view returns (uint256);
     function getReadStakeFactor(address wallet)	public view returns (uint256);
+
 }
 
 /**
@@ -86,7 +88,7 @@ contract StorageContract{
         bool active;
     }
     mapping(address => ProfileDefinition) public profile; // profile[wallet]
-    function setProfile( address wallet, 
+    function setProfile( address wallet,
         uint token_amount_per_byte_minute, uint stake_amount_per_byte_minute, uint read_stake_factor,
         uint balance, uint reputation, uint number_of_escrows,
         uint max_escrow_time_in_minutes, bool active) public;
@@ -138,7 +140,7 @@ contract Reading is Ownable{
        Storage = StorageContract(storage_address);
    }
 
-   function initiatePurchase(bytes32 import_id, address DH_wallet, uint token_amount) // TODO dodaj dispute time 
+   function initiatePurchase(bytes32 import_id, address DH_wallet, uint token_amount) // TODO dodaj dispute time
    public {
        // PurchaseDefinition storage this_purchase = purchase[DH_wallet][msg.sender][import_id];
        (s_token_amount,s_stake_factor,s_dispute_interval_in_minutes, , , ,s_purchase_status) = Storage.purchase(DH_wallet,msg.sender,import_id);
@@ -175,7 +177,7 @@ contract Reading is Ownable{
     require(DH_balance >= stake_amount);
 
     // Allocate stake amount from DH and update his new balance
-    DH_balance = DH_balance.sub(stake_amount); 
+    DH_balance = DH_balance.sub(stake_amount);
     Storage.setBalance(msg.sender, DH_balance);
 
     Storage.setPurchase(msg.sender,DV_wallet,import_id,s_token_amount,s_stake_factor,s_dispute_interval_in_minutes,commitment,s_encrypted_block,s_time_of_sending,Storage.PurchaseStatus.commited);
@@ -187,10 +189,6 @@ public {
 
     (s_token_amount,s_stake_factor,s_dispute_interval_in_minutes,s_commitment,encrypted_block,s_time_of_sending,s_purchase_status) = Storage.purchase(DH_wallet,msg.sender,import_id);
     require(s_purchase_status == Storage.PurchaseStatus.commited);
-
-
-    // TODO: Proveri sta ovde fali
-
 
     // this_purchase.purchase_status = Storage.PurchaseStatus.confirmed;
     Storage.setPurchase(DH_wallet,msg.sender,import_id,s_token_amount,s_stake_factor,s_dispute_interval_in_minutes,s_commitment,s_encrypted_block,s_time_of_sending,Storage.PurchaseStatus.confirmed);
@@ -220,7 +218,7 @@ public {
 
     uint256 stake_amount = s_token_amount.mul(s_stake_factor);
 
-    
+
     // Returns reading price and stake to DV
     (, , , DV_balance, , , , ) = Storage.profile(DV_wallet);
     DV_balance = DV_balance.add(s_token_amount.add(stake_amount));
@@ -279,6 +277,11 @@ public {
     (, , , DV_balance, , , , ) = Storage.profile(DV_wallet);
     DV_balance = DV_balance.add(stake_amount);
     Storage.setBalance(DV_wallet, DV_balance);
+		bidding.increaseBalance(msg.sender, this_purchase.token_amount.mul(this_purchase.stake_factor).add(this_purchase.token_amount));
+		bidding.increaseBalance(DV_wallet, this_purchase.token_amount.mul(this_purchase.stake_factor));
+
+	//	bidding.increaseReputation(msg.sender, this_purchase.token_amount.mul(this_purchase.stake_factor));
+	//	bidding.increaseReputation(DV_wallet, this_purchase.token_amount.mul(this_purchase.stake_factor));
 
     // Returns reading stake to DH and sends tokens
     (, , , DH_balance, , , , ) = Storage.profile(msg.sender);
