@@ -287,24 +287,21 @@ contract BiddingTest {
 		emit OfferCreated(import_id, DC_node_id, total_escrow_time_in_minutes, max_token_amount_per_DH, min_stake_amount_per_DH, min_reputation, data_size_in_bytes, data_hash, litigation_interval_in_minutes);
 	}
 
-	//TODO Decide when and under which conditions DC can cancel an offer
 	function cancelOffer(bytes32 import_id)
 	public{
 		// OfferDefinition storage this_offer = offer[import_id];
 		(s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
 			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, 
 			s_first_bid_index, s_replication_factor,s_timestamp,s_active, s_finalized) = Storage.offer(import_id);
-
-
+		
 		require(s_active && s_DC_wallet == msg.sender && s_finalized == false);
 		s_active = false;
-		uint max_total_token_amount = s_max_token_amount_per_DH.mul(s_replication_factor.mul(2).add(1));
 
 		// Returns the alloted token amount back to DC
+		uint max_total_token_amount = s_max_token_amount_per_DH.mul(s_replication_factor.mul(2).add(1));
 		(, , , DC_balance, , , , ) = Storage.profile(msg.sender);
 		DC_balance = DC_balance.add(max_total_token_amount);
 		Storage.setBalance(msg.sender, DH_balance);
-		emit BalanceModified(msg.sender, profile[msg.sender].balance);
 
 		Storage.setOffer(s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
 			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, 
