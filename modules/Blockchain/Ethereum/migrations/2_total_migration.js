@@ -167,6 +167,19 @@ module.exports = (deployer, network, accounts) => {
         .then(() => giveMeBiddingTest())
         .then(async (result) => {
             bidding = result;
+            await deployer.deploy(
+                Hub,
+                token.address, // Irrelevant, truffle tests don't use OT contract
+                token.address,
+                bidding.address,
+                escrow.address,
+                reading.address,
+            )
+        .then(() => giveMeHub())
+        .then(async (result) => {
+            hub = result;
+            await deployer.deploy(StorageContracts, hub.address)
+        .then(async () => {
             await deployer.deploy(TestingUtilities)
         .then(async () => {
             await escrow.setBidding(bidding.address, { from: accounts[0] })
@@ -189,23 +202,13 @@ module.exports = (deployer, network, accounts) => {
         .then(async () => {
             await token.finishMinting({ from: accounts[0] })
         .then(async () => {
-            await deployer.deploy(
-                Hub,
-                token.address, // Irrelevant, truffle tests don't use OT contract
-                token.address,
-                bidding.address,
-                escrow.address,
-                reading.address,
-            )
-        .then(() => giveMeHub())
-        .then(async (result) => {
-            hub = result;
             console.log('\n\n \t Contract adressess on ganache (for testing):');
             console.log(`\t Hub contract address: \t ${hub.address}`);
             console.log(`\t Token contract address: \t ${token.address}`);
             console.log(`\t Escrow contract address: \t ${escrow.address}`);
             console.log(`\t Bidding contract address: \t ${bidding.address}`);
             console.log(`\t Reading contract address: \t ${reading.address}`);
+        });
         });
         });
         });
