@@ -1,11 +1,52 @@
 pragma solidity ^0.4.22;
 
-contract ContractHub {
+/**
+* @title Ownable
+* @dev The Ownable contract has an owner address, and provides basic authorization control
+* functions, this simplifies the implementation of "user permissions".
+*/
+contract Ownable {
+    address public owner;
+
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
+    /**
+    * @dev The Ownable constructor sets the original `owner` of the contract to the sender
+    * account.
+    */
+    function Ownable () public {
+        owner = msg.sender;
+    }
+
+    /**
+    * @dev Throws if called by any account other than the owner.
+    */
+    modifier onlyOwner() {
+        require(msg.sender == owner);
+        _;
+    }
+
+    /**
+    * @dev Allows the current owner to transfer control of the contract to a newOwner.
+    * @param newOwner The address to transfer ownership to.
+    */
+    function transferOwnership(address newOwner) public onlyOwner {
+        require(newOwner != address(0));
+        emit OwnershipTransferred(owner, newOwner);
+        owner = newOwner;
+    }
+}
+
+
+
+contract ContractHub is Ownable {
 	address public fingerprintAddress;
 	address public tokenAddress;
 	address public biddingAddress;
 	address public escrowAddress;
 	address public readingAddress;
+
+
 }
 
 
@@ -32,6 +73,7 @@ contract StorageContract {
 			|| msg.sender == hub.tokenAddress()
 			|| msg.sender == hub.biddingAddress()
 			|| msg.sender == hub.escrowAddress()
+			|| msg.sender == hub.owner()
 			|| msg.sender == hub.readingAddress());
 		_;
 	}
@@ -145,7 +187,7 @@ contract StorageContract {
  		if(profile[wallet].max_escrow_time_in_minutes != max_escrow_time_in_minutes)
 		profile[wallet].max_escrow_time_in_minutes = max_escrow_time_in_minutes;
  	}
- 	function setProfile_active(address wallet, uint256 active) public onlyContracts {
+ 	function setProfile_active(address wallet, bool active) public onlyContracts {
  		if(profile[wallet].active != active)
 		profile[wallet].active = active;
  	}
@@ -364,14 +406,14 @@ contract StorageContract {
 
 		emit OfferChange(import_id);
 	}
-	function setOffer_active(bytes32 import_id, bo active) 
+	function setOffer_active(bytes32 import_id, bool active) 
 	public onlyContracts{
 		if(offer[import_id].active != active)
 		offer[import_id].active = active;
 
 		emit OfferChange(import_id);
 	}
-	function setOffer_finalized(bytes32 import_id, bo finalized) 
+	function setOffer_finalized(bytes32 import_id, bool finalized) 
 	public onlyContracts{
 		if(offer[import_id].finalized != finalized)
 		offer[import_id].finalized = finalized;
@@ -460,42 +502,42 @@ contract StorageContract {
 		emit BidChange(import_id,bid_index);
 	}
 	function setBid_DH_wallet(bytes32 import_id, uint index, address DH_wallet) public onlyContracts{
-		if(bid[import_id][bid_index].DH_wallet != DH_wallet)
-		bid[import_id][bid_index].DH_wallet = DH_wallet;
+		if(bid[import_id][index].DH_wallet != DH_wallet)
+		bid[import_id][index].DH_wallet = DH_wallet;
 	}
 	function setBid_DH_node_id(bytes32 import_id, uint index, bytes32 DH_node_id) public onlyContracts{
-		if(bid[import_id][bid_index].DH_node_id != DH_node_id)
-		bid[import_id][bid_index].DH_node_id = DH_node_id;
+		if(bid[import_id][index].DH_node_id != DH_node_id)
+		bid[import_id][index].DH_node_id = DH_node_id;
 	}
 	function setBid_token_amount_for_escrow(bytes32 import_id, uint index, uint token_amount_for_escrow) public onlyContracts{
-		if(bid[import_id][bid_index].token_amount_for_escrow != token_amount_for_escrow)
-		bid[import_id][bid_index].token_amount_for_escrow = token_amount_for_escrow;
+		if(bid[import_id][index].token_amount_for_escrow != token_amount_for_escrow)
+		bid[import_id][index].token_amount_for_escrow = token_amount_for_escrow;
 	}
 	function setBid_stake_amount_for_escrow(bytes32 import_id, uint index, uint stake_amount_for_escrow) public onlyContracts{
-		if(bid[import_id][bid_index].stake_amount_for_escrow != stake_amount_for_escrow)
-		bid[import_id][bid_index].stake_amount_for_escrow = stake_amount_for_escrow;
+		if(bid[import_id][index].stake_amount_for_escrow != stake_amount_for_escrow)
+		bid[import_id][index].stake_amount_for_escrow = stake_amount_for_escrow;
 	}
 	function setBid_ranking(bytes32 import_id, uint index, uint ranking) public onlyContracts{
-		if(bid[import_id][bid_index].ranking != ranking)
-		bid[import_id][bid_index].ranking = ranking;
+		if(bid[import_id][index].ranking != ranking)
+		bid[import_id][index].ranking = ranking;
 	}
 	function setBid_next_bid_index(bytes32 import_id, uint index, uint next_bid_index) public onlyContracts{
-		if(bid[import_id][bid_index].next_bid_index != next_bid_index)
-		bid[import_id][bid_index].next_bid_index = next_bid_index;
+		if(bid[import_id][index].next_bid_index != next_bid_index)
+		bid[import_id][index].next_bid_index = next_bid_index;
 	}
 	function setBid_active(bytes32 import_id, uint index, bool active) public onlyContracts{
-		if(bid[import_id][bid_index].active != active)
-		bid[import_id][bid_index].active = active;
+		if(bid[import_id][index].active != active)
+		bid[import_id][index].active = active;
 	}
 	function setBid_chosen(bytes32 import_id, uint index, bool chosen) public onlyContracts{
-		if(bid[import_id][bid_index].chosen != chosen)
-		bid[import_id][bid_index].chosen = chosen;
+		if(bid[import_id][index].chosen != chosen)
+		bid[import_id][index].chosen = chosen;
 	}
 
 	function setBidNextBidIndex(bytes32 import_id, uint index, uint next_bid_index)
 	public onlyContracts{
-		if(bid[import_id][bid_index].index != next_bid_index)
-		bid[import_id][bid_index].index = next_bid_index;
+		if(bid[import_id][index].next_bid_index != next_bid_index)
+		bid[import_id][index].next_bid_index = next_bid_index;
 
 		emit BidChange(import_id, index);
 	}  
