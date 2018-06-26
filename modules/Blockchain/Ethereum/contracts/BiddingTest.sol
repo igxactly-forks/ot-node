@@ -101,7 +101,7 @@ contract StorageContract {
 		uint max_token_amount_per_DH, uint min_stake_amount_per_DH, uint min_reputation,
 		uint total_escrow_time_in_minutes, uint data_size_in_bytes, uint litigation_interval_in_minutes,
 		bytes32 data_hash, uint first_bid_index, uint bid_array_length, uint replication_factor,
-		bool active, bool finalized, uint256 offer_creation_timestamp)
+		uint256 offer_creation_timestamp, bool active, bool finalized)
 	public;
 
 	struct BidDefinition{
@@ -178,11 +178,12 @@ contract BiddingTest {
 
 		bytes32 data_hash,
 		uint data_size_in_bytes,
+		uint litigation_interval_in_minutes,
 
 		address[] predetermined_DH_wallet,
 		bytes32[] predetermined_DH_node_id)
 	public {
-		( , , , , , , , , , , s_active, ) = Storage.offer(import_id);
+		( , , , , , , , , , , , , s_active, ) = Storage.offer(import_id);
 
 		require(s_active == false);
 		require(max_token_amount_per_DH > 0 && total_escrow_time_in_minutes > 0 && data_size_in_bytes > 0);
@@ -223,11 +224,11 @@ contract BiddingTest {
 		}
 
 		s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
-		s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, s_first_bid_index, 
-		s_bid_array_length, s_replication_factor,s_timestamp,s_active, s_finalized
+		s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_litigation_interval_in_minutes, s_data_hash,
+		s_first_bid_index, s_bid_array_length, s_replication_factor,s_timestamp,s_active, s_finalized
 
 		Storage.setOffer(msg.sender, max_token_amount_per_DH, min_stake_amount_per_DH, min_reputation,
-			total_escrow_time_in_minutes, data_size_in_bytes, data_hash, uint(-1),
+			total_escrow_time_in_minutes, data_size_in_bytes, litigation_interval_in_minutes, data_hash, uint(-1),
 			predetermined_DH_wallet.length, predetermined_DH_wallet.length, block.timestamp, true, false);
 
 		emit OfferCreated(import_id, DC_node_id, total_escrow_time_in_minutes, 
@@ -239,8 +240,8 @@ contract BiddingTest {
 	public{
 		// OfferDefinition storage this_offer = offer[import_id];
 		(s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
-			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, s_first_bid_index, 
-			s_bid_array_length, s_replication_factor,s_timestamp,s_active, s_finalized) = Storage.offer(import_id);
+		s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_litigation_interval_in_minutes, s_data_hash,
+		s_first_bid_index, s_bid_array_length, s_replication_factor,s_timestamp,s_active, s_finalized) = Storage.offer(import_id);
 		
 		require(s_active && s_DC_wallet == msg.sender && s_finalized == false);
 		s_active = false;
@@ -252,16 +253,16 @@ contract BiddingTest {
 		Storage.setBalance(msg.sender, DH_balance);
 
 		Storage.setOffer(s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
-			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, s_first_bid_index, 
-			s_bid_array_length, s_replication_factor,s_timestamp, false, s_finalized);
+		s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_litigation_interval_in_minutes, s_data_hash,
+		s_first_bid_index, s_bid_array_length, s_replication_factor,s_timestamp, false, s_finalized);
 		emit OfferCanceled(import_id);
 	}
 
 	function activatePredeterminedBid(bytes32 import_id, bytes32 DH_node_id, uint bid_index)
 	public{
 		(s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
-			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, s_first_bid_index, 
-			s_bid_array_length, s_replication_factor,s_timestamp,s_active, s_finalized) = Storage.offer(import_id);
+		s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_litigation_interval_in_minutes, s_data_hash,
+		s_first_bid_index, s_bid_array_length, s_replication_factor,s_timestamp,s_active, s_finalized) = Storage.offer(import_id);
 
 		require(s_active && !s_finalized);
 
@@ -291,8 +292,8 @@ contract BiddingTest {
 	public view returns (bytes32 node_hash, bytes32 data_hash, uint256 ranking, uint256 current_ranking, uint256 required_bid_amount, uint256 active_nodes_){
 		// OfferDefinition storage this_offer = offer[import_id];
 		(s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
-			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, s_first_bid_index, 
-			s_bid_array_length, s_replication_factor,s_timestamp,s_active, s_finalized) = Storage.offer(import_id);
+		s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_litigation_interval_in_minutes, s_data_hash,
+		s_first_bid_index, s_bid_array_length, s_replication_factor,s_timestamp,s_active, s_finalized) = Storage.offer(import_id);
 
 		node_hash = bytes32(uint128(keccak256(msg.sender)));
 		data_hash = bytes32(uint128(s_data_hash));
@@ -321,8 +322,8 @@ contract BiddingTest {
 	public returns (uint ranking){
 		// OfferDefinition storage this_offer = offer[import_id];
 		(s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
-			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, s_first_bid_index, 
-			s_bid_array_length, s_replication_factor,s_timestamp,s_active, s_finalized) = Storage.offer(import_id);
+		s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_litigation_interval_in_minutes, s_data_hash,
+		s_first_bid_index, s_bid_array_length, s_replication_factor,s_timestamp,s_active, s_finalized) = Storage.offer(import_id);
 
 		require(s_active && !s_finalized);
 
@@ -397,9 +398,9 @@ contract BiddingTest {
 		}
 
 		// Update offer
-		Storage.setOffer(ss_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
-			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, s_first_bid_index, 
-			s_bid_array_length.add(1), s_replication_factor,s_timestamp,s_active, s_finalized)
+		Storage.setOffer(s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
+		s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_litigation_interval_in_minutes, s_data_hash,
+		s_first_bid_index, s_bid_array_length.add(1), s_replication_factor,s_timestamp,s_active, s_finalized)
 		if(s_bid_array_length >= s_replication_factor.mul(3).add(1)) emit FinalizeOfferReady(import_id);
 
 		emit AddedBid(import_id, msg.sender, DH_node_id, this_bid_index);
@@ -408,13 +409,14 @@ contract BiddingTest {
 
 	function getBidIndex(bytes32 import_id, bytes32 DH_node_id) public view returns(uint256 index){
 		// OfferDefinition storage this_offer = offer[import_id];
-		(s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
-			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, s_first_bid_index, 
-			s_bid_array_length, s_replication_factor,s_timestamp,s_active, s_finalized) = Storage.offer(import_id);
+		( , , , , , , , , , s_bid_array_length, , , , ) = Storage.offer(import_id);
 
 		index = 0;
 		(t_DH_wallet, t_DH_node_id,  ,  ,  ,  ,  ,  ) = Storage.bid(import_id, i);
-		while(i < s_bid_array_length && (t_DH_wallet != msg.sender || t_DH_node_id != DH_node_id)) i = i + 1;
+		while(i < s_bid_array_length && (t_DH_wallet != msg.sender || t_DH_node_id != DH_node_id)){
+			i = i + 1;
+			(t_DH_wallet, t_DH_node_id,  ,  ,  ,  ,  ,  ) = Storage.bid(import_id, i);
+		}
 		if( i == s_bid_array_length) return uint(-1);
 		else return i;
 	}
@@ -432,8 +434,8 @@ contract BiddingTest {
 	function chooseBids(bytes32 import_id) public returns (uint256[] chosen_data_holders){
 		// OfferDefinition storage this_offer = offer[import_id];
 		(s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
-			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, s_first_bid_index, 
-			s_bid_array_length, s_replication_factor,s_timestamp,s_active, s_finalized) = Storage.offer(import_id);
+		s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_litigation_interval_in_minutes, s_data_hash,
+		s_first_bid_index, s_bid_array_length, s_replication_factor,s_timestamp,s_active, s_finalized) = Storage.offer(import_id);
 
 		require(s_active && !s_finalized);
 		require(s_replication_factor.mul(3).add(1) <= bid_array_length);
@@ -512,9 +514,9 @@ contract BiddingTest {
 		}
 
 		// Update offer (set finalized flag to true)
-		Storage.setOffer(ss_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
-			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, s_first_bid_index, 
-			s_bid_array_length.add(1), s_replication_factor,s_timestamp,s_active, true);
+		Storage.setOffer(s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
+		s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_litigation_interval_in_minutes, s_data_hash,
+		s_first_bid_index, s_bid_array_length, s_replication_factor,s_timestamp,s_active, true);
 
 		// Return the unused tokens back to DC
 		(, , , DC_balance, , , , ) = Storage.profile(DC_wallet);
@@ -662,8 +664,8 @@ contract BiddingTest {
 	public view returns (uint256 ranking) {
 		// OfferDefinition storage this_offer = offer[import_id];
 		(s_DC_wallet, s_max_token_amount_per_DH, s_min_stake_amount_per_DH, s_min_reputation,
-			s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_data_hash, s_first_bid_index, 
-			s_bid_array_length, s_replication_factor,s_timestamp,s_active, s_finalized) = Storage.offer(import_id);
+		s_total_escrow_time_in_minutes, s_data_size_in_bytes, s_litigation_interval_in_minutes, s_data_hash,
+		s_first_bid_index, s_bid_array_length, s_replication_factor,s_timestamp,s_active, s_finalized) = Storage.offer(import_id);
 
 		// ProfileDefinition storage this_DH = profile[DH_wallet];
 		(p_wallet, p_token_amount_per_byte_minute, p_stake_amount_per_byte_minute, p_read_stake_factor, 
