@@ -63,80 +63,107 @@ library SafeMath {
 
  }
 
- contract ERC20Basic {
- 	uint256 public totalSupply;
- 	function balanceOf(address who) public constant returns (uint256);
- 	function transfer(address to, uint256 value) public returns (bool);
- 	event Transfer(address indexed from, address indexed to, uint256 value);
- }
+contract StorageContract {
+     enum EscrowStatus {inactive, initiated, confirmed, active, completed}
+     struct EscrowDefinition{
+          address DC_wallet;
 
- contract ERC20 is ERC20Basic {
- 	function allowance(address owner, address spender) public constant returns (uint256);
- 	function transferFrom(address from, address to, uint256 value) public returns (bool);
- 	function approve(address spender, uint256 value) public returns (bool);
- 	event Approval(address indexed owner, address indexed spender, uint256 value);
- }
+          uint token_amount;
+          uint tokens_sent;
 
- contract Bidding {
- 	function increaseBalance(address wallet, uint amount) public;
- 	function decreaseBalance(address wallet, uint amount) public;
- 	function increaseReputation(address wallet, uint amount) public;
- 	function addEscrow(address wallet) public;
- }
+          uint stake_amount;
+
+          uint last_confirmation_time;
+          uint end_time;
+          uint total_time_in_seconds;
+          uint litigation_interval_in_minutes;
+
+          bytes32 litigation_root_hash;
+          bytes32 distribution_root_hash;
+          uint256 checksum;
+
+          EscrowStatus escrow_status;
+     }
+     mapping(bytes32 => mapping(address => EscrowDefinition)) public escrow; // escrow[import_id][DH_wallet]
+     function getEscrow_DC_wallet(bytes32 import_id, address DH_wallet) public view returns(address);
+     function getEscrow_token_amount(bytes32 import_id, address DH_wallet) public view returns(uint);
+     function getEscrow_tokens_sent(bytes32 import_id, address DH_wallet) public view returns(uint);
+     function getEscrow_stake_amount(bytes32 import_id, address DH_wallet) public view returns(uint);
+     function getEscrow_last_confirmation_time(bytes32 import_id, address DH_wallet) public view returns(uint);
+     function getEscrow_end_time(bytes32 import_id, address DH_wallet) public view returns(uint);
+     function getEscrow_total_time_in_seconds(bytes32 import_id, address DH_wallet) public view returns(uint);
+     function getEscrow_litigation_interval_in_minutes(bytes32 import_id, address DH_wallet) public view returns(uint);
+     function getEscrow_litigation_root_hash(bytes32 import_id, address DH_wallet) public view returns(bytes32);
+     function getEscrow_distribution_root_hash(bytes32 import_id, address DH_wallet) public view returns(bytes32);
+     function getEscrow_checksum(bytes32 import_id, address DH_wallet) public view returns(uint);
+     function getEscrow_escrow_status(bytes32 import_id, address DH_wallet) public view returns(EscrowStatus);
+     function setEscrow(
+          bytes32 import_id,
+          address DH_wallet,
+          address DC_wallet,
+          uint token_amount,
+          uint tokens_sent,
+          uint stake_amount,
+          uint last_confirmation_time,
+          uint end_time,
+          uint total_time_in_seconds,
+          uint litigation_interval_in_minutes,
+          bytes32 litigation_root_hash,
+          bytes32 distribution_root_hash,
+          uint256 checksum )
+     public;
+     function setEscrow_DC_wallet(bytes32 import_id, address DH_wallet, address DC_wallet) public onlyContract;
+     function setEscrow_token_amount(bytes32 import_id, address DH_wallet, uint token_amount) public;
+     function setEscrow_tokens_sent(bytes32 import_id, address DH_wallet, uint tokens_sent) public;
+     function setEscrow_stake_amount(bytes32 import_id, address DH_wallet, uint stake_amount) public;
+     function setEscrow_last_confirmation_time(bytes32 import_id, address DH_wallet, uint last_confirmation_time) public;
+     function setEscrow_end_time(bytes32 import_id, address DH_wallet, uint end_time) public;
+     function setEscrow_total_time_in_seconds(bytes32 import_id, address DH_wallet, uint256 total_time_in_seconds) public;
+     function setEscrow_litigation_interval_in_minutes(bytes32 import_id, address DH_wallet, uint256 litigation_interval_in_minutes) public;
+     function setEscrow_litigation_root_hash(bytes32 import_id, address DH_wallet, bytes32 litigation_root_hash) public;
+     function setEscrow_distribution_root_hash(bytes32 import_id, address DH_wallet, bytes32 distribution_root_hash) public;
+     function setEscrow_checksum(bytes32 import_id, address DH_wallet, uint256 checksum) public;
+     function setEscrow_escrow_status(bytes32 import_id, address DH_wallet, EscrowStatus escrow_status) public;
+
+
+     enum LitigationStatus {inactive, initiated, answered, timed_out, completed}
+     struct LitigationDefinition{
+          uint requested_data_index;
+          bytes32 requested_data;
+          bytes32[] hash_array;
+          uint litigation_start_time;
+          uint answer_timestamp;
+          LitigationStatus litigation_status;
+     }
+     mapping(bytes32 => mapping ( address => LitigationDefinition)) public litigation; // litigation[import_id][DH_wallet]
+     function getLitigation_requested_data_index(bytes32 import_id, address DH_wallet) public view returns(uint);
+     function getLitigation_requested_data(bytes32 import_id, address DH_wallet) public view returns(bytes32);
+     function getLitigation_hash_array(bytes32 import_id, address DH_wallet) public view returns(bytes32[]);
+     function getLitigation_litigation_start_time(bytes32 import_id, address DH_wallet) public view returns(uint);
+     function getLitigation_answer_timestamp(bytes32 import_id, address DH_wallet) public view returns(uint);
+     function getLitigation_litigation_status(bytes32 import_id, address DH_wallet) public view returns(LitigationStatus);
+
+     function setLitigation_requested_data_index(bytes32 import_id, address DH_wallet, uint requested_data_index) public;
+     function setLitigation_requested_data(bytes32 import_id, address DH_wallet, bytes32 requested_data) public;
+     function setLitigation_hash_array(bytes32 import_id, address DH_wallet, bytes32[] hash_array) public;
+     function setLitigation_litigation_start_time(bytes32 import_id, address DH_wallet, uint litigation_start_time) public;
+     function setLitigation_answer_timestamp(bytes32 import_id, address DH_wallet, uint answer_timestamp) public;
+     function setLitigation_litigation_status(bytes32 import_id, address DH_wallet, LitigationStatus litigation_status) public;
+}
 
 
  contract EscrowHolder is Ownable{
  	using SafeMath for uint256;
 
- 	ERC20 public token;
- 	Bidding public bidding;
- 	Reading public reading;
      StorageContract public Storage;
 
- 	function EscrowHolder(address tokenAddress)
+ 	continues(address storage_address)
  	public{
- 		require ( tokenAddress != address(0) );
- 		token = ERC20(tokenAddress);
+ 		require ( storage_address != address(0) );
+ 		Storage = StorageContract(storage_address);
  	}
-
- 	function setBidding(address biddingAddress) 
- 	public onlyOwner{
- 		require ( biddingAddress != address(0) );
- 		bidding = Bidding(biddingAddress);
- 	}
-
- 	function setReading(address readingAddress)
- 	public onlyOwner{
- 		require ( readingAddress != address(0));
- 		reading = Reading(readingAddress);
- 	}
-
 
  	/*    ----------------------------- ESCROW -----------------------------     */
-
-
- 	enum EscrowStatus {inactive, initiated, confirmed, active, completed}
-
- 	struct EscrowDefinition{
- 		address DC_wallet;
-
- 		uint token_amount;
- 		uint tokens_sent;
-
- 		uint stake_amount;
-
- 		uint last_confirmation_time;
- 		uint end_time;
- 		uint total_time_in_seconds;
-
- 		bytes32 litigation_root_hash;
- 		bytes32 distribution_root_hash;
- 		uint256 checksum;
-
- 		EscrowStatus escrow_status;
- 	}
-
- 	mapping(bytes32 => mapping(address => EscrowDefinition)) public escrow;
 
  	event EscrowInitated(bytes32 import_id, address DH_wallet, uint token_amount, uint stake_amount,  uint total_time_in_seconds);
  	event EscrowConfirmed(bytes32 import_id, address DH_wallet);
@@ -291,23 +318,10 @@ library SafeMath {
  	// 	4. At the end the result should be equal to the root hash of the merkle tree of the entire data, hence it gets compared to the litigation_root_hash defined in the escrow
  	// 	5. If the hashes are equal the Answer/Proof is correct. Otherwise, it fails.
 
- 	enum LitigationStatus {inactive, initiated, answered, timed_out, completed}
-
- 	struct LitigationDefinition{
- 		uint requested_data_index;
- 		bytes32 requested_data;
- 		bytes32[] hash_array;
- 		uint litigation_start_time;
- 		uint answer_timestamp;
- 		LitigationStatus litigation_status;
- 	}
-
  	event LitigationInitiated(bytes32 import_id, address DH_wallet, uint requested_data_index);
  	event LitigationAnswered(bytes32 import_id, address DH_wallet);
  	event LitigationTimedOut(bytes32 import_id, address DH_wallet);
  	event LitigationCompleted(bytes32 import_id, address DH_wallet, bool DH_was_penalized);
-
- 	mapping(bytes32 => mapping ( address => LitigationDefinition)) public litigation;
 
  	function initiateLitigation(bytes32 import_id, address DH_wallet, uint requested_data_index, bytes32[] hash_array)
  	public returns (bool newLitigationInitiated){
