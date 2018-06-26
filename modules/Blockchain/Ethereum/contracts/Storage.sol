@@ -561,6 +561,15 @@ contract StorageContract {
 		uint256 checksum;
 	}
 	mapping(bytes32 => mapping(address => PurchasedDataDefinition)) public purchased_data; // purchased_data[import_id][DH_wallet]
+	function getPuchasedData_DC_wallet(bytes32 import_id, address DH_wallet) public view returns(address){
+		return purchased_data[import_id][DH_wallet].DC_wallet;
+	}
+	function getPuchasedData_distribution_root_hash(bytes32 import_id, address DH_wallet) public view returns(bytes32){
+		return purchased_data[import_id][DH_wallet].distribution_root_hash;
+	}
+	function getPuchasedData_checksum(bytes32 import_id, address DH_wallet) public view returns(uint){
+		return purchased_data[import_id][DH_wallet].checksum;
+	}
 	function setPurchasedData(
 		bytes32 import_id,
 		address DH_wallet,
@@ -593,6 +602,34 @@ contract StorageContract {
 		PurchaseStatus purchase_status;
 	}
 	mapping(address => mapping(address => mapping(bytes32 => PurchaseDefinition))) public purchase; // purchase[DH_wallet][DV_wallet][import_id]
+	function setPurchase_token_amount(address DH_wallet, address DV_wallet, bytes32 import_id, uint token_amount) public onlyContracts{
+		if(purchase[DH_wallet][DV_wallet][import_id].token_amount != token_amount)
+		purchase[DH_wallet][DV_wallet][import_id].token_amount = token_amount;
+	}
+	function setPurchase_stake_factor(address DH_wallet, address DV_wallet, bytes32 import_id, uint stake_factor) public onlyContracts{
+		if(purchase[DH_wallet][DV_wallet][import_id].stake_factor != stake_factor)
+		purchase[DH_wallet][DV_wallet][import_id].stake_factor = stake_factor;
+	}
+	function setPurchase_dispute_interval_in_minutes(address DH_wallet, address DV_wallet, bytes32 import_id, uint dispute_interval_in_minutes) public onlyContracts{
+		if(purchase[DH_wallet][DV_wallet][import_id].dispute_interval_in_minutes != dispute_interval_in_minutes)
+		purchase[DH_wallet][DV_wallet][import_id].dispute_interval_in_minutes = dispute_interval_in_minutes;
+	}
+	function setPurchase_commitment(address DH_wallet, address DV_wallet, bytes32 import_id, bytes32 commitment) public onlyContracts{
+		if(purchase[DH_wallet][DV_wallet][import_id].commitment != commitment)
+		purchase[DH_wallet][DV_wallet][import_id].commitment = commitment;
+	}
+	function setPurchase_encrypted_block(address DH_wallet, address DV_wallet, bytes32 import_id, uint encrypted_block) public onlyContracts{
+		if(purchase[DH_wallet][DV_wallet][import_id].encrypted_block != encrypted_block)
+		purchase[DH_wallet][DV_wallet][import_id].encrypted_block = encrypted_block;
+	}
+	function setPurchase_time_of_sending(address DH_wallet, address DV_wallet, bytes32 import_id, uint time_of_sending) public onlyContracts{
+		if(purchase[DH_wallet][DV_wallet][import_id].time_of_sending != time_of_sending)
+		purchase[DH_wallet][DV_wallet][import_id].time_of_sending = time_of_sending;
+	}
+	function setPurchase_purchase_status(address DH_wallet, address DV_wallet, bytes32 import_id, PurchaseStatus purchase_status) public onlyContracts{
+		if(purchase[DH_wallet][DV_wallet][import_id].purchase_status != purchase_status)
+		purchase[DH_wallet][DV_wallet][import_id].purchase_status = purchase_status;
+	}
 	function setPurchase(
 		address DH_wallet,
 		address DV_wallet,
@@ -628,6 +665,24 @@ contract StorageContract {
 		emit PurchaseChange(DH_wallet, DV_wallet, import_id);
 	}
 
+	function getPurchase_token_amount(address DH_wallet, address DV_wallet, bytes32 import_id) public view returns(uint){
+		return purchase[DH_wallet][DV_wallet][import_id].token_amount;
+	}
+	function getPurchase_stake_factor(address DH_wallet, address DV_wallet, bytes32 import_id) public view returns(uint){
+		return purchase[DH_wallet][DV_wallet][import_id].stake_factor;
+	}
+	function getPurchase_dispute_interval_in_minutes(address DH_wallet, address DV_wallet, bytes32 import_id) public view returns(uint){
+		return purchase[DH_wallet][DV_wallet][import_id].dispute_interval_in_minutes;
+	}
+	function getPurchase_commitment(address DH_wallet, address DV_wallet, bytes32 import_id) public view returns(bytes32){
+		return purchase[DH_wallet][DV_wallet][import_id].commitment;
+	}
+	function getPurchase_encrypted_block(address DH_wallet, address DV_wallet, bytes32 import_id) public view returns(uint){
+		return purchase[DH_wallet][DV_wallet][import_id].encrypted_block;
+	}
+	function getPurchase_time_of_sending(address DH_wallet, address DV_wallet, bytes32 import_id) public view returns(uint){
+		return purchase[DH_wallet][DV_wallet][import_id].time_of_sending;
+	}
 
 	
 }
