@@ -52,6 +52,31 @@ contract StorageContract {
 	}
 	mapping(address => ProfileDefinition) public profile; // profile[wallet]
 
+	function getProfile_token_amount_per_byte_minute(address wallet) public returns(uint) {
+ 		return profile[wallet].token_amount_per_byte_minute;
+ 	}
+ 	function getProfile_stake_amount_per_byte_minute(address wallet) public returns(uint) {
+ 		return profile[wallet].stake_amount_per_byte_minute;
+ 	}
+ 	function getProfile_read_stake_factor(address wallet) public returns(uint) {
+ 		return profile[wallet].read_stake_factor;
+ 	}
+ 	function getProfile_balance(address wallet) public returns(uint) {
+ 		return profile[wallet].balance;
+ 	}
+ 	function getProfile_reputation(address wallet) public returns(uint) {
+ 		return profile[wallet].reputation;
+ 	}
+ 	function getProfile_number_of_escrows(address wallet) public returns(uint) {
+ 		return profile[wallet].number_of_escrows;
+ 	}
+ 	function getProfile_max_escrow_time_in_minutes(address wallet) public returns(uint) {
+ 		return profile[wallet].max_escrow_time_in_minutes;
+ 	}
+ 	function getProfile_active(address wallet) public returns(bool) {
+ 		return profile[wallet].active;
+ 	}
+
 	function setProfile(
 		address wallet,
 		uint token_amount_per_byte_minute,
@@ -123,6 +148,49 @@ contract StorageContract {
 	}
 	mapping(bytes32 => OfferDefinition) public offer; // offer[import_id]
 
+	function getOffer_DC_wallet(bytes32 import_id) public returns(address) {
+		return offer[import_id].DC_wallet;
+	}
+	function getOffer_max_token_amount_per_DH(bytes32 import_id) public returns(uint) {
+		return offer[import_id].max_token_amount_per_DH;
+	}
+	function getOffer_min_stake_amount_per_DH(bytes32 import_id) public returns(uint) {
+		return offer[import_id].min_stake_amount_per_DH;
+	}
+	function getOffer_min_reputation(bytes32 import_id) public returns(uint) {
+		return offer[import_id].min_reputation;
+	}
+	function getOffer_total_escrow_time_in_minutes(bytes32 import_id) public returns(uint) {
+		return offer[import_id].total_escrow_time_in_minutes;
+	}
+	function getOffer_data_size_in_bytes(bytes32 import_id) public returns(uint) {
+		return offer[import_id].data_size_in_bytes;
+	}
+	function getOffer_litigation_interval_in_minutes(bytes32 import_id) public returns(uint) {
+		return offer[import_id].litigation_interval_in_minutes;
+	}
+	function getOffer_data_hash(bytes32 import_id) public returns(bytes32) {
+		return offer[import_id].data_hash;
+	}
+	function getOffer_first_bid_index(bytes32 import_id) public returns(uint) {
+		return offer[import_id].first_bid_index;
+	}
+	function getOffer_bid_array_length(bytes32 import_id) public returns(uint) {
+		return offer[import_id].bid_array_length;
+	}
+	function getOffer_replication_factor(bytes32 import_id) public returns(uint) {
+		return offer[import_id].replication_factor;
+	}
+	function getOffer_offer_creation_timestamp(bytes32 import_id) public returns(uint) {
+		return offer[import_id].offer_creation_timestamp;
+	}
+	function getOffer_active(bytes32 import_id) public returns(bool) {
+		return offer[import_id].active;
+	}
+	function getOffer_finalized(bytes32 import_id) public returns(bool) {
+		return offer[import_id].finalized;
+	}
+
 	function setOffer(
 		bytes32 import_id,
 		address DC_wallet,
@@ -185,6 +253,21 @@ contract StorageContract {
 		emit OfferChange(import_id);
 	}
 
+	function setOfferFirstBidIndex(bytes32 import_id, uint index) 
+	public onlyContracts{
+		if(offer[import_id].first_bid_index != index)
+		offer[import_id].first_bid_index = index;
+
+		emit OfferChange(import_id);
+	}
+	function setOfferBidArrayLength(bytes32 import_id, uint length)
+	public onlyContracts{
+		if(offer[import_id].bid_array_length != length)
+		offer[import_id].bid_array_length = length;
+
+		emit OfferChange(import_id);
+	}  
+
 	struct BidDefinition{
 		address DH_wallet;
 		bytes32 DH_node_id;
@@ -194,7 +277,7 @@ contract StorageContract {
 
 		uint256 ranking;
 
-		uint next_bid;
+		uint next_bid_index;
 
 		bool active;
 		bool chosen;
@@ -209,7 +292,7 @@ contract StorageContract {
 		uint token_amount_for_escrow,
 		uint stake_amount_for_escrow,
 		uint256 ranking,
-		uint next_bid,
+		uint next_bid_index,
 		bool active,
 		bool chosen )
 	public onlyContracts{
@@ -228,8 +311,8 @@ contract StorageContract {
 		if(bid[import_id][bid_index].ranking != ranking)
 		bid[import_id][bid_index].ranking = ranking;
 
-		if(bid[import_id][bid_index].next_bid != next_bid)
-		bid[import_id][bid_index].next_bid = next_bid;
+		if(bid[import_id][bid_index].next_bid_index != next_bid_index)
+		bid[import_id][bid_index].next_bid_index = next_bid_index;
 
 		if(bid[import_id][bid_index].active != active)
 		bid[import_id][bid_index].active = active;
@@ -239,20 +322,13 @@ contract StorageContract {
 
 		emit BidChange(import_id,bid_index);
 	}
+	function setBidNextBidIndex(bytes32 import_id, uint index, uint next_bid_index)
+	public onlyContracts{
+		if(bid[import_id][bid_index].index != next_bid_index)
+		bid[import_id][bid_index].index = next_bid_index;
 
-	function addBid(
-		bytes32 import_id,
-		address DH_wallet,
-		bytes32 DH_node_id,
-		uint token_amount_for_escrow,
-		uint stake_amount_for_escrow,
-		uint256 ranking,
-		uint next_bid,
-		bool active,
-		bool chosen)
-	public onlyContracts {
-		offer[import_id].bid.push(new Bid(DH_wallet, DH_node_id, token_amount_for_escrow, stake_amount_for_escrow, ranking, next_bid, active, chosen))
-	}
+		emit BidChange(import_id, index);
+	}  
 
 	enum EscrowStatus {inactive, initiated, confirmed, active, completed}
 	struct EscrowDefinition{
@@ -376,7 +452,7 @@ contract StorageContract {
 		uint256 encrypted_block,
 		uint256 time_of_sending,
 		PurchaseStatus purchase_status )
-		public onlyContracts{
+	public onlyContracts{
 		if(purchase[DH_wallet][DV_wallet][import_id].token_amount != token_amount)
 		purchase[DH_wallet][DV_wallet][import_id].token_amount = token_amount;
 
@@ -394,8 +470,8 @@ contract StorageContract {
 
 		if(purchase[DH_wallet][DV_wallet][import_id].time_of_sending != time_of_sending)
 		purchase[DH_wallet][DV_wallet][import_id].time_of_sending = time_of_sending;
-        
-        if(purchase[DH_wallet][DV_wallet][import_id].purchase_status != purchase_status)
+
+		if(purchase[DH_wallet][DV_wallet][import_id].purchase_status != purchase_status)
 		purchase[DH_wallet][DV_wallet][import_id].purchase_status = purchase_status;
 		emit PurchaseChange(DH_wallet, DV_wallet, import_id);
 	}
