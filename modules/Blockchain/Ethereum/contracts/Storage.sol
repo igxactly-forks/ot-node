@@ -117,10 +117,38 @@ contract StorageContract {
 
 		emit ProfileChange(wallet);
 	}
-
-	function setBalance(address wallet, uint newBalance) public onlyContracts {
-		if(profile[wallet].balance != newBalance) profile[wallet].balance = newBalance;
-	}
+	function setProfile_token_amount_per_byte_minute(address wallet, uint256 token_amount_per_byte_minute) public onlyContracts {
+ 		if(profile[wallet].token_amount_per_byte_minute != token_amount_per_byte_minute)
+		profile[wallet].token_amount_per_byte_minute = token_amount_per_byte_minute;
+ 	}
+ 	function setProfile_stake_amount_per_byte_minute(address wallet, uint256 stake_amount_per_byte_minute) public onlyContracts {
+ 		if(profile[wallet].stake_amount_per_byte_minute != stake_amount_per_byte_minute)
+		profile[wallet].stake_amount_per_byte_minute = stake_amount_per_byte_minute;
+ 	}
+ 	function setProfile_read_stake_factor(address wallet, uint256 read_stake_factor) public onlyContracts {
+ 		if(profile[wallet].read_stake_factor != read_stake_factor)
+		profile[wallet].read_stake_factor = read_stake_factor;
+ 	}
+ 	function setProfile_balance(address wallet, uint256 balance) public onlyContracts {
+ 		if(profile[wallet].balance != balance)
+		profile[wallet].balance = balance;
+ 	}
+ 	function setProfile_reputation(address wallet, uint256 reputation) public onlyContracts {
+ 		if(profile[wallet].reputation != reputation)
+		profile[wallet].reputation = reputation;
+ 	}
+ 	function setProfile_number_of_escrows(address wallet, uint256 number_of_escrows) public onlyContracts {
+ 		if(profile[wallet].number_of_escrows != number_of_escrows)
+		profile[wallet].number_of_escrows = number_of_escrows;
+ 	}
+ 	function setProfile_max_escrow_time_in_minutes(address wallet, uint256 max_escrow_time_in_minutes) public onlyContracts {
+ 		if(profile[wallet].max_escrow_time_in_minutes != max_escrow_time_in_minutes)
+		profile[wallet].max_escrow_time_in_minutes = max_escrow_time_in_minutes;
+ 	}
+ 	function setProfile_active(address wallet, uint256 active) public onlyContracts {
+ 		if(profile[wallet].active != active)
+		profile[wallet].active = active;
+ 	}
 
 	struct OfferDefinition{
 		address DC_wallet;
@@ -252,21 +280,105 @@ contract StorageContract {
 
 		emit OfferChange(import_id);
 	}
-
-	function setOfferFirstBidIndex(bytes32 import_id, uint index) 
+	function setOffer_DC_wallet(bytes32 import_id, address DC_wallet) 
 	public onlyContracts{
-		if(offer[import_id].first_bid_index != index)
-		offer[import_id].first_bid_index = index;
+		if(offer[import_id].DC_wallet != DC_wallet)
+		offer[import_id].DC_wallet = DC_wallet;
 
 		emit OfferChange(import_id);
 	}
-	function setOfferBidArrayLength(bytes32 import_id, uint length)
+	function setOffer_max_token_amount_per_DH(bytes32 import_id, uint max_token_amount_per_DH) 
 	public onlyContracts{
-		if(offer[import_id].bid_array_length != length)
-		offer[import_id].bid_array_length = length;
+		if(offer[import_id].max_token_amount_per_DH != max_token_amount_per_DH)
+		offer[import_id].max_token_amount_per_DH = max_token_amount_per_DH;
 
 		emit OfferChange(import_id);
-	}  
+	}
+	function setOffer_min_stake_amount_per_DH(bytes32 import_id, uint min_stake_amount_per_DH) 
+	public onlyContracts{
+		if(offer[import_id].min_stake_amount_per_DH != min_stake_amount_per_DH)
+		offer[import_id].min_stake_amount_per_DH = min_stake_amount_per_DH;
+
+		emit OfferChange(import_id);
+	}
+	function setOffer_min_reputation(bytes32 import_id, uint min_reputation) 
+	public onlyContracts{
+		if(offer[import_id].min_reputation != min_reputation)
+		offer[import_id].min_reputation = min_reputation;
+
+		emit OfferChange(import_id);
+	}
+	function setOffer_total_escrow_time_in_minutes(bytes32 import_id, uint total_escrow_time_in_minutes) 
+	public onlyContracts{
+		if(offer[import_id].total_escrow_time_in_minutes != total_escrow_time_in_minutes)
+		offer[import_id].total_escrow_time_in_minutes = total_escrow_time_in_minutes;
+
+		emit OfferChange(import_id);
+	}
+	function setOffer_data_size_in_bytes(bytes32 import_id, uint data_size_in_bytes) 
+	public onlyContracts{
+		if(offer[import_id].data_size_in_bytes != data_size_in_bytes)
+		offer[import_id].data_size_in_bytes = data_size_in_bytes;
+
+		emit OfferChange(import_id);
+	}
+	function setOffer_litigation_interval_in_minutes(bytes32 import_id, uint litigation_interval_in_minutes) 
+	public onlyContracts{
+		if(offer[import_id].litigation_interval_in_minutes != litigation_interval_in_minutes)
+		offer[import_id].litigation_interval_in_minutes = litigation_interval_in_minutes;
+
+		emit OfferChange(import_id);
+	}
+	function setOffer_data_hash(bytes32 import_id, bytes32 data_hash) 
+	public onlyContracts{
+		if(offer[import_id].data_hash != data_hash)
+		offer[import_id].data_hash = data_hash;
+
+		emit OfferChange(import_id);
+	}
+	function setOffer_first_bid_index(bytes32 import_id, uint first_bid_index) 
+	public onlyContracts{
+		if(offer[import_id].first_bid_index != first_bid_index)
+		offer[import_id].first_bid_index = first_bid_index;
+
+		emit OfferChange(import_id);
+	}
+	function setOffer_bid_array_length(bytes32 import_id, uint bid_array_length) 
+	public onlyContracts{
+		if(offer[import_id].bid_array_length != bid_array_length)
+		offer[import_id].bid_array_length = bid_array_length;
+
+		emit OfferChange(import_id);
+	}
+	function setOffer_replication_factor(bytes32 import_id, uint replication_factor) 
+	public onlyContracts{
+		if(offer[import_id].replication_factor != replication_factor)
+		offer[import_id].replication_factor = replication_factor;
+
+		emit OfferChange(import_id);
+	}
+	function setOffer_offer_creation_timestamp(bytes32 import_id, uint offer_creation_timestamp) 
+	public onlyContracts{
+		if(offer[import_id].offer_creation_timestamp != offer_creation_timestamp)
+		offer[import_id].offer_creation_timestamp = offer_creation_timestamp;
+
+		emit OfferChange(import_id);
+	}
+	function setOffer_active(bytes32 import_id, bo active) 
+	public onlyContracts{
+		if(offer[import_id].active != active)
+		offer[import_id].active = active;
+
+		emit OfferChange(import_id);
+	}
+	function setOffer_finalized(bytes32 import_id, bo finalized) 
+	public onlyContracts{
+		if(offer[import_id].finalized != finalized)
+		offer[import_id].finalized = finalized;
+
+		emit OfferChange(import_id);
+	}
+
 
 	struct BidDefinition{
 		address DH_wallet;
@@ -283,6 +395,31 @@ contract StorageContract {
 		bool chosen;
 	}
 	mapping(bytes32 => mapping (uint256 => BidDefinition ) ) public bid; // bid[import_id][bid_index]
+
+	function getBid_DH_wallet(bytes32 import_id, uint bid_index) public returns (address){
+		return bid[import_id][bid_index].DH_wallet;
+	}
+	function getBid_DH_node_id(bytes32 import_id, uint bid_index) public returns (bytes32){
+		return bid[import_id][bid_index].DH_node_id;
+	}
+	function getBid_token_amount_for_escrow(bytes32 import_id, uint bid_index) public returns (uint){
+		return bid[import_id][bid_index].token_amount_for_escrow;
+	}
+	function getBid_stake_amount_for_escrow(bytes32 import_id, uint bid_index) public returns (uint){
+		return bid[import_id][bid_index].stake_amount_for_escrow;
+	}
+	function getBid_ranking(bytes32 import_id, uint bid_index) public returns (uint){
+		return bid[import_id][bid_index].ranking;
+	}
+	function getBid_next_bid_index(bytes32 import_id, uint bid_index) public returns (uint){
+		return bid[import_id][bid_index].next_bid_index;
+	}
+	function getBid_active(bytes32 import_id, uint bid_index) public returns (bool){
+		return bid[import_id][bid_index].active;
+	}
+	function getBid_chosen(bytes32 import_id, uint bid_index) public returns (bool){
+		return bid[import_id][bid_index].chosen;
+	}
 
 	function setBid(
 		bytes32 import_id,
