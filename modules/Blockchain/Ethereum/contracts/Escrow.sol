@@ -65,6 +65,16 @@ library SafeMath {
 
 contract StorageContract {
      enum EscrowStatus {inactive, initiated, confirmed, active, completed}
+
+     function getProfile_balance(address wallet) public view returns(uint);
+     function getProfile_reputation(address wallet) public view returns(uint);
+     function getProfile_number_of_escrows(address wallet) public view returns(uint);
+     
+     function setProfile_balance(address wallet, uint256 balance) public;
+     function setProfile_reputation(address wallet, uint256 reputation) public;
+     function setProfile_number_of_escrows(address wallet, uint256 number_of_escrows) public;
+     
+
      struct EscrowDefinition{
           address DC_wallet;
 
@@ -149,6 +159,9 @@ contract StorageContract {
      function setLitigation_litigation_start_time(bytes32 import_id, address DH_wallet, uint litigation_start_time) public;
      function setLitigation_answer_timestamp(bytes32 import_id, address DH_wallet, uint answer_timestamp) public;
      function setLitigation_litigation_status(bytes32 import_id, address DH_wallet, LitigationStatus litigation_status) public;
+
+     function setPurchasedData( bytes32 import_id, address DH_wallet, address DC_wallet, bytes32 distribution_root_hash, uint256 checksum );
+     public 
 }
 
 
@@ -172,7 +185,7 @@ contract StorageContract {
  	event EscrowCompleted(bytes32 import_id, address DH_wallet);
 
  	function initiateEscrow(address DC_wallet, address DH_wallet, bytes32 import_id, uint token_amount, uint stake_amount, uint total_time_in_minutes)
- 	public onlyOwner{
+ 	public {
  		EscrowDefinition storage this_escrow = escrow[import_id][DH_wallet];
  		require(this_escrow.escrow_status == EscrowStatus.completed
  			||	this_escrow.escrow_status == EscrowStatus.inactive);
@@ -192,74 +205,95 @@ contract StorageContract {
 
  	function addRootHashAndChecksum(bytes32 import_id, bytes32 litigation_root_hash, bytes32 distribution_root_hash, uint256 checksum)
  	public {
- 		EscrowDefinition storage this_escrow = escrow[import_id][msg.sender];
+ 		// EscrowDefinition storage this_escrow = escrow[import_id][msg.sender];
 
- 		require(this_escrow.escrow_status == EscrowStatus.initiated);
+ 		require(Storage.getEscrow_escrow_status(import_id, msg.sender) == StorageContract.EscrowStatus.initiated);
 
- 		this_escrow.litigation_root_hash = litigation_root_hash;
- 		this_escrow.distribution_root_hash = distribution_root_hash;
- 		this_escrow.checksum = checksum;
+          Storage.setEscrow_litigation_root_hash(import_id, msg.sender, litigation_root_hash);
+          Storage.setEscrow_total_time_in_seconds(import_id, msg.sender, distribution_root_hash);
+          Storage.setEscrow_checksum(import_id, msg.sender, checksum);
 
  		//Transfer the stake_amount to the escrow
- 		bidding.decreaseBalance(msg.sender, this_escrow.stake_amount);
+          uint balance = Storage.getProfile_balance(msg.sender);
+          require(balance >= Storage.getEscrow_stake_amount(import_id, msg.sender));
+          balance.sub(Storage.getEscrow_stake_amount(import_id, msg.sender));
+          Storage.setProfile_balance(msg.sender, balance);
 
- 		this_escrow.escrow_status = EscrowStatus.confirmed;
+          Storage.setEscrow_escrow_status(import_id, msg.sender, StorageContract.EscrowStatus.confirmed);
  		emit EscrowConfirmed(import_id, msg.sender);
  	}
 
  	function verifyEscrow(bytes32 import_id, address DH_wallet)
  	public {
- 		EscrowDefinition storage this_escrow = escrow[import_id][DH_wallet];
+ 		require(Storage.getEscrow_DC_wallet(import_id, DH_wallet) == msg.sender
+ 			&& Storage.getEscrow_escrow_status(import_id, DH_wallet) == StorageContract.EscrowStatus.confirmed);
 
- 		require(this_escrow.DC_wallet == msg.sender
- 			&& this_escrow.escrow_status == EscrowStatus.confirmed);
+          Storage.setProfile_number_of_escrows(msg.sender, Storage.getProfile_number_of_escrows(msg.sender).add(1));
+          Storage.setProfile_number_of_escrows(DH_wallet, Storage.getProfile_number_of_escrows(DH_wallet).add(1));
 
- 		bidding.addEscrow(msg.sender);
- 		bidding.addEscrow(DH_wallet);
+          Storage.setEscrow_last_confirmation_time(import_id, DH_wallet, block.timestamp);
  		
  		this_escrow.last_confirmation_time = block.timestamp;
  		this_escrow.end_time = SafeMath.add(block.timestamp, this_escrow.total_time_in_seconds);
 
  		// reading.addReadData(import_id, DH_wallet, msg.sender, this_escrow.distribution_root_hash, this_escrow.checksum);
-          Storage.setPurchasedData(DC_wallet,distribution_root_hash,checksum);
+          Storage.setPurchasedData(import_id, DH_wallet, DC_wallet, distribution_root_hash, checksum);
 
- 		this_escrow.escrow_status = EscrowStatus.active;
+          Storage.setEscrow_escrow_status(import_id, DH_wallet, StorageContract.EscrowStatus.active);
  		emit EscrowVerified(import_id, DH_wallet);
  	}
 
  	function payOut(bytes32 import_id)
  	public{
- 		EscrowDefinition storage this_escrow = escrow[import_id][msg.sender];
- 		LitigationDefinition storage this_litigation = litigation[import_id][msg.sender];
+ 		// EscrowDefinition storage this_escrow = escrow[import_id][msg.sender];
+ 		// LitigationDefinition storage this_litigation = litigation[import_id][msg.sender];
 
- 		require(this_escrow.escrow_status == EscrowStatus.active);
- 		require(this_litigation.litigation_status == LitigationStatus.inactive
- 			||  this_litigation.litigation_status == LitigationStatus.completed);
+ 		require(Storage.getEscrow_escrow_status(import_id, msg.sender) == StorageContract.EscrowStatus.active);
+ 		require(Storage.getLitigation_litigation_status(import_id, msg.sender) == StorageContract.LitigationStatus.inactive
+ 			||  Storage.getLitigation_litigation_status(import_id, msg.sender) == StorageContract.LitigationStatus.completed);
 
  		uint256 amount_to_send;
 
  		uint current_time = block.timestamp;
- 		if(current_time > this_escrow.end_time){
- 			uint stake_to_send = this_escrow.stake_amount;
- 			this_escrow.stake_amount = 0;
+ 		if(current_time > Storage.getEscrow_end_time(import_id, msg.sender)){
+ 			uint stake_to_send = Storage.getEscrow_stake_amount(import_id, DH_wallet);
+ 			Storage.setEscrow_stake_amount(import_id, DH_wallet, 0);
  			if(stake_to_send > 0) {
- 				bidding.increaseBalance(msg.sender, stake_to_send);
- 				bidding.increaseReputation(msg.sender, stake_to_send);
- 				bidding.increaseReputation(this_escrow.DC_wallet, this_escrow.token_amount);
+                    uint value = Storage.getProfile_balance(msg.sender);
+                    value.add(stake_to_send);
+                    Storage.setProfile_balance(msg.sender, value);
+
+                     value = Storage.getProfile_reputation(msg.sender);
+                    value.add(stake_to_send);
+                    Storage.setProfile_reputation(msg.sender, value);
+                     value = Storage.getProfile_reputation(Storage.getEscrow_DC_wallet(import_id, msg.sender));
+                    value.add(stake_to_send);
+                    Storage.setProfile_reputation(Storage.getEscrow_DC_wallet(import_id, msg.sender), value);
  			}
- 			amount_to_send = SafeMath.sub(this_escrow.token_amount, this_escrow.tokens_sent);
- 			this_escrow.escrow_status = EscrowStatus.completed;
+ 			amount_to_send = SafeMath.sub(Storage.getEscrow_token_amount(import_id, msg.sender), Storage.getEscrow_tokens_sent(import_id, msg.sender));
+ 			Storage.setEscrow_escrow_status(import_id, msg.sender, EscrowStatus.completed);
  			emit EscrowCompleted(import_id, msg.sender);
  		}
  		else{
- 			amount_to_send = SafeMath.mul(this_escrow.token_amount,SafeMath.sub(current_time,this_escrow.last_confirmation_time)) / this_escrow.total_time_in_seconds;
- 	          assert(amount_to_send.add(this_escrow.tokens_sent) <= this_escrow.token_amount);
-               this_escrow.last_confirmation_time = current_time;
+ 			amount_to_send = current_time.sub(Storage.getEscrow_last_confirmation_time(import_id, msg.sender));
+               amount_to_send = amount_to_send.mul(Storage.getEscrow_token_amount(import_id, msg.sender));
+               amount_to_send = amount_to_send / this_escrow.total_time_in_seconds;
+               // SafeMath.mul(this_escrow.token_amount,SafeMath.sub(current_time,this_escrow.last_confirmation_time)) / this_escrow.total_time_in_seconds;
+ 	          assert(amount_to_send.add(Storage.getEscrow_tokens_sent(import_id, msg.sender)) <= Storage.getEscrow_token_amount(import_id, msg.sender));
+               Storage.setEscrow_last_confirmation_time(import_id, msg.sender, current);
  		}
  		
  		if(amount_to_send > 0) {
- 			this_escrow.tokens_sent = this_escrow.tokens_sent.add(amount_to_send);
- 			bidding.increaseBalance(msg.sender, amount_to_send);
+ 			// this_escrow.tokens_sent = this_escrow.tokens_sent.add(amount_to_send);
+
+                value = Storage.getEscrow_tokens_sent(import_id, msg.sender);
+                    value.add(amount_to_send);
+                    Storage.setEscrow_tokens_sent(import_id, msg.sender, value);
+
+                value = Storage.getProfile_balance(msg.sender);
+                    value.add(amount_to_send);
+                    Storage.setProfile_balance(msg.sender, value);
+ 			//bidding.increaseBalance(msg.sender, amount_to_send);
  		}
  	}
 
@@ -268,7 +302,7 @@ contract StorageContract {
           address DH_wallet;
           address DC_wallet;
 
-          if (sender_is_DH  == true) {
+          if (sender_is_DH == true) {
                DH_wallet = msg.sender;
                DC_wallet = correspondent_wallet;
           }
@@ -277,24 +311,33 @@ contract StorageContract {
                DC_wallet = msg.sender;
           }
 
-          EscrowDefinition storage this_escrow = escrow[import_id][DH_wallet];
+         // EscrowDefinition storage this_escrow = escrow[import_id][DH_wallet];
 
- 		require(msg.sender == DH_wallet || msg.sender == this_escrow.DC_wallet);
+ 		require(DC_wallet == Storage.getEscrow_DC_wallet(import_id, DH_wallet));
 
- 		require(this_escrow.escrow_status == EscrowStatus.initiated
-               || this_escrow.escrow_status == EscrowStatus.confirmed);
+ 		require(Storage.getEscrow_escrow_status(import_id, msg.sender) == StorageContract.EscrowStatus.initiated
+               || Storage.getEscrow_escrow_status(import_id, msg.sender) == StorageContract.EscrowStatus.confirmed);
 
-          uint256 amount_to_send = this_escrow.token_amount;
-          this_escrow.token_amount = 0;
-          if(amount_to_send > 0) bidding.increaseBalance(DC_wallet, amount_to_send);
-
-          if(this_escrow.escrow_status == EscrowStatus.confirmed){
-               amount_to_send = this_escrow.stake_amount;
-               this_escrow.stake_amount = 0;
-               if(amount_to_send > 0) bidding.increaseBalance(DH_wallet, amount_to_send);
+          uint256 amount_to_send = Storage.getEscrow_token_amount(import_id, msg.sender);
+          Storage.setEscrow_token_amount(import_id, msg.sender, 0)
+          if(amount_to_send > 0) {
+              // bidding.increaseBalance(DC_wallet, amount_to_send);
+              uint value = Storage.getProfile_balance(DC_wallet);
+                    value.add(amount_to_send);
+                    Storage.setProfile_balance(DC_wallet, value);
+          }
+          if(Storage.getEscrow_escrow_status(import_id, msg.sender) == StorageContract.EscrowStatus.confirmed){
+               amount_to_send = Storage.getEscrow_stake_amount(import_id, msg.sender);
+               Storage.setEscrow_stake_amount(import_id, msg.sender, 0);
+               if(amount_to_send > 0) {
+                    // bidding.increaseBalance(DH_wallet, amount_to_send);
+                    value = Storage.getProfile_balance(DH_wallet);
+                    value.add(amount_to_send);
+                    Storage.setProfile_balance(DH_wallet, value);
+               }
           }
 
- 		this_escrow.escrow_status = EscrowStatus.completed;
+ 		Storage.setEscrow_escrow_status(import_id, msg.sender, StorageContract.EscrowStatus.completed);
  		emit EscrowCanceled(import_id, DH_wallet);
  	}
 
@@ -329,7 +372,8 @@ contract StorageContract {
  		EscrowDefinition storage this_escrow = escrow[import_id][DH_wallet];
 
  		require(this_escrow.DC_wallet == msg.sender && this_escrow.escrow_status == EscrowStatus.active);
- 		require(this_litigation.litigation_status == LitigationStatus.inactive || this_litigation.litigation_status == LitigationStatus.completed);
+ 		require(Storage.getLitigation_litigation_status(import_id, DH_wallet) == StorageContract.LitigationStatus.inactive 
+               || Storage.getLitigation_litigation_status(import_id, DH_wallet) == StorageContract.LitigationStatus.completed);
           require(block.timestamp < this_escrow.end_time);
 
  		this_litigation.requested_data_index = requested_data_index;
