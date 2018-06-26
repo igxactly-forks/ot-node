@@ -683,6 +683,9 @@ contract StorageContract {
 	function getPurchase_time_of_sending(address DH_wallet, address DV_wallet, bytes32 import_id) public view returns(uint){
 		return purchase[DH_wallet][DV_wallet][import_id].time_of_sending;
 	}
+	function getPurchase_purchase_status(address DH_wallet, address DV_wallet, bytes32 import_id) public view returns(PurchaseStatus){
+		return purchase[DH_wallet][DV_wallet][import_id].purchase_status;
+	}
 
 	
 }
