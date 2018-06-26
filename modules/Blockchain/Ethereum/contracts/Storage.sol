@@ -14,7 +14,7 @@ contract Ownable {
     * @dev The Ownable constructor sets the original `owner` of the contract to the sender
     * account.
     */
-    function Ownable () public {
+    constructor () public {
         owner = msg.sender;
     }
 
@@ -94,28 +94,28 @@ contract StorageContract {
 	}
 	mapping(address => ProfileDefinition) public profile; // profile[wallet]
 
-	function getProfile_token_amount_per_byte_minute(address wallet) public returns(uint) {
+	function getProfile_token_amount_per_byte_minute(address wallet) public view returns(uint) {
  		return profile[wallet].token_amount_per_byte_minute;
  	}
- 	function getProfile_stake_amount_per_byte_minute(address wallet) public returns(uint) {
+ 	function getProfile_stake_amount_per_byte_minute(address wallet) public view returns(uint) {
  		return profile[wallet].stake_amount_per_byte_minute;
  	}
- 	function getProfile_read_stake_factor(address wallet) public returns(uint) {
+ 	function getProfile_read_stake_factor(address wallet) public view returns(uint) {
  		return profile[wallet].read_stake_factor;
  	}
- 	function getProfile_balance(address wallet) public returns(uint) {
+ 	function getProfile_balance(address wallet) public view returns(uint) {
  		return profile[wallet].balance;
  	}
- 	function getProfile_reputation(address wallet) public returns(uint) {
+ 	function getProfile_reputation(address wallet) public view returns(uint) {
  		return profile[wallet].reputation;
  	}
- 	function getProfile_number_of_escrows(address wallet) public returns(uint) {
+ 	function getProfile_number_of_escrows(address wallet) public view returns(uint) {
  		return profile[wallet].number_of_escrows;
  	}
- 	function getProfile_max_escrow_time_in_minutes(address wallet) public returns(uint) {
+ 	function getProfile_max_escrow_time_in_minutes(address wallet) public view returns(uint) {
  		return profile[wallet].max_escrow_time_in_minutes;
  	}
- 	function getProfile_active(address wallet) public returns(bool) {
+ 	function getProfile_active(address wallet) public view returns(bool) {
  		return profile[wallet].active;
  	}
 
@@ -218,110 +218,50 @@ contract StorageContract {
 	}
 	mapping(bytes32 => OfferDefinition) public offer; // offer[import_id]
 
-	function getOffer_DC_wallet(bytes32 import_id) public returns(address) {
+	function getOffer_DC_wallet(bytes32 import_id) public view returns(address) {
 		return offer[import_id].DC_wallet;
 	}
-	function getOffer_max_token_amount_per_DH(bytes32 import_id) public returns(uint) {
+	function getOffer_max_token_amount_per_DH(bytes32 import_id) public view returns(uint) {
 		return offer[import_id].max_token_amount_per_DH;
 	}
-	function getOffer_min_stake_amount_per_DH(bytes32 import_id) public returns(uint) {
+	function getOffer_min_stake_amount_per_DH(bytes32 import_id) public view returns(uint) {
 		return offer[import_id].min_stake_amount_per_DH;
 	}
-	function getOffer_min_reputation(bytes32 import_id) public returns(uint) {
+	function getOffer_min_reputation(bytes32 import_id) public view returns(uint) {
 		return offer[import_id].min_reputation;
 	}
-	function getOffer_total_escrow_time_in_minutes(bytes32 import_id) public returns(uint) {
+	function getOffer_total_escrow_time_in_minutes(bytes32 import_id) public view returns(uint) {
 		return offer[import_id].total_escrow_time_in_minutes;
 	}
-	function getOffer_data_size_in_bytes(bytes32 import_id) public returns(uint) {
+	function getOffer_data_size_in_bytes(bytes32 import_id) public view returns(uint) {
 		return offer[import_id].data_size_in_bytes;
 	}
-	function getOffer_litigation_interval_in_minutes(bytes32 import_id) public returns(uint) {
+	function getOffer_litigation_interval_in_minutes(bytes32 import_id) public view returns(uint) {
 		return offer[import_id].litigation_interval_in_minutes;
 	}
-	function getOffer_data_hash(bytes32 import_id) public returns(bytes32) {
+	function getOffer_data_hash(bytes32 import_id) public view returns(bytes32) {
 		return offer[import_id].data_hash;
 	}
-	function getOffer_first_bid_index(bytes32 import_id) public returns(uint) {
+	function getOffer_first_bid_index(bytes32 import_id) public view returns(uint) {
 		return offer[import_id].first_bid_index;
 	}
-	function getOffer_bid_array_length(bytes32 import_id) public returns(uint) {
+	function getOffer_bid_array_length(bytes32 import_id) public view returns(uint) {
 		return offer[import_id].bid_array_length;
 	}
-	function getOffer_replication_factor(bytes32 import_id) public returns(uint) {
+	function getOffer_replication_factor(bytes32 import_id) public view returns(uint) {
 		return offer[import_id].replication_factor;
 	}
-	function getOffer_offer_creation_timestamp(bytes32 import_id) public returns(uint) {
+	function getOffer_offer_creation_timestamp(bytes32 import_id) public view returns(uint) {
 		return offer[import_id].offer_creation_timestamp;
 	}
-	function getOffer_active(bytes32 import_id) public returns(bool) {
+	function getOffer_active(bytes32 import_id) public view returns(bool) {
 		return offer[import_id].active;
 	}
-	function getOffer_finalized(bytes32 import_id) public returns(bool) {
+	function getOffer_finalized(bytes32 import_id) public view returns(bool) {
 		return offer[import_id].finalized;
 	}
-
-	function setOffer(
-		bytes32 import_id,
-		address DC_wallet,
-		uint max_token_amount_per_DH,
-		uint min_stake_amount_per_DH,
-		uint min_reputation,
-		uint total_escrow_time_in_minutes,
-		uint data_size_in_bytes,
-		uint litigation_interval_in_minutes,
-		bytes32 data_hash,
-		uint first_bid_index,
-		uint bid_array_length,
-		uint replication_factor,
-		uint offer_creation_timestamp,
-		bool active,
-		bool finalized)
-	public onlyContracts {
-		if(offer[import_id].DC_wallet != DC_wallet)
-		offer[import_id].DC_wallet = DC_wallet;
-
-		if(offer[import_id].max_token_amount_per_DH != max_token_amount_per_DH)
-		offer[import_id].max_token_amount_per_DH = max_token_amount_per_DH;
-
-		if(offer[import_id].min_stake_amount_per_DH != min_stake_amount_per_DH)
-		offer[import_id].min_stake_amount_per_DH = min_stake_amount_per_DH;
-
-		if(offer[import_id].min_reputation != min_reputation)
-		offer[import_id].min_reputation = min_reputation;
-
-		if(offer[import_id].total_escrow_time_in_minutes != total_escrow_time_in_minutes)
-		offer[import_id].total_escrow_time_in_minutes = total_escrow_time_in_minutes;
-
-		if(offer[import_id].data_size_in_bytes != data_size_in_bytes)
-		offer[import_id].data_size_in_bytes = data_size_in_bytes;
-
-		if(offer[import_id].litigation_interval_in_minutes != litigation_interval_in_minutes)
-		offer[import_id].litigation_interval_in_minutes = litigation_interval_in_minutes;
-
-		if(offer[import_id].data_hash != data_hash)
-		offer[import_id].data_hash = data_hash;
-
-		if(offer[import_id].first_bid_index != first_bid_index)
-		offer[import_id].first_bid_index = first_bid_index;
-
-		if(offer[import_id].bid_array_length != bid_array_length)
-		offer[import_id].bid_array_length = bid_array_length;
-
-		if(offer[import_id].replication_factor != replication_factor)
-		offer[import_id].replication_factor = replication_factor;
-
-		if(offer[import_id].offer_creation_timestamp != offer_creation_timestamp)
-		offer[import_id].offer_creation_timestamp = offer_creation_timestamp;
-
-		if(offer[import_id].active != active)
-		offer[import_id].active = active;
-
-		if(offer[import_id].finalized != finalized)
-		offer[import_id].finalized = finalized;
-
-		emit OfferChange(import_id);
-	}
+	
+	
 	function setOffer_DC_wallet(bytes32 import_id, address DC_wallet) 
 	public onlyContracts{
 		if(offer[import_id].DC_wallet != DC_wallet)
@@ -438,28 +378,28 @@ contract StorageContract {
 	}
 	mapping(bytes32 => mapping (uint256 => BidDefinition ) ) public bid; // bid[import_id][bid_index]
 
-	function getBid_DH_wallet(bytes32 import_id, uint bid_index) public returns (address){
+	function getBid_DH_wallet(bytes32 import_id, uint bid_index) public view returns (address){
 		return bid[import_id][bid_index].DH_wallet;
 	}
-	function getBid_DH_node_id(bytes32 import_id, uint bid_index) public returns (bytes32){
+	function getBid_DH_node_id(bytes32 import_id, uint bid_index) public view returns (bytes32){
 		return bid[import_id][bid_index].DH_node_id;
 	}
-	function getBid_token_amount_for_escrow(bytes32 import_id, uint bid_index) public returns (uint){
+	function getBid_token_amount_for_escrow(bytes32 import_id, uint bid_index) public view returns (uint){
 		return bid[import_id][bid_index].token_amount_for_escrow;
 	}
-	function getBid_stake_amount_for_escrow(bytes32 import_id, uint bid_index) public returns (uint){
+	function getBid_stake_amount_for_escrow(bytes32 import_id, uint bid_index) public view returns (uint){
 		return bid[import_id][bid_index].stake_amount_for_escrow;
 	}
-	function getBid_ranking(bytes32 import_id, uint bid_index) public returns (uint){
+	function getBid_ranking(bytes32 import_id, uint bid_index) public view returns (uint){
 		return bid[import_id][bid_index].ranking;
 	}
-	function getBid_next_bid_index(bytes32 import_id, uint bid_index) public returns (uint){
+	function getBid_next_bid_index(bytes32 import_id, uint bid_index) public view returns (uint){
 		return bid[import_id][bid_index].next_bid_index;
 	}
-	function getBid_active(bytes32 import_id, uint bid_index) public returns (bool){
+	function getBid_active(bytes32 import_id, uint bid_index) public view returns (bool){
 		return bid[import_id][bid_index].active;
 	}
-	function getBid_chosen(bytes32 import_id, uint bid_index) public returns (bool){
+	function getBid_chosen(bytes32 import_id, uint bid_index) public view returns (bool){
 		return bid[import_id][bid_index].chosen;
 	}
 
