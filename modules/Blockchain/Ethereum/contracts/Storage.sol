@@ -6,24 +6,24 @@ pragma solidity ^0.4.22;
 * functions, this simplifies the implementation of "user permissions".
 */
 contract Ownable {
-    address public owner;
+	address public owner;
 
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+	event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     /**
     * @dev The Ownable constructor sets the original `owner` of the contract to the sender
     * account.
     */
     constructor () public {
-        owner = msg.sender;
+    	owner = msg.sender;
     }
 
     /**
     * @dev Throws if called by any account other than the owner.
     */
     modifier onlyOwner() {
-        require(msg.sender == owner);
-        _;
+    	require(msg.sender == owner);
+    	_;
     }
 
     /**
@@ -31,9 +31,9 @@ contract Ownable {
     * @param newOwner The address to transfer ownership to.
     */
     function transferOwnership(address newOwner) public onlyOwner {
-        require(newOwner != address(0));
-        emit OwnershipTransferred(owner, newOwner);
-        owner = newOwner;
+    	require(newOwner != address(0));
+    	emit OwnershipTransferred(owner, newOwner);
+    	owner = newOwner;
     }
 }
 
@@ -95,29 +95,29 @@ contract StorageContract {
 	mapping(address => ProfileDefinition) public profile; // profile[wallet]
 
 	function getProfile_token_amount_per_byte_minute(address wallet) public view returns(uint) {
- 		return profile[wallet].token_amount_per_byte_minute;
- 	}
- 	function getProfile_stake_amount_per_byte_minute(address wallet) public view returns(uint) {
- 		return profile[wallet].stake_amount_per_byte_minute;
- 	}
- 	function getProfile_read_stake_factor(address wallet) public view returns(uint) {
- 		return profile[wallet].read_stake_factor;
- 	}
- 	function getProfile_balance(address wallet) public view returns(uint) {
- 		return profile[wallet].balance;
- 	}
- 	function getProfile_reputation(address wallet) public view returns(uint) {
- 		return profile[wallet].reputation;
- 	}
- 	function getProfile_number_of_escrows(address wallet) public view returns(uint) {
- 		return profile[wallet].number_of_escrows;
- 	}
- 	function getProfile_max_escrow_time_in_minutes(address wallet) public view returns(uint) {
- 		return profile[wallet].max_escrow_time_in_minutes;
- 	}
- 	function getProfile_active(address wallet) public view returns(bool) {
- 		return profile[wallet].active;
- 	}
+		return profile[wallet].token_amount_per_byte_minute;
+	}
+	function getProfile_stake_amount_per_byte_minute(address wallet) public view returns(uint) {
+		return profile[wallet].stake_amount_per_byte_minute;
+	}
+	function getProfile_read_stake_factor(address wallet) public view returns(uint) {
+		return profile[wallet].read_stake_factor;
+	}
+	function getProfile_balance(address wallet) public view returns(uint) {
+		return profile[wallet].balance;
+	}
+	function getProfile_reputation(address wallet) public view returns(uint) {
+		return profile[wallet].reputation;
+	}
+	function getProfile_number_of_escrows(address wallet) public view returns(uint) {
+		return profile[wallet].number_of_escrows;
+	}
+	function getProfile_max_escrow_time_in_minutes(address wallet) public view returns(uint) {
+		return profile[wallet].max_escrow_time_in_minutes;
+	}
+	function getProfile_active(address wallet) public view returns(bool) {
+		return profile[wallet].active;
+	}
 
 	function setProfile(
 		address wallet,
@@ -160,37 +160,37 @@ contract StorageContract {
 		emit ProfileChange(wallet);
 	}
 	function setProfile_token_amount_per_byte_minute(address wallet, uint256 token_amount_per_byte_minute) public onlyContracts {
- 		if(profile[wallet].token_amount_per_byte_minute != token_amount_per_byte_minute)
+		if(profile[wallet].token_amount_per_byte_minute != token_amount_per_byte_minute)
 		profile[wallet].token_amount_per_byte_minute = token_amount_per_byte_minute;
- 	}
- 	function setProfile_stake_amount_per_byte_minute(address wallet, uint256 stake_amount_per_byte_minute) public onlyContracts {
- 		if(profile[wallet].stake_amount_per_byte_minute != stake_amount_per_byte_minute)
+	}
+	function setProfile_stake_amount_per_byte_minute(address wallet, uint256 stake_amount_per_byte_minute) public onlyContracts {
+		if(profile[wallet].stake_amount_per_byte_minute != stake_amount_per_byte_minute)
 		profile[wallet].stake_amount_per_byte_minute = stake_amount_per_byte_minute;
- 	}
- 	function setProfile_read_stake_factor(address wallet, uint256 read_stake_factor) public onlyContracts {
- 		if(profile[wallet].read_stake_factor != read_stake_factor)
+	}
+	function setProfile_read_stake_factor(address wallet, uint256 read_stake_factor) public onlyContracts {
+		if(profile[wallet].read_stake_factor != read_stake_factor)
 		profile[wallet].read_stake_factor = read_stake_factor;
- 	}
- 	function setProfile_balance(address wallet, uint256 balance) public onlyContracts {
- 		if(profile[wallet].balance != balance)
+	}
+	function setProfile_balance(address wallet, uint256 balance) public onlyContracts {
+		if(profile[wallet].balance != balance)
 		profile[wallet].balance = balance;
- 	}
- 	function setProfile_reputation(address wallet, uint256 reputation) public onlyContracts {
- 		if(profile[wallet].reputation != reputation)
+	}
+	function setProfile_reputation(address wallet, uint256 reputation) public onlyContracts {
+		if(profile[wallet].reputation != reputation)
 		profile[wallet].reputation = reputation;
- 	}
- 	function setProfile_number_of_escrows(address wallet, uint256 number_of_escrows) public onlyContracts {
- 		if(profile[wallet].number_of_escrows != number_of_escrows)
+	}
+	function setProfile_number_of_escrows(address wallet, uint256 number_of_escrows) public onlyContracts {
+		if(profile[wallet].number_of_escrows != number_of_escrows)
 		profile[wallet].number_of_escrows = number_of_escrows;
- 	}
- 	function setProfile_max_escrow_time_in_minutes(address wallet, uint256 max_escrow_time_in_minutes) public onlyContracts {
- 		if(profile[wallet].max_escrow_time_in_minutes != max_escrow_time_in_minutes)
+	}
+	function setProfile_max_escrow_time_in_minutes(address wallet, uint256 max_escrow_time_in_minutes) public onlyContracts {
+		if(profile[wallet].max_escrow_time_in_minutes != max_escrow_time_in_minutes)
 		profile[wallet].max_escrow_time_in_minutes = max_escrow_time_in_minutes;
- 	}
- 	function setProfile_active(address wallet, bool active) public onlyContracts {
- 		if(profile[wallet].active != active)
+	}
+	function setProfile_active(address wallet, bool active) public onlyContracts {
+		if(profile[wallet].active != active)
 		profile[wallet].active = active;
- 	}
+	}
 
 	struct OfferDefinition{
 		address DC_wallet;
@@ -614,7 +614,7 @@ contract StorageContract {
 		escrow[import_id][DH_wallet].end_time = end_time;
 	}
 	function setEscrow.total_time_in_seconds(bytes32 import_id, address DH_wallet, uint256 total_time_in_seconds) public onlyContracts{
-	if(escrow[import_id][DH_wallet].total_time_in_seconds != total_time_in_seconds)
+		if(escrow[import_id][DH_wallet].total_time_in_seconds != total_time_in_seconds)
 		escrow[import_id][DH_wallet].total_time_in_seconds = total_time_in_seconds;
 	}
 	function setEscrow.litigation_interval_in_minutes(bytes32 import_id, address DH_wallet, uint256 litigation_interval_in_minutes) public onlyContracts{
@@ -640,18 +640,58 @@ contract StorageContract {
 
 
 	enum LitigationStatus {inactive, initiated, answered, timed_out, completed}
+	struct LitigationDefinition{
+		uint requested_data_index;
+		bytes32 requested_data;
+		bytes32[] hash_array;
+		uint litigation_start_time;
+		uint answer_timestamp;
+		LitigationStatus litigation_status;
+	}
+	mapping(bytes32 => mapping ( address => LitigationDefinition)) public litigation; // litigation[import_id][DH_wallet]
+	function getLitigation.requested_data_index(bytes32 import_id, address DH_wallet) public view returns(uint){
+		return litigation[import_id][DH_wallet].requested_data_index;
+	}
+	function getLitigation.requested_data(bytes32 import_id, address DH_wallet) public view returns(bytes32){
+		return litigation[import_id][DH_wallet].requested_data_index;
+	}
+	function getLitigation.hash_array(bytes32 import_id, address DH_wallet) public view returns(bytes32[]){
+		return litigation[import_id][DH_wallet].hash_array;
+	}
+	function getLitigation.litigation_start_time(bytes32 import_id, address DH_wallet) public view returns(uint){
+		return litigation[import_id][DH_wallet].litigation_start_time;
+	}
+	function getLitigation.answer_timestamp(bytes32 import_id, address DH_wallet) public view returns(uint){
+		return litigation[import_id][DH_wallet].answer_timestamp;
+	}
+	function getLitigation.litigation_status(bytes32 import_id, address DH_wallet) public view returns(LitigationStatus){
+		return litigation[import_id][DH_wallet].litigation_status;
+	}
 
- 	struct LitigationDefinition{
- 		uint requested_data_index;
- 		bytes32 requested_data;
- 		bytes32[] hash_array;
- 		uint litigation_start_time;
- 		uint answer_timestamp;
- 		LitigationStatus litigation_status;
- 	}
-
- 	mapping(bytes32 => mapping ( address => LitigationDefinition)) public litigation;
-
+	function setLitigation.requested_data_index(bytes32 import_id, address DH_wallet, uint requested_data_index) public onlyContracts{
+		if(litigation[import_id][DH_wallet].requested_data_index != requested_data_index)
+		litigation[import_id][DH_wallet].requested_data_index = requested_data_index;
+	} 	
+	function setLitigation.requested_data(bytes32 import_id, address DH_wallet, bytes32 requested_data) public onlyContracts{
+		if(litigation[import_id][DH_wallet].requested_data != requested_data)
+		litigation[import_id][DH_wallet].requested_data = requested_data;
+	}
+	function setLitigation.hash_array(bytes32 import_id, address DH_wallet, bytes32[] hash_array) public onlyContracts{
+		if(litigation[import_id][DH_wallet].hash_array != hash_array)
+		litigation[import_id][DH_wallet].hash_array = hash_array;
+	}
+	function setLitigation.litigation_start_time(bytes32 import_id, address DH_wallet, uint litigation_start_time) public onlyContracts{
+		if(litigation[import_id][DH_wallet].litigation_start_time != litigation_start_time)
+		litigation[import_id][DH_wallet].litigation_start_time = litigation_start_time;
+	}
+	function setLitigation.answer_timestamp(bytes32 import_id, address DH_wallet, uint answer_timestamp) public onlyContracts{
+		if(litigation[import_id][DH_wallet].answer_timestamp != answer_timestamp)
+		litigation[import_id][DH_wallet].answer_timestamp = answer_timestamp;
+	}
+	function setLitigation.litigation_status(bytes32 import_id, address DH_wallet, LitigationStatus litigation_status) public onlyContracts{
+		if(litigation[import_id][DH_wallet].litigation_status != litigation_status)
+		litigation[import_id][DH_wallet].litigation_status = litigation_status;
+	}
 
 	struct PurchasedDataDefinition {
 		address DC_wallet;
