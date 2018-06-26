@@ -459,6 +459,39 @@ contract StorageContract {
 
 		emit BidChange(import_id,bid_index);
 	}
+	function setBid_DH_wallet(bytes32 import_id, uint index, address DH_wallet) public onlyContracts{
+		if(bid[import_id][bid_index].DH_wallet != DH_wallet)
+		bid[import_id][bid_index].DH_wallet = DH_wallet;
+	}
+	function setBid_DH_node_id(bytes32 import_id, uint index, bytes32 DH_node_id) public onlyContracts{
+		if(bid[import_id][bid_index].DH_node_id != DH_node_id)
+		bid[import_id][bid_index].DH_node_id = DH_node_id;
+	}
+	function setBid_token_amount_for_escrow(bytes32 import_id, uint index, uint token_amount_for_escrow) public onlyContracts{
+		if(bid[import_id][bid_index].token_amount_for_escrow != token_amount_for_escrow)
+		bid[import_id][bid_index].token_amount_for_escrow = token_amount_for_escrow;
+	}
+	function setBid_stake_amount_for_escrow(bytes32 import_id, uint index, uint stake_amount_for_escrow) public onlyContracts{
+		if(bid[import_id][bid_index].stake_amount_for_escrow != stake_amount_for_escrow)
+		bid[import_id][bid_index].stake_amount_for_escrow = stake_amount_for_escrow;
+	}
+	function setBid_ranking(bytes32 import_id, uint index, uint ranking) public onlyContracts{
+		if(bid[import_id][bid_index].ranking != ranking)
+		bid[import_id][bid_index].ranking = ranking;
+	}
+	function setBid_next_bid_index(bytes32 import_id, uint index, uint next_bid_index) public onlyContracts{
+		if(bid[import_id][bid_index].next_bid_index != next_bid_index)
+		bid[import_id][bid_index].next_bid_index = next_bid_index;
+	}
+	function setBid_active(bytes32 import_id, uint index, bool active) public onlyContracts{
+		if(bid[import_id][bid_index].active != active)
+		bid[import_id][bid_index].active = active;
+	}
+	function setBid_chosen(bytes32 import_id, uint index, bool chosen) public onlyContracts{
+		if(bid[import_id][bid_index].chosen != chosen)
+		bid[import_id][bid_index].chosen = chosen;
+	}
+
 	function setBidNextBidIndex(bytes32 import_id, uint index, uint next_bid_index)
 	public onlyContracts{
 		if(bid[import_id][bid_index].index != next_bid_index)
