@@ -39,12 +39,7 @@ contract Ownable {
 
 
 contract ContractHub is Ownable {
-	address public fingerprintAddress;
-	address public tokenAddress;
-	address public biddingAddress;
-	address public escrowAddress;
 	address public litigationAddress;
-	address public readingAddress;
 }
 
 contract LitigationStorage is Ownable{
@@ -58,13 +53,8 @@ contract LitigationStorage is Ownable{
 
 	modifier onlyContracts() {
 		require(
-			msg.sender == hub.fingerprintAddress()
-			|| msg.sender == hub.tokenAddress()
-			|| msg.sender == hub.biddingAddress()
-			|| msg.sender == hub.escrowAddress()
-			|| msg.sender == hub.litigationAddress()
-			|| msg.sender == hub.owner()
-			|| msg.sender == hub.readingAddress());
+			msg.sender == hub.litigationAddress()
+			|| msg.sender == hub.owner());
 		_;
 	}
 
