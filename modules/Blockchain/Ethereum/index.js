@@ -169,7 +169,7 @@ class Ethereum {
     getProfile(wallet) {
         return new Promise((resolve, reject) => {
             this.log.trace(`Get profile by wallet ${wallet}`);
-            this.biddingContract.methods.profile(wallet).call({
+            this.storageContract.methods.profile(wallet).call({
                 from: wallet,
             }).then((res) => {
                 resolve(res);
@@ -187,7 +187,7 @@ class Ethereum {
     getOffer(importId) {
         return new Promise((resolve, reject) => {
             this.log.trace(`Get offer by importId ${importId}`);
-            this.biddingContract.methods.offer(importId).call().then((res) => {
+            this.storageContract.methods.offer(importId).call().then((res) => {
                 resolve(res);
             }).catch((e) => {
                 reject(e);
@@ -627,7 +627,7 @@ class Ethereum {
     getDistanceParameters(importId, wallet, dhNodeId) {
         return new Promise((resolve, reject) => {
             this.log.trace(`Check if close enough for ${wallet}:${dhNodeId}`);
-            this.biddingContract.methods.getDistanceParameters(importId, dhNodeId).call({
+            this.storageContract.methods.getDistanceParameters(importId, dhNodeId).call({
                 from: wallet,
             }).then((res) => {
                 resolve(res);
@@ -727,7 +727,7 @@ class Ethereum {
     getOfferStatus(importId) {
         return new Promise((resolve, reject) => {
             this.log.trace(`Asking for ${importId} offer status`);
-            this.biddingContract.methods.getOfferStatus(importId).call()
+            this.storageContract.methods.getOfferStatus(importId).call()
                 .then((res) => {
                     resolve(res);
                 }).catch((e) => {
@@ -739,7 +739,7 @@ class Ethereum {
     getDcWalletFromOffer(importId) {
         return new Promise((resolve, reject) => {
             this.log.trace(`Asking for offer's (${importId}) DC wallet.`);
-            this.biddingContract.methods.offer(importId).call()
+            this.storageContract.methods.offer(importId).call()
                 .then((res) => {
                     resolve(res[0]);
                 }).catch((e) => {
@@ -785,17 +785,17 @@ class Ethereum {
      */
     async getEscrow(importId, dhWallet) {
         this.log.trace(`Asking escrow for import ${importId} and dh ${dhWallet}.`);
-        return this.escrowContract.methods.escrow(importId, dhWallet).call();
+        return this.storageContract.methods.escrow(importId, dhWallet).call();
     }
 
     async getPurchase(dhWallet, dvWallet, importId) {
         this.log.trace(`Asking purchase for import (purchase[${dhWallet}][${dvWallet}][${importId}].`);
-        return this.readingContract.methods.purchase(dhWallet, dvWallet, importId).call();
+        return this.storageContract.methods.purchase(dhWallet, dvWallet, importId).call();
     }
 
     async getPurchasedData(importId, wallet) {
         this.log.trace(`Asking purchased data for import ${importId} and wallet ${wallet}.`);
-        return this.readingContract.methods.purchased_data(importId, wallet).call();
+        return this.storageContract.methods.purchased_data(importId, wallet).call();
     }
 
     initiatePurchase(importId, dhWallet, tokenAmount, stakeFactor) {
