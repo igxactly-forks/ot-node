@@ -204,13 +204,11 @@ contract BiddingTest {
 		
 		DC_balance = DC_balance.sub(max_token_amount_per_DH.mul(predetermined_DH_wallet.length.mul(2).add(1)));
 		profileStorage.setProfile_balance(msg.sender, DC_balance);
-		//emit BalanceModified(msg.sender, DC_balance);
 
 		//Writing the predetermined DC into the bid list
 		for(uint256 i = 0; i < predetermined_DH_wallet.length; i = i + 1) {
 			biddingStorage.setBid(import_id, i, predetermined_DH_wallet[i], predetermined_DH_node_id[i], 0, 0, 0, 0, false, false);
-			// BidDefinition memory bid_def = BidDefinition(predetermined_DH_wallet[biddingStorage.bid.length], predetermined_DH_node_id[biddingStorage.bid.length], 0, 0, 0, 0, false, false);
-			// biddingStorage.bid.push(bid_def);
+
 			emit AddedPredeterminedBid(import_id, predetermined_DH_wallet[i], predetermined_DH_node_id[i], i, 
 				total_escrow_time_in_minutes, max_token_amount_per_DH, min_stake_amount_per_DH, 
 				data_size_in_bytes, litigation_interval_in_minutes);
@@ -367,7 +365,7 @@ contract BiddingTest {
 	}
 
 	function chooseBids(bytes32 import_id) public returns (uint256[] chosen_data_holders){
-		// OfferDefinition storage this_offer = offer[import_id];
+
 		uint256[] memory parameters;
 		require(biddingStorage.getOffer_active(import_id) && !biddingStorage.getOffer_finalized(import_id));
 		parameters[0] = biddingStorage.getOffer_replication_factor(import_id); // replication_factor
