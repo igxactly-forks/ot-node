@@ -39,11 +39,7 @@ contract Ownable {
 
 
 contract ContractHub is Ownable {
-	address public fingerprintAddress;
-	address public tokenAddress;
 	address public biddingAddress;
-	address public escrowAddress;
-	address public readingAddress;
 }
 
 contract BidStorage is Ownable{
@@ -56,12 +52,8 @@ contract BidStorage is Ownable{
 
 	modifier onlyContracts() {
 		require(
-			msg.sender == hub.fingerprintAddress()
-			|| msg.sender == hub.tokenAddress()
-			|| msg.sender == hub.biddingAddress()
-			|| msg.sender == hub.escrowAddress()
-			|| msg.sender == hub.owner()
-			|| msg.sender == hub.readingAddress());
+			msg.sender == hub.owner()
+			|| msg.sender == hub.biddingAddress());
 		_;
 	}
 
