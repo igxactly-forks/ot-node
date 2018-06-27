@@ -57,7 +57,6 @@ library MyMath {
 		}
 	}
 
-
 	function absoluteDifference(uint256 a, uint256 b) internal pure returns (uint256) {
 		if (a > b) return a-b;
 		else return b-a;
@@ -273,34 +272,6 @@ contract BiddingTest {
 			0, 0, true, false);
 	}
 
-	// function getDistanceParameters(bytes32 import_id)
-	// public view returns (bytes32 node_hash, bytes32 data_hash, uint256 ranking, uint256 current_ranking, uint256 required_bid_amount, uint256 activated_nodes_){
-
-	// 	node_hash = bytes32(uint128(keccak256(abi.encodePacked(msg.sender))));
-	// 	data_hash = bytes32(uint128(biddingStorage.getOffer_data_hash(import_id)));
-
-	// 	uint256 scope = biddingStorage.getOffer_total_escrow_time_in_minutes(import_id).mul(biddingStorage.getOffer_data_size_in_bytes(import_id));
-	// 	ranking = calculateRanking(import_id, msg.sender, scope);
-	// 	required_bid_amount = biddingStorage.getOffer_replication_factor(import_id);
-	// 	required_bid_amount = required_bid_amount.mul(2).add(1);
-	// 	activated_nodes_ = activated_nodes; // TODO Find a way to remove this
-
-	// 	uint256 current_index = biddingStorage.getOffer_first_bid_index(import_id);
-	// 	if(current_index == uint(-1)){
-	// 		current_ranking = 0;
-	// 	}
-	// 	else{
-	// 		current_ranking = 0;
-	// 		uint ranking = biddingStorage.getBid_ranking(import_id, current_index);
-	// 		uint next_bid_index = biddingStorage.getBid_next_bid_index(import_id, current_index);
-	// 		while(b_next_bid != uint(-1) && b_ranking >= ranking){
-	// 		    ranking = biddingStorage.getBid_ranking(import_id, current_index);
-	// 		    next_bid_index = biddingStorage.getBid_next_bid_index(import_id, current_index);
-	// 			current_ranking++;
-	// 		}
-	// 	}
-	// }
-
 	function bidRequirements(bytes32 import_id, address wallet) internal view returns(bool passed_requirements) {
 		require(biddingStorage.getOffer_active(import_id) && !biddingStorage.getOffer_finalized(import_id));
 
@@ -388,20 +359,6 @@ contract BiddingTest {
 
 		emit AddedBid(import_id, msg.sender, DH_node_id, this_bid_index);
 	}
-
-	// function getBidIndex(bytes32 import_id, bytes32 DH_node_id) public view returns(uint256 index){
-	// 	// OfferDefinition storage this_offer = offer[import_id];
-	// 	uint bid_array_length = biddingStorage.getOffer_bid_array_length(import_id);
-
-	// 	index = 0;
-
-	// 	(address t_DH_wallet, bytes32 t_DH_node_id,  ,  ,  ,  ,  ,  ) = biddingStorage.bid(import_id, index);
-	// 	while(index < bid_array_length && (t_DH_wallet != msg.sender || t_DH_node_id != DH_node_id)){
-	// 		index = index + 1;
-	// 		(t_DH_wallet, t_DH_node_id,  ,  ,  ,  ,  ,  ) = biddingStorage.bid(import_id, index);
-	// 	}
-	// 	if( index == bid_array_length) return uint(-1);
-	// }
 
 	function cancelBid(bytes32 import_id, uint bid_index)
 	public{
@@ -495,7 +452,6 @@ contract BiddingTest {
 		uint DC_balance = profileStorage.getProfile_balance(msg.sender);
 		DC_balance = DC_balance.add(parameters[4].sub(parameters[3]));
 		profileStorage.setProfile_balance(msg.sender, DC_balance);
-// 		emit BalanceModified(msg.sender, DC_balance);
 		
 		emit OfferFinalized(import_id); 
 	}
