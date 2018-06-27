@@ -125,56 +125,7 @@ contract EscrowStorage is Ownable{
 	function getEscrow_escrow_status(bytes32 import_id, address DH_wallet) public view returns(EscrowStatus){
 		return escrow[import_id][DH_wallet].escrow_status;
 	}
-	function setEscrow(
-		bytes32 import_id,
-		address DH_wallet,
-		address DC_wallet,
-		uint token_amount,
-		uint tokens_sent,
-		uint stake_amount,
-		uint last_confirmation_time,
-		uint end_time,
-		uint total_time_in_seconds,
-		uint litigation_interval_in_minutes,
-		bytes32 litigation_root_hash,
-		bytes32 distribution_root_hash,
-		uint256 checksum )
-	public onlyContracts{
-		if(escrow[import_id][DH_wallet].DC_wallet != DC_wallet)
-		escrow[import_id][DH_wallet].DC_wallet = DC_wallet;
 
-		if(escrow[import_id][DH_wallet].token_amount != token_amount)
-		escrow[import_id][DH_wallet].token_amount = token_amount;
-
-		if(escrow[import_id][DH_wallet].tokens_sent != tokens_sent)
-		escrow[import_id][DH_wallet].tokens_sent = tokens_sent;
-
-		if(escrow[import_id][DH_wallet].stake_amount != stake_amount)
-		escrow[import_id][DH_wallet].stake_amount = stake_amount;
-
-		if(escrow[import_id][DH_wallet].last_confirmation_time != last_confirmation_time)
-		escrow[import_id][DH_wallet].last_confirmation_time = last_confirmation_time;
-
-		if(escrow[import_id][DH_wallet].end_time != end_time)
-		escrow[import_id][DH_wallet].end_time = end_time;
-
-		if(escrow[import_id][DH_wallet].total_time_in_seconds != total_time_in_seconds)
-		escrow[import_id][DH_wallet].total_time_in_seconds = total_time_in_seconds;
-
-		if(escrow[import_id][DH_wallet].litigation_interval_in_minutes != litigation_interval_in_minutes)
-		escrow[import_id][DH_wallet].litigation_interval_in_minutes = litigation_interval_in_minutes;
-
-		if(escrow[import_id][DH_wallet].litigation_root_hash != litigation_root_hash)
-		escrow[import_id][DH_wallet].litigation_root_hash = litigation_root_hash;
-
-		if(escrow[import_id][DH_wallet].distribution_root_hash != distribution_root_hash)
-		escrow[import_id][DH_wallet].distribution_root_hash = distribution_root_hash;
-
-		if(escrow[import_id][DH_wallet].checksum != checksum)
-		escrow[import_id][DH_wallet].checksum = checksum;
-
-		emit EscrowChange(import_id, DH_wallet);
-	}
 	function setEscrow_DC_wallet(bytes32 import_id, address DH_wallet, address DC_wallet) public onlyContracts{
 		if(escrow[import_id][DH_wallet].DC_wallet != DC_wallet)
 		escrow[import_id][DH_wallet].DC_wallet = DC_wallet;
