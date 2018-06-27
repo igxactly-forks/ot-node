@@ -45,14 +45,10 @@ contract ContractHub is Ownable{
      address public escrowAddress;
      address public readingAddress;
 
-     constructor(address _fingerprintAddress, address _tokenAddress, address _biddingAddress, address _escrowAddress, address _readingAddress)
-     public {
-          fingerprintAddress = _fingerprintAddress;
-          tokenAddress = _tokenAddress;
-          biddingAddress = _biddingAddress;
-          escrowAddress = _escrowAddress;
-          readingAddress = _readingAddress;
-     }
+     address public profileStorageAddress;
+     address public biddingStorageAddress;
+     address public escrowStorageAddress;
+     address public readingStorageAddress;
 
      function setFingerprint(address newFingerprintAddress)
      public onlyOwner{
@@ -78,5 +74,22 @@ contract ContractHub is Ownable{
      public onlyOwner{
           readingAddress = newReadingAddress;
      }
+
+      function setProfileStorageAddress(address newpPofileStorageAddress)
+      public onlyOwner{
+          profileStorageAddress = newpPofileStorageAddress;
+      }
+      function setBiddingStorageAddress(address newBiddingStorageAddress)
+      public onlyOwner{
+          biddingStorageAddress = newBiddingStorageAddress;
+      }
+      function setEscrowStorageAddress(address newEscrowStorageAddress)
+      public onlyOwner{
+          escrowStorageAddress = newEscrowStorageAddress;
+      }
+      function setReadingStorageAddress(address newReadingStorageAddress)
+      public onlyOwner{
+          escrowStorageAddress = newReadingStorageAddress;
+      }
      
 }
