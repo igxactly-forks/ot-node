@@ -41,26 +41,15 @@ contract EscrowStorage{
     function getEscrow_token_amount(bytes32 import_id, address DH_wallet) public view returns(uint);
     function getEscrow_tokens_sent(bytes32 import_id, address DH_wallet) public view returns(uint);
     function getEscrow_stake_amount(bytes32 import_id, address DH_wallet) public view returns(uint);
-    function getEscrow_last_confirmation_time(bytes32 import_id, address DH_wallet) public view returns(uint);
     function getEscrow_end_time(bytes32 import_id, address DH_wallet) public view returns(uint);
     function getEscrow_total_time_in_seconds(bytes32 import_id, address DH_wallet) public view returns(uint);
     function getEscrow_litigation_interval_in_minutes(bytes32 import_id, address DH_wallet) public view returns(uint);
     function getEscrow_litigation_root_hash(bytes32 import_id, address DH_wallet) public view returns(bytes32);
     function getEscrow_distribution_root_hash(bytes32 import_id, address DH_wallet) public view returns(bytes32);
-    function getEscrow_checksum(bytes32 import_id, address DH_wallet) public view returns(uint);
     function getEscrow_escrow_status(bytes32 import_id, address DH_wallet) public view returns(EscrowStatus);
 
-    function setEscrow_DC_wallet(bytes32 import_id, address DH_wallet, address DC_wallet) public;
-    function setEscrow_token_amount(bytes32 import_id, address DH_wallet, uint token_amount) public;
     function setEscrow_tokens_sent(bytes32 import_id, address DH_wallet, uint tokens_sent) public;
     function setEscrow_stake_amount(bytes32 import_id, address DH_wallet, uint stake_amount) public;
-    function setEscrow_last_confirmation_time(bytes32 import_id, address DH_wallet, uint last_confirmation_time) public;
-    function setEscrow_end_time(bytes32 import_id, address DH_wallet, uint end_time) public;
-    function setEscrow_total_time_in_seconds(bytes32 import_id, address DH_wallet, uint256 total_time_in_seconds) public;
-    function setEscrow_litigation_interval_in_minutes(bytes32 import_id, address DH_wallet, uint256 litigation_interval_in_minutes) public;
-    function setEscrow_litigation_root_hash(bytes32 import_id, address DH_wallet, bytes32 litigation_root_hash) public;
-    function setEscrow_distribution_root_hash(bytes32 import_id, address DH_wallet, bytes32 distribution_root_hash) public;
-    function setEscrow_checksum(bytes32 import_id, address DH_wallet, uint256 checksum) public;
     function setEscrow_escrow_status(bytes32 import_id, address DH_wallet, EscrowStatus escrow_status) public;
 }
 
@@ -91,6 +80,7 @@ contract ContractHub{
 
     address public profileStorageAddress;
     address public escrowStorageAddress;
+    address public litigationStorageAddress;
     address public readingStorageAddress;
 }
 
@@ -99,6 +89,7 @@ contract Litigation{
 
     ProfileStorage public profileStorage;
     EscrowStorage public escrowStorage;
+    LitigationStorage public litigationStorage;
     ReadingStorage public readingStorage;
 
     ContractHub public Hub;
@@ -111,6 +102,7 @@ contract Litigation{
     function initiate() public {
         profileStorage = ProfileStorage(Hub.profileStorageAddress());
         escrowStorage  = EscrowStorage(Hub.escrowStorageAddress());
+        litigationStorage  = LitigationStorage(Hub.litigationStorageAddress());
         readingStorage = ReadingStorage(Hub.readingStorageAddress());
     }
 
@@ -142,14 +134,14 @@ contract Litigation{
     function initiateLitigation(bytes32 import_id, address DH_wallet, uint requested_data_index, bytes32[] hash_array)
     public returns (bool newLitigationInitiated){
         require(escrowStorage.getEscrow_DC_wallet(import_id, DH_wallet) == msg.sender && escrowStorage.getEscrow_escrow_status(import_id, DH_wallet) == EscrowStorage.EscrowStatus.active);
-        require(escrowStorage.getLitigation_litigation_status(import_id, DH_wallet) == EscrowStorage.LitigationStatus.inactive 
-            || escrowStorage.getLitigation_litigation_status(import_id, DH_wallet) == EscrowStorage.LitigationStatus.completed);
+        require(litigationStorage.getLitigation_litigation_status(import_id, DH_wallet) == LitigationStorage.LitigationStatus.inactive 
+            || litigationStorage.getLitigation_litigation_status(import_id, DH_wallet) == LitigationStorage.LitigationStatus.completed);
         require(block.timestamp < escrowStorage.getEscrow_end_time(import_id, DH_wallet));
 
-        escrowStorage.setLitigation_requested_data_index(import_id, DH_wallet, requested_data_index);
-        escrowStorage.setLitigation_hash_array(import_id, DH_wallet, hash_array);
-        escrowStorage.setLitigation_litigation_start_time(import_id, DH_wallet, block.timestamp);
-        escrowStorage.setLitigation_litigation_status(import_id, DH_wallet, EscrowStorage.LitigationStatus.initiated);
+        litigationStorage.setLitigation_requested_data_index(import_id, DH_wallet, requested_data_index);
+        litigationStorage.setLitigation_hash_array(import_id, DH_wallet, hash_array);
+        litigationStorage.setLitigation_litigation_start_time(import_id, DH_wallet, block.timestamp);
+        litigationStorage.setLitigation_litigation_status(import_id, DH_wallet, LitigationStorage.LitigationStatus.initiated);
 
         emit LitigationInitiated(import_id, DH_wallet, requested_data_index);
         return true;
@@ -157,12 +149,12 @@ contract Litigation{
 
     function answerLitigation(bytes32 import_id, bytes32 requested_data)
     public returns (bool answer_accepted){
-        require(escrowStorage.getLitigation_litigation_status(import_id, msg.sender) == EscrowStorage.LitigationStatus.initiated);
+        require(litigationStorage.getLitigation_litigation_status(import_id, msg.sender) == LitigationStorage.LitigationStatus.initiated);
 
-        if(block.timestamp > escrowStorage.getLitigation_litigation_start_time(import_id, msg.sender) + escrowStorage.getEscrow_litigation_interval_in_minutes(import_id, msg.sender).mul(60)){
+        if(block.timestamp > litigationStorage.getLitigation_litigation_start_time(import_id, msg.sender) + escrowStorage.getEscrow_litigation_interval_in_minutes(import_id, msg.sender).mul(60)){
             uint256 amount_to_send;
 
-            uint time = escrowStorage.getLitigation_litigation_start_time(import_id, msg.sender);
+            uint time = litigationStorage.getLitigation_litigation_start_time(import_id, msg.sender);
             time = escrowStorage.getEscrow_end_time(import_id, msg.sender).sub(time);
             amount_to_send = escrowStorage.getEscrow_token_amount(import_id, msg.sender).mul(time) / escrowStorage.getEscrow_total_time_in_seconds(import_id, msg.sender);
 
@@ -199,7 +191,7 @@ contract Litigation{
             }
 
             escrowStorage.setEscrow_escrow_status(import_id, msg.sender, EscrowStorage.EscrowStatus.inactive);
-            escrowStorage.setLitigation_litigation_status(import_id, msg.sender, EscrowStorage.LitigationStatus.completed);
+            litigationStorage.setLitigation_litigation_status(import_id, msg.sender, LitigationStorage.LitigationStatus.completed);
 
             readingStorage.setPurchasedData(import_id, msg.sender, address(0), bytes32(0), 0);
 
@@ -207,9 +199,9 @@ contract Litigation{
             return false;
         }
         else {
-            escrowStorage.setLitigation_requested_data(import_id, msg.sender, keccak256(abi.encodePacked(requested_data, escrowStorage.getLitigation_requested_data_index(import_id, msg.sender))));
-            escrowStorage.setLitigation_answer_timestamp(import_id, msg.sender, block.timestamp);
-            escrowStorage.setLitigation_litigation_status(import_id, msg.sender, EscrowStorage.LitigationStatus.answered);
+            litigationStorage.setLitigation_requested_data(import_id, msg.sender, keccak256(abi.encodePacked(requested_data, litigationStorage.getLitigation_requested_data_index(import_id, msg.sender))));
+            litigationStorage.setLitigation_answer_timestamp(import_id, msg.sender, block.timestamp);
+            litigationStorage.setLitigation_litigation_status(import_id, msg.sender, LitigationStorage.LitigationStatus.answered);
 
             emit LitigationAnswered(import_id, msg.sender);
             return true;
@@ -219,10 +211,10 @@ contract Litigation{
 
     function cancelInactiveLitigation(bytes32 import_id)
     public {
-        require(escrowStorage.getLitigation_litigation_status(import_id, msg.sender) == EscrowStorage.LitigationStatus.answered
-            &&   escrowStorage.getLitigation_answer_timestamp(import_id, msg.sender) + escrowStorage.getEscrow_litigation_interval_in_minutes(import_id, msg.sender).mul(60) <= block.timestamp);
+        require(litigationStorage.getLitigation_litigation_status(import_id, msg.sender) == LitigationStorage.LitigationStatus.answered
+            &&   litigationStorage.getLitigation_answer_timestamp(import_id, msg.sender) + escrowStorage.getEscrow_litigation_interval_in_minutes(import_id, msg.sender).mul(60) <= block.timestamp);
 
-        escrowStorage.setLitigation_litigation_status(import_id, msg.sender, EscrowStorage.LitigationStatus.completed);
+        litigationStorage.setLitigation_litigation_status(import_id, msg.sender, LitigationStorage.LitigationStatus.completed);
 
         emit LitigationCompleted(import_id, msg.sender, false);
 
@@ -232,15 +224,15 @@ contract Litigation{
     public returns (bool DH_was_penalized){
 
         require(escrowStorage.getEscrow_DC_wallet(import_id, DH_wallet) == msg.sender && 
-            (escrowStorage.getLitigation_litigation_status(import_id, DH_wallet) == EscrowStorage.LitigationStatus.initiated 
-                || escrowStorage.getLitigation_litigation_status(import_id, DH_wallet) == EscrowStorage.LitigationStatus.answered));
+            (litigationStorage.getLitigation_litigation_status(import_id, DH_wallet) == LitigationStorage.LitigationStatus.initiated 
+                || litigationStorage.getLitigation_litigation_status(import_id, DH_wallet) == LitigationStorage.LitigationStatus.answered));
 
-        if (escrowStorage.getLitigation_litigation_status(import_id, DH_wallet) == EscrowStorage.LitigationStatus.initiated){
-            require(escrowStorage.getLitigation_litigation_start_time(import_id, DH_wallet) + escrowStorage.getEscrow_litigation_interval_in_minutes(import_id, DH_wallet).mul(60) <= block.timestamp);
+        if (litigationStorage.getLitigation_litigation_status(import_id, DH_wallet) == LitigationStorage.LitigationStatus.initiated){
+            require(litigationStorage.getLitigation_litigation_start_time(import_id, DH_wallet) + escrowStorage.getEscrow_litigation_interval_in_minutes(import_id, DH_wallet).mul(60) <= block.timestamp);
 
             uint256 amount_to_send;
 
-            uint time = escrowStorage.getLitigation_litigation_start_time(import_id, DH_wallet);
+            uint time = litigationStorage.getLitigation_litigation_start_time(import_id, DH_wallet);
             time = escrowStorage.getEscrow_end_time(import_id, DH_wallet).sub(time);
             amount_to_send = escrowStorage.getEscrow_token_amount(import_id, DH_wallet).mul(time) / escrowStorage.getEscrow_total_time_in_seconds(import_id, DH_wallet);
 
@@ -276,7 +268,7 @@ contract Litigation{
             }
 
             escrowStorage.setEscrow_escrow_status(import_id, DH_wallet, EscrowStorage.EscrowStatus.inactive);
-            escrowStorage.setLitigation_litigation_status(import_id, DH_wallet, EscrowStorage.LitigationStatus.completed);
+            litigationStorage.setLitigation_litigation_status(import_id, DH_wallet, LitigationStorage.LitigationStatus.completed);
 
             readingStorage.setPurchasedData(import_id, DH_wallet, address(0), bytes32(0), 0);
 
@@ -288,7 +280,7 @@ contract Litigation{
 
         if(isDHokay(import_id, DH_wallet, proof_data)){
             // DH has the requested data -> Set litigation as completed, no transfer of tokens
-            escrowStorage.setLitigation_litigation_status(import_id, DH_wallet, EscrowStorage.LitigationStatus.completed);
+            litigationStorage.setLitigation_litigation_status(import_id, DH_wallet, LitigationStorage.LitigationStatus.completed);
             emit LitigationCompleted(import_id, DH_wallet, false);
             return false;
         }
@@ -328,7 +320,7 @@ contract Litigation{
             }
 
             escrowStorage.setEscrow_escrow_status(import_id, DH_wallet, EscrowStorage.EscrowStatus.inactive);
-            escrowStorage.setLitigation_litigation_status(import_id, DH_wallet, EscrowStorage.LitigationStatus.completed);
+            litigationStorage.setLitigation_litigation_status(import_id, DH_wallet, LitigationStorage.LitigationStatus.completed);
 
             readingStorage.setPurchasedData(import_id, DH_wallet, address(0), bytes32(0), 0);
             emit LitigationCompleted(import_id, DH_wallet, true);
@@ -339,14 +331,14 @@ contract Litigation{
     function isDHokay(bytes32 import_id, address DH_wallet, bytes32 proof_data) internal view returns(bool DH_is_okay){
         uint256 i = 0;
         uint256 one = 1;
-        bytes32 proof_hash = keccak256(abi.encodePacked(proof_data, escrowStorage.getLitigation_requested_data_index(import_id, DH_wallet)));    
+        bytes32 proof_hash = keccak256(abi.encodePacked(proof_data, litigationStorage.getLitigation_requested_data_index(import_id, DH_wallet)));    
         // bytes32 proof_hash = keccak256(abi.encodePacked(proof_data, this_litigation.requested_data_index));   
-        bytes32 answer_hash = escrowStorage.getLitigation_requested_data(import_id, DH_wallet);
-        bytes32[] memory hash_array = escrowStorage.getLitigation_hash_array(import_id,DH_wallet);
+        bytes32 answer_hash = litigationStorage.getLitigation_requested_data(import_id, DH_wallet);
+        bytes32[] memory hash_array = litigationStorage.getLitigation_hash_array(import_id,DH_wallet);
         // ako je bit 1 on je levo
         while (i < hash_array.length){
 
-            if( ((one << i) & escrowStorage.getLitigation_requested_data_index(import_id, DH_wallet)) != 0 ){
+            if( ((one << i) & litigationStorage.getLitigation_requested_data_index(import_id, DH_wallet)) != 0 ){
                 proof_hash = keccak256(abi.encodePacked(hash_array[i], proof_hash));
                 answer_hash = keccak256(abi.encodePacked(hash_array[i], answer_hash));
             }
