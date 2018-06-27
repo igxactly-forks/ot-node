@@ -42,7 +42,9 @@ contract ContractHub is Ownable {
 	address public fingerprintAddress;
 	address public tokenAddress;
 	address public biddingAddress;
+	address public litigationAddress;
 	address public escrowAddress;
+	address public litigationAddress;
 	address public readingAddress;
 }
 
@@ -61,6 +63,7 @@ contract ProfileStorage is Ownable{
 			|| msg.sender == hub.tokenAddress()
 			|| msg.sender == hub.biddingAddress()
 			|| msg.sender == hub.escrowAddress()
+			|| msg.sender == hub.litigationAddress()
 			|| msg.sender == hub.owner()
 			|| msg.sender == hub.readingAddress());
 		_;
