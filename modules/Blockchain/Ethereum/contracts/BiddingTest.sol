@@ -148,13 +148,10 @@ contract BiddingTest {
 	ProfileStorage public profileStorage;
 	BiddingStorage public biddingStorage;
 
-	uint256 activated_nodes;
-
 	constructor(address hub_address)
 	public{
 		require (hub_address != address(0));
 		hub = ContractHub(hub_address);
-		activated_nodes = 0;
 	}
 
 	function initiate() public {
