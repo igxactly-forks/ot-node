@@ -26,12 +26,7 @@ library SafeMath {
 
 contract ProfileStorage{
     function getProfile_balance(address wallet) public view returns(uint);
-    function getProfile_reputation(address wallet) public view returns(uint);
-    function getProfile_number_of_escrows(address wallet) public view returns(uint);
-
     function setProfile_balance(address wallet, uint256 balance) public;
-    function setProfile_reputation(address wallet, uint256 reputation) public;
-    function setProfile_number_of_escrows(address wallet, uint256 number_of_escrows) public;
 }
 
 contract EscrowStorage{
@@ -45,7 +40,6 @@ contract EscrowStorage{
     function getEscrow_total_time_in_seconds(bytes32 import_id, address DH_wallet) public view returns(uint);
     function getEscrow_litigation_interval_in_minutes(bytes32 import_id, address DH_wallet) public view returns(uint);
     function getEscrow_litigation_root_hash(bytes32 import_id, address DH_wallet) public view returns(bytes32);
-    function getEscrow_distribution_root_hash(bytes32 import_id, address DH_wallet) public view returns(bytes32);
     function getEscrow_escrow_status(bytes32 import_id, address DH_wallet) public view returns(EscrowStatus);
 
     function setEscrow_tokens_sent(bytes32 import_id, address DH_wallet, uint tokens_sent) public;
@@ -76,8 +70,6 @@ contract ReadingStorage {
 }
 
 contract ContractHub{
-    address public biddingAddress;
-
     address public profileStorageAddress;
     address public escrowStorageAddress;
     address public litigationStorageAddress;
@@ -107,8 +99,6 @@ contract Litigation{
     }
 
     /*    ----------------------------- LITIGATION -----------------------------     */
-
-
 
     // Litigation protocol:
     //   1. DC creates a litigation for a specific DH over a specific offer_hash
@@ -335,9 +325,8 @@ contract Litigation{
         // bytes32 proof_hash = keccak256(abi.encodePacked(proof_data, this_litigation.requested_data_index));   
         bytes32 answer_hash = litigationStorage.getLitigation_requested_data(import_id, DH_wallet);
         bytes32[] memory hash_array = litigationStorage.getLitigation_hash_array(import_id,DH_wallet);
-        // ako je bit 1 on je levo
         while (i < hash_array.length){
-
+            // If the current bit in the requested_data_index is 1, the hashes should be the right argument during hashing
             if( ((one << i) & litigationStorage.getLitigation_requested_data_index(import_id, DH_wallet)) != 0 ){
                 proof_hash = keccak256(abi.encodePacked(hash_array[i], proof_hash));
                 answer_hash = keccak256(abi.encodePacked(hash_array[i], answer_hash));
