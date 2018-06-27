@@ -40,6 +40,7 @@ contract Ownable {
 
 contract ContractHub is Ownable {
 	address public escrowAddress;
+	address public litigationAddress;
 }
 
 contract EscrowStorage is Ownable{
@@ -53,6 +54,7 @@ contract EscrowStorage is Ownable{
 	modifier onlyContracts() {
 		require(
 			msg.sender == hub.escrowAddress()
+			|| msg.sender == hub.litigationAddress()
 			|| msg.sender == hub.owner());
 		_;
 	}
