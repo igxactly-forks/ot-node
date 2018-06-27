@@ -293,7 +293,7 @@ contract BiddingTest {
 	public{
 		require(Storage.getBid_DH_wallet(import_id, bid_index) == msg.sender && Storage.getBid_DH_node_id(import_id, bid_index) == DH_node_id);
 
-		bidRequirements(import_id, msg.sender);
+		require(bidRequirements(import_id, msg.sender));
 
 		//Check if the the DH meets the filters DC set for the offer
 		uint scope = Storage.getOffer_total_escrow_time_in_minutes(import_id) * Storage.getOffer_data_size_in_bytes(import_id);
@@ -336,7 +336,7 @@ contract BiddingTest {
 		}
 	}
 
-	function bidRequirements(bytes32 import_id, address wallet) internal {
+	function bidRequirements(bytes32 import_id, address wallet) internal view returns(bool passed_requirements) {
 		require(Storage.getOffer_active(import_id) && !Storage.getOffer_finalized(import_id));
 
 		uint max_token_amount_per_DH = Storage.getOffer_max_token_amount_per_DH(import_id);
@@ -351,15 +351,17 @@ contract BiddingTest {
 
 		//Check if the the DH meets the filters DC set for the offer
 		uint scope = data_size_in_bytes.mul(total_escrow_time_in_minutes);
-		require(total_escrow_time_in_minutes <= max_escrow_time_in_minutes);
-		require(max_token_amount_per_DH  >= token_amount_per_byte_minute * scope);
-		require((min_stake_amount_per_DH  <= stake_amount_per_byte_minute * scope) && (stake_amount_per_byte_minute * scope <= balance));
+		if(total_escrow_time_in_minutes > max_escrow_time_in_minutes) return false;
+		if(max_token_amount_per_DH  < token_amount_per_byte_minute * scope) return false;
+		if(min_stake_amount_per_DH  > stake_amount_per_byte_minute * scope) return false;
+        if(stake_amount_per_byte_minute * scope > balance) return false;
+        return true;
 	}
 
 	function addBid(bytes32 import_id, bytes32 DH_node_id)
 	public {
 		//Check if the the DH meets the filters DC set for the offer
-		bidRequirements(import_id, msg.sender);
+		require(bidRequirements(import_id, msg.sender));
 		require(Storage.getOffer_min_reputation(import_id) <= Storage.getProfile_reputation(msg.sender));
 
 		uint scope = Storage.getOffer_data_size_in_bytes(import_id) * Storage.getOffer_total_escrow_time_in_minutes(import_id);
@@ -536,7 +538,7 @@ contract BiddingTest {
 	event BalanceModified(address wallet, uint new_balance);
 	event ReputationModified(address wallet, uint new_balance);
 
-	function createProfile(bytes32 node_id, uint price_per_byte_minute, uint stake_per_byte_minute, uint read_stake_factor, uint max_time_in_minutes) public{
+	function createProfile(uint price_per_byte_minute, uint stake_per_byte_minute, uint read_stake_factor, uint max_time_in_minutes) public{
 		( , , , uint p_balance, uint p_reputation, uint p_number_of_escrows, , bool p_active) = Storage.profile(msg.sender);
 
 		Storage.setProfile(msg.sender, price_per_byte_minute, stake_per_byte_minute, read_stake_factor, 
@@ -600,7 +602,7 @@ contract BiddingTest {
 		else return b-a;
 	}
 
-	function log2(uint x) internal pure returns (uint y){
+	function logs2(uint x) internal pure returns (uint y){
 		require(x > 0);
 		assembly {
 			let arg := x
@@ -668,7 +670,7 @@ contract BiddingTest {
 		uint256 number_of_escrows = Storage.getProfile_number_of_escrows(DH_wallet);
 		uint256 reputation = Storage.getProfile_reputation(DH_wallet);
 		if(number_of_escrows == 0 || reputation == 0) reputation = 1;
-		else reputation = (log2(reputation / number_of_escrows) * corrective_factor / 115) / (corrective_factor / 100);
+		else reputation = (logs2(reputation / number_of_escrows) * corrective_factor / 115) / (corrective_factor / 100);
 		if(reputation == 0) reputation = 1;
 
 		uint256 hash_difference = absoluteDifference(data_hash, uint256(uint128(keccak256(abi.encodePacked(DH_wallet)))));

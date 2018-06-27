@@ -14,7 +14,7 @@ pragma solidity ^0.4.21;
      * @dev The Ownable constructor sets the original `owner` of the contract to the sender
      * account.
      */
-     function Ownable () public {
+     constructor () public {
           owner = msg.sender;
      }
 
@@ -45,7 +45,7 @@ contract ContractHub is Ownable{
      address public escrowAddress;
      address public readingAddress;
 
-     function ContractHub(address _fingerprintAddress, address _tokenAddress, address _biddingAddress, address _escrowAddress, address _readingAddress)
+     constructor(address _fingerprintAddress, address _tokenAddress, address _biddingAddress, address _escrowAddress, address _readingAddress)
      public {
           fingerprintAddress = _fingerprintAddress;
           tokenAddress = _tokenAddress;
