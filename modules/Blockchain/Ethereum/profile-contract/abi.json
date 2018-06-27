@@ -1,0 +1,187 @@
+[
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "new_stake_per_byte_minute",
+				"type": "uint256"
+			}
+		],
+		"name": "setStake",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "hub",
+		"outputs": [
+			{
+				"name": "",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "price_per_byte_minute",
+				"type": "uint256"
+			},
+			{
+				"name": "stake_per_byte_minute",
+				"type": "uint256"
+			},
+			{
+				"name": "read_stake_factor",
+				"type": "uint256"
+			},
+			{
+				"name": "max_time_in_minutes",
+				"type": "uint256"
+			}
+		],
+		"name": "createProfile",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "withdrawToken",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "depositToken",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "new_price_per_byte_minute",
+				"type": "uint256"
+			}
+		],
+		"name": "setPrice",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "new_max_time_in_minutes",
+				"type": "uint256"
+			}
+		],
+		"name": "setMaxTime",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "profileStorage",
+		"outputs": [
+			{
+				"name": "",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"name": "hub_address",
+				"type": "address"
+			},
+			{
+				"name": "storage_address",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "wallet",
+				"type": "address"
+			}
+		],
+		"name": "ProfileCreated",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "wallet",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"name": "new_balance",
+				"type": "uint256"
+			}
+		],
+		"name": "BalanceModified",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "wallet",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"name": "new_balance",
+				"type": "uint256"
+			}
+		],
+		"name": "ReputationModified",
+		"type": "event"
+	}
+]

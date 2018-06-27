@@ -40,19 +40,30 @@ contract ERC20 is ERC20Basic {
 	event Approval(address indexed owner, address indexed spender, uint256 value);
 }
 
-contract EscrowHolder {
-	function initiateEscrow(address DC_wallet, address DH_wallet, bytes32 import_id, uint token_amount, uint stake_amount, uint total_time_in_minutes, uint litigation_interval_in_minutes) public;
+contract ProfileStorage {
+
+	function getProfile_token_amount_per_byte_minute(address wallet) public view returns(uint);
+	function getProfile_stake_amount_per_byte_minute(address wallet) public view returns(uint);
+	function getProfile_balance(address wallet) public view returns(uint);
+	function getProfile_reputation(address wallet) public view returns(uint);
+	function getProfile_number_of_escrows(address wallet) public view returns(uint);
+	function getProfile_max_escrow_time_in_minutes(address wallet) public view returns(uint);
+	function getProfile_active(address wallet) public view returns(bool);
+
+	function setProfile_token_amount_per_byte_minute(address wallet, uint token_amount_per_byte_minute) public;
+	function setProfile_stake_amount_per_byte_minute(address wallet, uint stake_amount_per_byte_minute) public;
+	function setProfile_read_stake_factor(address wallet, uint read_stake_factor) public;
+	function setProfile_balance(address wallet, uint balance) public;
+	function setProfile_reputation(address wallet, uint reputation) public;
+	function setProfile_number_of_escrows(address wallet, uint number_of_escrows) public;
+	function setProfile_max_escrow_time_in_minutes(address wallet, uint max_escrow_time_in_minutes) public;
+	function setProfile_active(address wallet, bool active) public;
 }
 
-contract ContractHub{
-	address public fingerprintAddress;
-	address public tokenAddress;
-	address public biddingAddress;
-	address public escrowAddress;
-	address public readingAddress;
 
+contract ContractHub{
+	address public tokenAddress;
 	address public profileStorageAddress;
-	address public biddingStorageAddress;
 }
 
 contract Profile {
@@ -61,7 +72,6 @@ contract Profile {
 	ContractHub public hub;
 
 	ProfileStorage public profileStorage;
-	BiddingStorage public biddingStorage;
 
 	uint256 activated_nodes;
 
@@ -69,8 +79,7 @@ contract Profile {
 	public{
 		require (hub_address != address(0) && storage_address != address(0));
 		hub = ContractHub(hub_address);
-		profileStorage = ProfileStorage(hub.profileStorageAddress());
-		biddingStorage = BiddingStorage(hub.biddingStorageAddress());
+		profileStorage = ProfileStorage(hub.profileStorageAddress()); // TODO Maybe move this line to initialize
 		activated_nodes = 0;
 	}
 
