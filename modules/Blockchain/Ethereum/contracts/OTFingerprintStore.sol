@@ -6,7 +6,7 @@ contract Ownable {
    * @dev The Ownable constructor sets the original `owner` of the contract to the sender
    * account.
    */
-  function constructor () public { owner = msg.sender; }
+  constructor () public { owner = msg.sender; }
   /**
    * @dev Throws if called by any account other than the owner.
    */

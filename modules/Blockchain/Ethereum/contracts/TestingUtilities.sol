@@ -5,32 +5,32 @@ contract TestingUtilities{
 
 	function keccak2hashes(bytes32 a, bytes32 b)
 	public pure returns (bytes32){
-		return keccak256(a,b);
+		return keccak256(abi.encodePacked(a,b));
 	}
 
 	function keccakString(string a)
 	public pure returns (bytes32){
-		return keccak256(a);
+		return keccak256(abi.encodePacked(a));
 	}
 
 	function keccakIndex(bytes32 a, uint b)
 	public pure returns (bytes32){
-		return keccak256(a,b);
+		return keccak256(abi.encodePacked(a,b));
 	}
 
 	function keccakSender()
 	public view returns (bytes32){
-		return keccak256(msg.sender);
+		return keccak256(abi.encodePacked(msg.sender));
 	}
 
 	function keccakAddressBytes(address adr, bytes32 byt)
 	public pure returns (bytes32){
-		return keccak256(adr, byt);
+		return keccak256(abi.encodePacked(adr, byt));
 	}
 
 	function keccakOffer(address adr, bytes32 nod_id, uint data_id)
 	public pure returns (bytes32){
-		return keccak256(adr, nod_id, data_id);
+		return keccak256(abi.encodePacked(adr, nod_id, data_id));
 	}
 
 	function getBlockTimestamp()
@@ -50,7 +50,7 @@ contract TestingUtilities{
 
 	function escrowHash(bytes32 offer_hash, address DH_wallet, bytes32 DH_node_id)
 	public pure returns (bytes32){
-		return keccak256(offer_hash, DH_wallet, DH_node_id);
+		return keccak256(abi.encodePacked(offer_hash, DH_wallet, DH_node_id));
 	} 
 
 	event PreIPosle(uint a);

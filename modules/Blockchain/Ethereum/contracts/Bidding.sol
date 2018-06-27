@@ -41,33 +41,55 @@ contract ERC20 is ERC20Basic {
 }
 
 contract EscrowHolder {
-	function initiateEscrow(address DC_wallet, address DH_wallet, bytes32 import_id, uint token_amount, uint stake_amount, uint total_time_in_minutes) public;
+	function initiateEscrow(address DC_wallet, address DH_wallet, bytes32 import_id, uint token_amount, uint stake_amount, uint total_time_in_minutes, uint litigation_interval_in_minutes) public;
 }
 
-contract Bidding{
-	using SafeMath for uint256;
+contract ContractHub{
+	address public fingerprintAddress;
+	address public tokenAddress;
+	address public biddingAddress;
+	address public escrowAddress;
+	address public readingAddress;
+}
 
-	ERC20 public token;
-	EscrowHolder public escrow;
-	address public reading;
+contract StorageContract {
 
-	modifier onlyContracts() {
-		require(EscrowHolder(msg.sender) == escrow || msg.sender == reading);
-		_;
+	struct ProfileDefinition{
+		uint token_amount_per_byte_minute;
+		uint stake_amount_per_byte_minute;
+
+		uint read_stake_factor;
+
+		uint balance;
+		uint reputation;
+		uint number_of_escrows;
+
+		uint max_escrow_time_in_minutes;
+
+		bool active;
 	}
-	
-	function Bidding(address token_address, address escrow_address, address reading_address)
-	public{
-		require ( token_address != address(0) && escrow_address != address(0) && reading_address != address(0));
-		token = ERC20(token_address);
-		escrow = EscrowHolder(escrow_address);
-		reading = reading_address;
-		active_nodes = 0;
-	}
-
-
-	/*    ----------------------------- BIDDING -----------------------------     */
-
+	mapping(address => ProfileDefinition) public profile; // profile[wallet]
+	function getProfile_token_amount_per_byte_minute(address wallet) public view returns(uint);
+	function getProfile_stake_amount_per_byte_minute(address wallet) public view returns(uint);
+	function getProfile_read_stake_factor(address wallet) public view returns(uint);
+	function getProfile_balance(address wallet) public view returns(uint);
+	function getProfile_reputation(address wallet) public view returns(uint);
+	function getProfile_number_of_escrows(address wallet) public view returns(uint);
+	function getProfile_max_escrow_time_in_minutes(address wallet) public view returns(uint);
+	function getProfile_active(address wallet) public view returns(bool);
+	function setProfile(
+		address wallet,
+		uint token_amount_per_byte_minute, uint stake_amount_per_byte_minute, uint read_stake_factor,
+		uint balance, uint reputation, uint number_of_escrows, uint max_escrow_time_in_minutes, bool active) 
+	public;
+	function setProfile_token_amount_per_byte_minute(address wallet, uint256 token_amount_per_byte_minute) public;
+ 	function setProfile_stake_amount_per_byte_minute(address wallet, uint256 stake_amount_per_byte_minute) public;
+ 	function setProfile_read_stake_factor(address wallet, uint256 read_stake_factor) public;
+ 	function setProfile_balance(address wallet, uint256 balance) public;
+ 	function setProfile_reputation(address wallet, uint256 reputation) public;
+ 	function setProfile_number_of_escrows(address wallet, uint256 number_of_escrows) public;
+ 	function setProfile_max_escrow_time_in_minutes(address wallet, uint256 max_escrow_time_in_minutes) public;
+ 	function setProfile_active(address wallet, uint256 active) public;
 
 	struct OfferDefinition{
 		address DC_wallet;
@@ -80,36 +102,49 @@ contract Bidding{
 		//Data holding parameters
 		uint total_escrow_time_in_minutes;
 		uint data_size_in_bytes;
+		uint litigation_interval_in_minutes;
 
 		//Parameters for the bidding ranking
 		bytes32 data_hash;
 		uint first_bid_index;
+		uint bid_array_length;
 
 		uint replication_factor;
-
+		
+		uint256 offer_creation_timestamp;
 		bool active;
 		bool finalized;
-
-		// uint256 offer_creation_timestamp;
-
-		BidDefinition[] bid;
 	}
+	mapping(bytes32 => OfferDefinition) public offer; // offer[import_id]
+	function getOffer_DC_wallet(bytes32 import_id) public view returns(address);
+	function getOffer_max_token_amount_per_DH(bytes32 import_id) public view returns(uint);
+	function getOffer_min_stake_amount_per_DH(bytes32 import_id) public view returns(uint);
+	function getOffer_min_reputation(bytes32 import_id) public view returns(uint);
+	function getOffer_total_escrow_time_in_minutes(bytes32 import_id) public view returns(uint);
+	function getOffer_data_size_in_bytes(bytes32 import_id) public view returns(uint);
+	function getOffer_litigation_interval_in_minutes(bytes32 import_id) public view returns(uint);
+	function getOffer_data_hash(bytes32 import_id) public view returns(bytes32);
+	function getOffer_first_bid_index(bytes32 import_id) public view returns(uint);
+	function getOffer_bid_array_length(bytes32 import_id) public view returns(uint);
+	function getOffer_replication_factor(bytes32 import_id) public view returns(uint);
+	function getOffer_offer_creation_timestamp(bytes32 import_id) public view returns(uint);
+	function getOffer_active(bytes32 import_id) public view returns(bool);
+	function getOffer_finalized(bytes32 import_id) public view returns(bool);
 
-	struct ProfileDefinition{
-		//Offer Parameters
-		uint token_amount_per_byte_minute; //Per byte per minute
-		uint stake_amount_per_byte_minute; //Per byte per minute
-
-		uint read_stake_factor;
-
-		uint balance;
-		uint reputation;
-		uint number_of_escrows;
-
-		uint max_escrow_time_in_minutes;
-
-		bool active;
-	}
+	function setOffer_DC_wallet(bytes32 import_id, address DC_wallet) public;
+	function setOffer_max_token_amount_per_DH(bytes32 import_id, uint max_token_amount_per_DH) public;
+	function setOffer_min_stake_amount_per_DH(bytes32 import_id, uint min_stake_amount_per_DH) public;
+	function setOffer_min_reputation(bytes32 import_id, uint min_reputation) public;
+	function setOffer_total_escrow_time_in_minutes(bytes32 import_id, uint total_escrow_time_in_minutes) public;
+	function setOffer_data_size_in_bytes(bytes32 import_id, uint data_size_in_bytes) public;
+	function setOffer_litigation_interval_in_minutes(bytes32 import_id, uint litigation_interval_in_minutes) public;
+	function setOffer_data_hash(bytes32 import_id, bytes32 data_hash) public;
+	function setOffer_first_bid_index(bytes32 import_id, uint first_bid_index) public;
+	function setOffer_bid_array_length(bytes32 import_id, uint bid_array_length) public;
+	function setOffer_replication_factor(bytes32 import_id, uint replication_factor) public;
+	function setOffer_offer_creation_timestamp(bytes32 import_id, uint offer_creation_timestamp) public;
+	function setOffer_active(bytes32 import_id, bool active) public;
+	function setOffer_finalized(bytes32 import_id, bool finalized) public;
 
 	struct BidDefinition{
 		address DH_wallet;
@@ -118,22 +153,63 @@ contract Bidding{
 		uint token_amount_for_escrow;
 		uint stake_amount_for_escrow;
 
-		uint256 distance;
+		uint256 ranking;
 
 		uint next_bid;
 
 		bool active;
 		bool chosen;
 	}
+	mapping(bytes32 => mapping (uint256 => BidDefinition ) ) public bid; // bid[import_id][bid_index]
+	function getBid_DH_wallet(bytes32 import_id, uint bid_index) public view returns (address);
+	function getBid_DH_node_id(bytes32 import_id, uint bid_index) public view returns (bytes32);
+	function getBid_token_amount_for_escrow(bytes32 import_id, uint bid_index) public view returns (uint);
+	function getBid_stake_amount_for_escrow(bytes32 import_id, uint bid_index) public view returns (uint);
+	function getBid_ranking(bytes32 import_id, uint bid_index) public view returns (uint);
+	function getBid_next_bid_index(bytes32 import_id, uint bid_index) public view returns (uint);
+	function getBid_active(bytes32 import_id, uint bid_index) public view returns (bool);
+	function getBid_chosen(bytes32 import_id, uint bid_index) public view returns (bool);
+	function setBid(
+		bytes32 import_id, uint256 bid_index,
+		address DH_wallet, bytes32 DH_node_id,
+		uint token_amount_for_escrow, uint stake_amount_for_escrow,
+		uint256 ranking, uint next_bid, bool active, bool chosen)
+	public;
+	function setBid_DH_wallet(bytes32 import_id, uint index, address DH_wallet) public;
+	function setBid_DH_node_id(bytes32 import_id, uint index, bytes32 DH_node_id) public;
+	function setBid_token_amount_for_escrow(bytes32 import_id, uint index, uint token_amount_for_escrow) public;
+	function setBid_stake_amount_for_escrow(bytes32 import_id, uint index, uint stake_amount_for_escrow) public;
+	function setBid_ranking(bytes32 import_id, uint index, uint ranking) public;
+	function setBid_next_bid_index(bytes32 import_id, uint index, uint next_bid_index) public;
+	function setBid_active(bytes32 import_id, uint index, bool active) public;
+	function setBid_chosen(bytes32 import_id, uint index, bool chosen) public;
+}
+contract BiddingTest {
+	using SafeMath for uint256;
 
-	uint256 public active_nodes;
-	mapping(bytes32 => OfferDefinition) public offer; //offer[import_id] import_id
-	mapping(address => ProfileDefinition) public profile; //profile[wallet]
+	ContractHub public hub;
+	StorageContract public Storage;
+	uint256 activated_nodes;
 
-	event OfferCreated(bytes32 import_id, bytes32 DC_node_id, uint total_escrow_time_in_minutes, uint max_token_amount_per_DH, uint min_stake_amount_per_DH, uint min_reputation, uint data_size_in_bytes, bytes32 data_hash);
+	constructor(address hub_address, address storage_address)
+	public{
+		require (hub_address != address(0) && storage_address != address(0));
+		hub = ContractHub(hub_address);
+		Storage = StorageContract(storage_address);
+		activated_nodes = 0;
+	}
+
+	/*    ----------------------------- EVENTS -----------------------------     */
+
+
+	event OfferCreated(bytes32 import_id, bytes32 DC_node_id, 
+		uint total_escrow_time_in_minutes, uint max_token_amount_per_DH, uint min_stake_amount_per_DH, uint min_reputation, 
+		uint data_size_in_bytes, bytes32 data_hash, uint litigation_interval_in_minutes);
 	event OfferCanceled(bytes32 import_id);
 	event AddedBid(bytes32 import_id, address DH_wallet, bytes32 DH_node_id, uint bid_index);
-	event AddedPredeterminedBid(bytes32 import_id, address DH_wallet, bytes32 DH_node_id, uint bid_index, uint total_escrow_time_in_minutes, uint max_token_amount_per_DH, uint min_stake_amount_per_DH, uint data_size_in_bytes);
+	event AddedPredeterminedBid(bytes32 import_id, address DH_wallet, bytes32 DH_node_id, uint bid_index, 
+		uint total_escrow_time_in_minutes, uint max_token_amount_per_DH, uint min_stake_amount_per_DH,
+		uint data_size_in_bytes, uint litigation_interval_in_minutes);
 	event FinalizeOfferReady(bytes32 import_id);
 	event BidTaken(bytes32 import_id, address DH_wallet);
 	event OfferFinalized(bytes32 import_id);
@@ -151,289 +227,338 @@ contract Bidding{
 
 		bytes32 data_hash,
 		uint data_size_in_bytes,
+		uint litigation_interval_in_minutes,
 
 		address[] predetermined_DH_wallet,
 		bytes32[] predetermined_DH_node_id)
 	public {
-		OfferDefinition storage this_offer = offer[import_id];
-
+		require(Storage.getOffer_active(import_id) == false);
 		require(max_token_amount_per_DH > 0 && total_escrow_time_in_minutes > 0 && data_size_in_bytes > 0);
-		require(this_offer.active == false);
 
-		require(profile[msg.sender].balance >= max_token_amount_per_DH.mul(predetermined_DH_wallet.length.mul(2).add(1)));
-		profile[msg.sender].balance = profile[msg.sender].balance.sub(max_token_amount_per_DH.mul(predetermined_DH_wallet.length.mul(2).add(1)));
-		emit BalanceModified(msg.sender, profile[msg.sender].balance);
-
-		this_offer.DC_wallet = msg.sender;
-
-		this_offer.total_escrow_time_in_minutes = total_escrow_time_in_minutes;
-		this_offer.max_token_amount_per_DH = max_token_amount_per_DH;
-		this_offer.min_stake_amount_per_DH = min_stake_amount_per_DH;
-		this_offer.min_reputation = min_reputation;
-
-		this_offer.data_hash = data_hash;
-		this_offer.data_size_in_bytes = data_size_in_bytes;
-
-		this_offer.replication_factor = predetermined_DH_wallet.length;
-
-		this_offer.active = true;
-		this_offer.finalized = false;
-
-		this_offer.first_bid_index = uint(-1);
-		// this_offer.offer_creation_timestamp = block.timestamp;
+		(, , , uint DC_balance, , , , ) = Storage.profile(msg.sender);
+		require(DC_balance >= max_token_amount_per_DH.mul(predetermined_DH_wallet.length.mul(2).add(1)));
+		
+		DC_balance = DC_balance.sub(max_token_amount_per_DH.mul(predetermined_DH_wallet.length.mul(2).add(1)));
+		Storage.setProfile_balance(msg.sender, DC_balance);
+		emit BalanceModified(msg.sender, DC_balance);
 
 		//Writing the predetermined DC into the bid list
-		while(this_offer.bid.length < predetermined_DH_wallet.length) {
-			BidDefinition memory bid_def = BidDefinition(predetermined_DH_wallet[this_offer.bid.length], predetermined_DH_node_id[this_offer.bid.length], 0, 0, 0, 0, false, false);
-			this_offer.bid.push(bid_def);
-			emit AddedPredeterminedBid(import_id, bid_def.DH_wallet, bid_def.DH_node_id, this_offer.bid.length - 1, total_escrow_time_in_minutes, max_token_amount_per_DH, min_stake_amount_per_DH, data_size_in_bytes);
+		for(uint256 i = 0; i < predetermined_DH_wallet.length; i = i + 1) {
+			Storage.setBid(import_id, i, predetermined_DH_wallet[i], predetermined_DH_node_id[i], 0, 0, 0, 0, false, false);
+			// BidDefinition memory bid_def = BidDefinition(predetermined_DH_wallet[this_offer.bid.length], predetermined_DH_node_id[this_offer.bid.length], 0, 0, 0, 0, false, false);
+			// this_offer.bid.push(bid_def);
+			emit AddedPredeterminedBid(import_id, predetermined_DH_wallet[i], predetermined_DH_node_id[i], i, 
+				total_escrow_time_in_minutes, max_token_amount_per_DH, min_stake_amount_per_DH, 
+				data_size_in_bytes, litigation_interval_in_minutes);
 		}
+		Storage.setOffer_DC_wallet(import_id, msg.sender);
+		Storage.setOffer_max_token_amount_per_DH(import_id, max_token_amount_per_DH);
+		Storage.setOffer_min_stake_amount_per_DH(import_id, min_stake_amount_per_DH);
+		Storage.setOffer_min_reputation(import_id, min_reputation);
+		Storage.setOffer_total_escrow_time_in_minutes(import_id, total_escrow_time_in_minutes);
+		Storage.setOffer_data_size_in_bytes(import_id, data_size_in_bytes);
+		Storage.setOffer_litigation_interval_in_minutes(import_id, litigation_interval_in_minutes);
+		Storage.setOffer_data_hash(import_id, data_hash);
+		Storage.setOffer_first_bid_index(import_id, uint(-1));
+		Storage.setOffer_bid_array_length(import_id, predetermined_DH_wallet.length);
+		Storage.setOffer_replication_factor(import_id, predetermined_DH_wallet.length);
+		Storage.setOffer_offer_creation_timestamp(import_id, block.timestamp);
+		Storage.setOffer_active(import_id, true);
+		Storage.setOffer_finalized(import_id, false);
 
-		emit OfferCreated(import_id, DC_node_id, total_escrow_time_in_minutes, max_token_amount_per_DH, min_stake_amount_per_DH, min_reputation, data_size_in_bytes, data_hash);
+		emit OfferCreated(import_id, DC_node_id, total_escrow_time_in_minutes, 
+			max_token_amount_per_DH, min_stake_amount_per_DH, min_reputation,
+			data_size_in_bytes, data_hash, litigation_interval_in_minutes);
 	}
 
-	//TODO Decide when and under which conditions DC can cancel an offer
 	function cancelOffer(bytes32 import_id)
 	public{
-		OfferDefinition storage this_offer = offer[import_id];
-		require(this_offer.active && this_offer.DC_wallet == msg.sender
-			&& this_offer.finalized == false);
-		this_offer.active = false;
-		uint max_total_token_amount = this_offer.max_token_amount_per_DH.mul(this_offer.replication_factor.mul(2).add(1));
-		profile[msg.sender].balance = profile[msg.sender].balance.add(max_total_token_amount);
-		emit BalanceModified(msg.sender, profile[msg.sender].balance);
+		// OfferDefinition storage this_offer = offer[import_id];
+		(address s_DC_wallet, uint s_max_token_amount_per_DH, , , ,  , , , , , 
+			uint s_replication_factor, , bool s_active, bool s_finalized) = Storage.offer(import_id);
+
+		require(s_active && s_DC_wallet == msg.sender && s_finalized == false);
+
+		// Returns the alloted token amount back to DC
+		uint max_total_token_amount = s_max_token_amount_per_DH.mul(s_replication_factor.mul(2).add(1));
+		(, , , uint DC_balance, , , , ) = Storage.profile(msg.sender);
+		DC_balance = DC_balance.add(max_total_token_amount);
+		Storage.setProfile_balance(msg.sender, DC_balance);
+
+		Storage.setOffer_active(import_id, false);
 		emit OfferCanceled(import_id);
 	}
 
 	function activatePredeterminedBid(bytes32 import_id, bytes32 DH_node_id, uint bid_index)
 	public{
-		require(offer[import_id].active && !offer[import_id].finalized);
+		require(Storage.getBid_DH_wallet(import_id, bid_index) == msg.sender && Storage.getBid_DH_node_id(import_id, bid_index) == DH_node_id);
 
-		OfferDefinition storage this_offer = offer[import_id];
-		ProfileDefinition storage this_DH = profile[msg.sender];
-		BidDefinition storage this_bid = offer[import_id].bid[bid_index];
-
-		require(this_bid.DH_wallet == msg.sender && this_bid.DH_node_id == DH_node_id);
+		require(bidRequirements(import_id, msg.sender));
 
 		//Check if the the DH meets the filters DC set for the offer
-		uint scope = this_offer.data_size_in_bytes * this_offer.total_escrow_time_in_minutes;
-		require(this_offer.total_escrow_time_in_minutes <= this_DH.max_escrow_time_in_minutes);
-		require(this_offer.max_token_amount_per_DH  >= this_DH.token_amount_per_byte_minute * scope);
-		require((this_offer.min_stake_amount_per_DH  <= this_DH.stake_amount_per_byte_minute * scope) && (this_DH.stake_amount_per_byte_minute * scope <= profile[msg.sender].balance));
+		uint scope = Storage.getOffer_total_escrow_time_in_minutes(import_id) * Storage.getOffer_data_size_in_bytes(import_id);
+		uint token_amount_for_escrow = Storage.getProfile_token_amount_per_byte_minute(msg.sender).mul(scope);
+		uint stake_amount_for_escrow = Storage.getProfile_stake_amount_per_byte_minute(msg.sender).mul(scope);
 
 		//Write the required data for the bid
-		this_bid.token_amount_for_escrow = this_DH.token_amount_per_byte_minute * scope;
-		this_bid.stake_amount_for_escrow = this_DH.stake_amount_per_byte_minute * scope;
-		this_bid.active = true;
+		Storage.setBid(import_id, bid_index, msg.sender, DH_node_id, 
+			token_amount_for_escrow, stake_amount_for_escrow,
+			0, 0, true, false);
+		// this_bid.token_amount_for_escrow = p_token_amount_per_byte_minute * scope;
+		// this_bid.stake_amount_for_escrow = p_stake_amount_per_byte_minute * scope;
+		// this_bid.active = true;
 	}
 
 	function getDistanceParameters(bytes32 import_id)
-	public view returns (bytes32 node_hash, bytes32 data_hash, uint256 distance, uint256 current_ranking, uint256 required_bid_amount, uint256 active_nodes_){
-		OfferDefinition storage this_offer = offer[import_id];
+	public view returns (bytes32 node_hash, bytes32 data_hash, uint256 ranking, uint256 current_ranking, uint256 required_bid_amount, uint256 activated_nodes_){
+		// OfferDefinition storage this_offer = offer[import_id];
+		node_hash = bytes32(uint128(keccak256(abi.encodePacked(msg.sender))));
+		data_hash = bytes32(uint128(Storage.getOffer_data_hash(import_id)));
 
-		node_hash = bytes32(uint128(keccak256(msg.sender)));
-		data_hash = bytes32(uint128(this_offer.data_hash));
+		uint256 scope = Storage.getOffer_total_escrow_time_in_minutes(import_id).mul(Storage.getOffer_data_size_in_bytes(import_id));
+		ranking = calculateRanking(import_id, msg.sender, scope);
+		required_bid_amount = Storage.getOffer_replication_factor(import_id);
+		required_bid_amount = required_bid_amount.mul(2).add(1);
+		activated_nodes_ = activated_nodes; // TODO Find a way to remove this
 
-
-		distance = calculateDistance(import_id, msg.sender);
-		required_bid_amount = this_offer.replication_factor.mul(2).add(1);
-		active_nodes_ = active_nodes;
-
-		if(this_offer.first_bid_index == uint(-1)){
+		uint256 current_index = Storage.getOffer_first_bid_index(import_id);
+		if(current_index == uint(-1)){
 			current_ranking = 0;
 		}
 		else{
-			uint256 current_index = this_offer.first_bid_index;
 			current_ranking = 0;
-			while(this_offer.bid[current_index].next_bid != uint(-1) && this_offer.bid[current_index].distance >= distance){
-				current_index = this_offer.bid[current_index].next_bid;
+			(, , , , uint b_ranking, uint b_next_bid, , ) = Storage.bid(import_id, current_index);
+			while(b_next_bid != uint(-1) && b_ranking >= ranking){
+				// current_index = this_offer.bid[current_index].next_bid;
+				(, , , , b_ranking, b_next_bid, , ) = Storage.bid(import_id, current_index);
 				current_ranking++;
 			}
 		}
 	}
 
-	function addBid(bytes32 import_id, bytes32 DH_node_id)
-	public returns (uint distance){
-		require(offer[import_id].active && !offer[import_id].finalized);
+	function bidRequirements(bytes32 import_id, address wallet) internal view returns(bool passed_requirements) {
+		require(Storage.getOffer_active(import_id) && !Storage.getOffer_finalized(import_id));
 
-		OfferDefinition storage this_offer = offer[import_id];
-		ProfileDefinition storage this_DH = profile[msg.sender];
+		uint max_token_amount_per_DH = Storage.getOffer_max_token_amount_per_DH(import_id);
+		uint min_stake_amount_per_DH = Storage.getOffer_min_stake_amount_per_DH(import_id);
+		uint total_escrow_time_in_minutes = Storage.getOffer_total_escrow_time_in_minutes(import_id);
+		uint data_size_in_bytes = Storage.getOffer_data_size_in_bytes(import_id);
+
+		uint token_amount_per_byte_minute = Storage.getProfile_token_amount_per_byte_minute(wallet);
+		uint stake_amount_per_byte_minute = Storage.getProfile_stake_amount_per_byte_minute(wallet);
+		uint balance = Storage.getProfile_balance(wallet);
+		uint max_escrow_time_in_minutes = Storage.getProfile_max_escrow_time_in_minutes(wallet);
 
 		//Check if the the DH meets the filters DC set for the offer
-		uint scope = this_offer.data_size_in_bytes * this_offer.total_escrow_time_in_minutes;
-		require(this_offer.total_escrow_time_in_minutes <= this_DH.max_escrow_time_in_minutes);
-		require(this_offer.max_token_amount_per_DH  >= this_DH.token_amount_per_byte_minute * scope);
-		require((this_offer.min_stake_amount_per_DH  <= this_DH.stake_amount_per_byte_minute * scope) && (this_DH.stake_amount_per_byte_minute * scope <= profile[msg.sender].balance));
-		require(this_offer.min_reputation 	 <= profile[msg.sender].reputation);
-
-		//Create new bid in the list
-		uint this_bid_index = this_offer.bid.length;
-		BidDefinition memory new_bid = BidDefinition(msg.sender, DH_node_id, this_DH.token_amount_per_byte_minute * scope, this_DH.stake_amount_per_byte_minute * scope, 0, uint(-1), true, false);
-		new_bid.distance = calculateDistance(import_id, msg.sender);
-
-		distance = new_bid.distance;
-
-		//Insert the bid in the proper place in the list
-		if(this_offer.first_bid_index == uint(-1)){
-			this_offer.first_bid_index = this_bid_index;
-			this_offer.bid.push(new_bid);
-		}
-		else{
-			uint256 current_index = this_offer.first_bid_index;
-			uint256 previous_index = uint(-1);
-			if(this_offer.bid[current_index].distance < new_bid.distance){
-				this_offer.first_bid_index = this_bid_index;
-				new_bid.next_bid = current_index;
-				this_offer.bid.push(new_bid);
-			}
-			else {
-				while(current_index != uint(-1) && this_offer.bid[current_index].distance >= new_bid.distance){
-					previous_index = current_index;
-					current_index = this_offer.bid[current_index].next_bid;
-				}
-				if(current_index == uint(-1)){
-					this_offer.bid[previous_index].next_bid = this_bid_index;
-					this_offer.bid.push(new_bid);
-				}
-				else{
-					new_bid.next_bid = current_index;
-					this_offer.bid[previous_index].next_bid = this_bid_index;
-					this_offer.bid.push(new_bid);
-				}
-			}
-		}
-
-		if(this_offer.bid.length >= this_offer.replication_factor.mul(3).add(1)) emit FinalizeOfferReady(import_id);
-
-		emit AddedBid(import_id, msg.sender, DH_node_id, this_bid_index);
-		// return this_bid_index;
+		uint scope = data_size_in_bytes.mul(total_escrow_time_in_minutes);
+		if(total_escrow_time_in_minutes > max_escrow_time_in_minutes) return false;
+		if(max_token_amount_per_DH  < token_amount_per_byte_minute * scope) return false;
+		if(min_stake_amount_per_DH  > stake_amount_per_byte_minute * scope) return false;
+        if(stake_amount_per_byte_minute * scope > balance) return false;
+        return true;
 	}
 
-	function getBidIndex(bytes32 import_id, bytes32 DH_node_id) public view returns(uint){
-		OfferDefinition storage this_offer = offer[import_id];
-		uint256 i = 0;
-		while(i < this_offer.bid.length && (offer[import_id].bid[i].DH_wallet != msg.sender || offer[import_id].bid[i].DH_node_id != DH_node_id)) i = i + 1;
-		if( i == this_offer.bid.length) return uint(-1);
-		else return i;
+	function addBid(bytes32 import_id, bytes32 DH_node_id)
+	public {
+		//Check if the the DH meets the filters DC set for the offer
+		require(bidRequirements(import_id, msg.sender));
+		require(Storage.getOffer_min_reputation(import_id) <= Storage.getProfile_reputation(msg.sender));
+
+		uint scope = Storage.getOffer_data_size_in_bytes(import_id) * Storage.getOffer_total_escrow_time_in_minutes(import_id);
+		uint token_amount_for_escrow = Storage.getProfile_token_amount_per_byte_minute(msg.sender).mul(scope);
+		uint stake_amount_for_escrow = Storage.getProfile_stake_amount_per_byte_minute(msg.sender).mul(scope);
+		uint ranking = calculateRanking(import_id, msg.sender, scope);
+
+		uint this_bid_index = Storage.getOffer_bid_array_length(import_id);
+
+		//Insert the bid in the proper place in the list
+		if(Storage.getOffer_first_bid_index(import_id) == uint(-1)){
+			Storage.setOffer_first_bid_index(import_id, this_bid_index);
+			Storage.setBid(import_id, this_bid_index, msg.sender, DH_node_id, 
+				token_amount_for_escrow, stake_amount_for_escrow,
+				uint(-1), ranking, true, false);
+		}
+		else{
+			uint256 current_index = Storage.getOffer_first_bid_index(import_id);
+			uint256 previous_index = uint(-1);
+			(, , , , uint b_ranking, uint b_next_bid, , ) = Storage.bid(import_id, current_index);
+			if(b_ranking < ranking){
+				Storage.setOffer_first_bid_index(import_id, this_bid_index);
+				Storage.setBid(import_id, this_bid_index, msg.sender, DH_node_id, 
+					token_amount_for_escrow, stake_amount_for_escrow,
+					current_index, ranking, true, false);
+			}
+			else {
+				while(current_index != uint(-1) && b_ranking >= ranking){
+					previous_index = current_index;
+					current_index = b_next_bid;
+					(, , , , b_ranking, b_next_bid, , ) = Storage.bid(import_id, current_index);
+				}
+				if(current_index == uint(-1)){
+					// Set the bid[previous_bid_index].next_bid to this_bid_index
+					Storage.setBid_next_bid_index(import_id, previous_index, this_bid_index);
+					// Add new bid to storage
+					Storage.setBid(import_id, this_bid_index, msg.sender, DH_node_id, 
+						token_amount_for_escrow, stake_amount_for_escrow,
+						uint(-1), ranking, true, false);
+				}
+				else{
+					// Set the bid[previous_bid_index].next_bid to this_bid_index
+					Storage.setBid_next_bid_index(import_id, previous_index, this_bid_index);
+					// Add new bid to storage
+					Storage.setBid(import_id, this_bid_index, msg.sender, DH_node_id, 
+						token_amount_for_escrow, stake_amount_for_escrow,
+						current_index, ranking, true, false);
+				}
+			}
+
+		}
+
+		// Update offer
+		Storage.setOffer_bid_array_length(import_id, this_bid_index + 1);
+		uint replication_factor = Storage.getOffer_replication_factor(import_id);
+		if(this_bid_index + 1 >= replication_factor.mul(3).add(1)) emit FinalizeOfferReady(import_id);
+
+		emit AddedBid(import_id, msg.sender, DH_node_id, this_bid_index);
+	}
+
+	function getBidIndex(bytes32 import_id, bytes32 DH_node_id) public view returns(uint256 index){
+		// OfferDefinition storage this_offer = offer[import_id];
+		( , , , , , , , , , uint s_bid_array_length, , , , ) = Storage.offer(import_id);
+
+		index = 0;
+		(address t_DH_wallet, bytes32 t_DH_node_id,  ,  ,  ,  ,  ,  ) = Storage.bid(import_id, index);
+		while(index < s_bid_array_length && (t_DH_wallet != msg.sender || t_DH_node_id != DH_node_id)){
+			index = index + 1;
+			(t_DH_wallet, t_DH_node_id,  ,  ,  ,  ,  ,  ) = Storage.bid(import_id, index);
+		}
+		if( index == s_bid_array_length) return uint(-1);
 	}
 
 	function cancelBid(bytes32 import_id, uint bid_index)
 	public{
-		require(offer[import_id].bid[bid_index].DH_wallet == msg.sender);
-		offer[import_id].bid[bid_index].active = false;
+		require(Storage.getBid_DH_wallet(import_id, bid_index) == msg.sender);
+		Storage.setBid_active(import_id, bid_index, false);
 	}
 
 	function chooseBids(bytes32 import_id) public returns (uint256[] chosen_data_holders){
+		// OfferDefinition storage this_offer = offer[import_id];
+		uint256[] memory parameters;
+		require(Storage.getOffer_active(import_id) && !Storage.getOffer_finalized(import_id));
+		parameters[0] = Storage.getOffer_replication_factor(import_id); // replication_factor
 
-		OfferDefinition storage this_offer = offer[import_id];
-		require(this_offer.active && !this_offer.finalized);
-		require(this_offer.replication_factor.mul(3).add(1) <= this_offer.bid.length);
-		// require(this_offer.offer_creation_timestamp + 5 minutes < block.timestamp);
+		require(parameters[0].mul(3).add(1) <= Storage.getOffer_bid_array_length(import_id));
+		require(Storage.getOffer_offer_creation_timestamp(import_id) + 5 seconds < block.timestamp); // TODO Vrati ovo na minute
 		
-		chosen_data_holders = new uint256[](this_offer.replication_factor.mul(2).add(1));
+		chosen_data_holders = new uint256[](parameters[0].mul(2).add(1));
 
-		uint256 i;
-		uint256 current_index = 0;
+		parameters[1] = 0; // uint256 bid_index;
+		parameters[2] = 0; // uint256 current_index;
 
-		uint256 token_amount_sent = 0;
-		uint256 max_total_token_amount = this_offer.max_token_amount_per_DH.mul(this_offer.replication_factor.mul(2).add(1));
+		parameters[3] = 0; // uint256 token_amount_sent = 0;
+		parameters[4] = Storage.getOffer_max_token_amount_per_DH(import_id).mul(parameters[0].mul(2).add(1)); 
+		// uint256 max_total_token_amount = Storage.getOffer_max_token_amount_per_DH(import_id).mul(parameters[0].mul(2).add(1));
 
+		parameters[5] = 0; // token_amount_for_escrow
+		parameters[6] = 0; // stake_amount_for_escrow
+		parameters[7] = Storage.getOffer_total_escrow_time_in_minutes(import_id); // total_escrow_time_in_minutes
+		parameters[8] = Storage.getOffer_litigation_interval_in_minutes(import_id); // litigation_interval_in_minutes
+		EscrowHolder escrow = EscrowHolder(hub.escrowAddress());
+		
 		//Sending escrow requests to predetermined bids
-		for(i = 0; i < this_offer.replication_factor; i = i + 1){
-			BidDefinition storage chosen_bid = this_offer.bid[i];
-			ProfileDefinition storage chosen_DH = profile[chosen_bid.DH_wallet];				
+		for(parameters[1] = 0; parameters[1] < parameters[0]; parameters[1] = parameters[1] + 1){
 
-			if(profile[chosen_bid.DH_wallet].balance >= chosen_bid.stake_amount_for_escrow && chosen_bid.active){
+			if(Storage.getProfile_balance(Storage.getBid_DH_wallet(import_id, parameters[1])) >= Storage.getBid_stake_amount_for_escrow(import_id, parameters[1]) 
+				&& Storage.getBid_active(import_id, parameters[1])){
 				//Initiating new escrow
-				escrow.initiateEscrow(msg.sender, chosen_bid.DH_wallet, import_id, chosen_bid.token_amount_for_escrow, chosen_bid.stake_amount_for_escrow, this_offer.total_escrow_time_in_minutes);
+				parameters[5] = Storage.getBid_token_amount_for_escrow(import_id, parameters[1]);
+				parameters[6] = Storage.getBid_stake_amount_for_escrow(import_id, parameters[1]);
+				escrow.initiateEscrow(msg.sender, Storage.getBid_DH_wallet(import_id, parameters[1]), import_id, 
+					parameters[5], parameters[6], parameters[7], parameters[8]);
 
-				token_amount_sent = token_amount_sent.add(chosen_bid.token_amount_for_escrow);
+				parameters[3] = parameters[3].add(parameters[5]);
 
-				chosen_bid.chosen = true;
-				chosen_data_holders[current_index] = i;
-				current_index = current_index + 1;
+				Storage.setBid_chosen(import_id, parameters[1], true);
+				chosen_data_holders[parameters[2]] = parameters[1];
+				parameters[2] = parameters[2] + 1;
 
-				emit BidTaken(import_id, chosen_bid.DH_wallet);
-			}
-		}		
-
-		//Sending escrow requests to network bids
-		uint256 bid_index = this_offer.first_bid_index;
-		while(current_index < this_offer.replication_factor.mul(2).add(1)) {
-
-			while(bid_index != uint(-1) && !this_offer.bid[bid_index].active){
-				bid_index = this_offer.bid[bid_index].next_bid;
-			} 
-			if(bid_index == uint(-1)) break;
-
-			chosen_bid = this_offer.bid[bid_index];
-			chosen_DH = profile[chosen_bid.DH_wallet];
-
-			if(profile[chosen_bid.DH_wallet].balance >= chosen_bid.stake_amount_for_escrow){
-				//Initiating new escrow
-				escrow.initiateEscrow(msg.sender, chosen_bid.DH_wallet, import_id, chosen_bid.token_amount_for_escrow, chosen_bid.stake_amount_for_escrow, this_offer.total_escrow_time_in_minutes);
-
-				token_amount_sent = token_amount_sent.add(chosen_bid.token_amount_for_escrow);
-
-				chosen_bid.chosen = true;
-				chosen_data_holders[current_index] = bid_index;
-				current_index = current_index + 1;
-				bid_index = this_offer.bid[bid_index].next_bid;
-
-				emit BidTaken(import_id, chosen_bid.DH_wallet);
-			}
-			else{
-				chosen_bid.active = false;
+				emit BidTaken(import_id, Storage.getBid_DH_wallet(import_id, parameters[1]));
 			}
 		}
 
-		offer[import_id].finalized = true;
+		//Sending escrow requests to network bids
+		parameters[1] = Storage.getOffer_first_bid_index(import_id);
+		while(parameters[2] < parameters[0].mul(2).add(1)) {
+		    uint next_bid;
 
-		profile[msg.sender].balance = profile[msg.sender].balance.add(max_total_token_amount.sub(token_amount_sent));
-		emit BalanceModified(msg.sender, profile[msg.sender].balance);
+			while(parameters[1] != uint(-1) && !Storage.getBid_active(import_id, parameters[1])){
+				parameters[1] = next_bid;
+				next_bid = Storage.getBid_next_bid_index(import_id, parameters[1]);
+			} 
+
+			if(parameters[1] == uint(-1)) break;
+
+			if(Storage.getProfile_balance(Storage.getBid_DH_wallet(import_id, parameters[1])) >= Storage.getBid_stake_amount_for_escrow(import_id, parameters[1])){
+				//Initiating new escrow
+				escrow.initiateEscrow(msg.sender, Storage.getBid_DH_wallet(import_id, parameters[1]), import_id, 
+					parameters[5], parameters[6], parameters[7], parameters[8]);
+
+				parameters[3] = parameters[3].add(parameters[5]);
+
+				// Set bid to chosen
+				Storage.setBid_chosen(import_id, parameters[1], true);
+
+				chosen_data_holders[parameters[2]] = parameters[1];
+				parameters[2] = parameters[2] + 1;
+				parameters[1] = next_bid;
+
+				emit BidTaken(import_id, Storage.getBid_DH_wallet(import_id, parameters[1]));
+			}
+			else{
+				// Set bid to inactive
+				Storage.setBid_active(import_id, parameters[1], false);
+			}
+		}
+
+		// Update offer (set finalized flag to true)
+		Storage.setOffer_finalized(import_id, true);
+
+		// Return the unused tokens back to DC
+		uint DC_balance = Storage.getProfile_balance(msg.sender);
+		DC_balance = DC_balance.add(parameters[4].sub(parameters[3]));
+		Storage.setProfile_balance(msg.sender, DC_balance);
+		emit BalanceModified(msg.sender, DC_balance);
+		
 		emit OfferFinalized(import_id); 
-	}
-
-
-	function isBidChosen(bytes32 import_id, uint bid_index) public constant returns (bool _isBidChosen){
-		return offer[import_id].bid[bid_index].chosen;
-	}
-
-	function getOfferStatus(bytes32 import_id) public constant returns (bool isOfferFinal){
-		return offer[import_id].finalized;
 	}
 
 	/*    ----------------------------- PROFILE -----------------------------    */
 
-	event ProfileCreated(address wallet, bytes32 node_id);
+	event ProfileCreated(address wallet);
 	event BalanceModified(address wallet, uint new_balance);
 	event ReputationModified(address wallet, uint new_balance);
 
-	function createProfile(bytes32 node_id, uint price_per_byte_minute, uint stake_per_byte_minute, uint read_stake_factor, uint max_time_in_minutes) public{
-		ProfileDefinition storage this_profile = profile[msg.sender];
-		require(!this_profile.active);
-		this_profile.active = true;
-		active_nodes = active_nodes.add(1);
+	function createProfile(uint price_per_byte_minute, uint stake_per_byte_minute, uint read_stake_factor, uint max_time_in_minutes) public{
+		( , , , uint p_balance, uint p_reputation, uint p_number_of_escrows, , bool p_active) = Storage.profile(msg.sender);
 
-		this_profile.token_amount_per_byte_minute = price_per_byte_minute;
-		this_profile.stake_amount_per_byte_minute = stake_per_byte_minute;
+		Storage.setProfile(msg.sender, price_per_byte_minute, stake_per_byte_minute, read_stake_factor, 
+			p_balance, p_reputation, p_number_of_escrows, max_time_in_minutes, true);
 
-		this_profile.read_stake_factor = read_stake_factor;
-		this_profile.max_escrow_time_in_minutes = max_time_in_minutes;
+		if(!p_active) activated_nodes = activated_nodes.add(1);
 
-		emit ProfileCreated(msg.sender, node_id);
+		emit ProfileCreated(msg.sender);
 	}
 
 	function setPrice(uint new_price_per_byte_minute) public {
-		profile[msg.sender].token_amount_per_byte_minute = new_price_per_byte_minute;
+		Storage.setProfile_token_amount_per_byte_minute(msg.sender, new_price_per_byte_minute);
 	}
 
 	function setStake(uint new_stake_per_byte_minute) public {
-		profile[msg.sender].stake_amount_per_byte_minute = new_stake_per_byte_minute;
+		Storage.setProfile_stake_amount_per_byte_minute(msg.sender, new_stake_per_byte_minute);
 	}
 
 	function setMaxTime(uint new_max_time_in_minutes) public {
-		profile[msg.sender].max_escrow_time_in_minutes = new_max_time_in_minutes;
+		Storage.setProfile_max_escrow_time_in_minutes(msg.sender, new_max_time_in_minutes);
 	}
 
 	function depositToken(uint amount) public {
@@ -441,57 +566,35 @@ contract Bidding{
 		uint amount_to_transfer = amount;
 		amount = 0;
 		if(amount_to_transfer > 0) {
+			ERC20 token = ERC20(hub.tokenAddress());
 			token.transferFrom(msg.sender, this, amount_to_transfer);
-			profile[msg.sender].balance = profile[msg.sender].balance.add(amount_to_transfer);
-			emit BalanceModified(msg.sender, profile[msg.sender].balance);
+			(, , , uint balance, , , , ) = Storage.profile(msg.sender);
+			balance = balance.add(amount_to_transfer);
+			Storage.setProfile_balance(msg.sender, balance);
+			emit BalanceModified(msg.sender, balance);
 		}
 	}
 
 	function withdrawToken(uint amount) public {
 		uint256 amount_to_transfer;
-		if(profile[msg.sender].balance >= amount){
+
+		(, , , uint balance, , , , ) = Storage.profile(msg.sender);
+
+		if(balance >= amount){
 			amount_to_transfer = amount;
-			profile[msg.sender].balance = profile[msg.sender].balance.sub(amount);
+			balance = balance.sub(amount);
 		}
 		else{ 
-			amount_to_transfer = profile[msg.sender].balance;
-			profile[msg.sender].balance = 0;
+			amount_to_transfer = balance;
+			balance = 0;
 		}
 		amount = 0;
 		if(amount_to_transfer > 0){
+			ERC20 token = ERC20(hub.tokenAddress());
 			token.transfer(msg.sender, amount_to_transfer);
-			emit BalanceModified(msg.sender, profile[msg.sender].balance);
+			Storage.setProfile_balance(msg.sender, balance);
+			emit BalanceModified(msg.sender, balance);
 		} 
-	}
-
-	function increaseBalance(address wallet, uint amount) public onlyContracts {
-		profile[wallet].balance = profile[wallet].balance.add(amount);
-		emit BalanceModified(wallet, profile[wallet].balance);
-	}
-
-	function decreaseBalance(address wallet, uint amount) public onlyContracts {
-		require(profile[wallet].balance >= amount);
-		profile[wallet].balance = profile[wallet].balance.sub(amount);
-		emit BalanceModified(wallet, profile[wallet].balance);
-	}
-
-	function increaseReputation(address wallet, uint amount) public onlyContracts {
-		profile[wallet].reputation = profile[wallet].reputation.add(amount);
-		emit ReputationModified(wallet, profile[wallet].reputation);
-	}
-
-	function addEscrow(address wallet) public onlyContracts {
-		profile[wallet].number_of_escrows = profile[wallet].number_of_escrows.add(1);
-	}
-
-	function getBalance(address wallet)
-	public view returns (uint256) {
-		return profile[wallet].balance;
-	}
-
-	function getReadStakeFactor(address wallet)
-	public view returns (uint256) {
-		return profile[wallet].read_stake_factor;
 	}
 
 	function absoluteDifference(uint256 a, uint256 b) public pure returns (uint256) {
@@ -499,7 +602,7 @@ contract Bidding{
 		else return b-a;
 	}
 
-	function log2(uint x) internal pure returns (uint y){
+	function logs2(uint x) internal pure returns (uint y){
 		require(x > 0);
 		assembly {
 			let arg := x
@@ -551,27 +654,31 @@ contract Bidding{
 	// Constant values used for distance calculation
 	uint256 corrective_factor = 10**10;
 
-	function calculateDistance(bytes32 import_id, address DH_wallet)
-	public view returns (uint256 distance) {
-		OfferDefinition storage this_offer = offer[import_id];
-		ProfileDefinition storage this_DH = profile[DH_wallet];
+	function calculateRanking(bytes32 import_id, address DH_wallet, uint256 scope)
+	public view returns (uint256 ranking) {
+		uint256 data_hash = uint256(uint128(Storage.getOffer_data_hash(import_id)));
+		
+		uint256[] memory amounts;
+		amounts[0] = Storage.getProfile_token_amount_per_byte_minute(DH_wallet) * scope;
+		amounts[1] = Storage.getProfile_stake_amount_per_byte_minute(DH_wallet) * scope;
+		amounts[2] = Storage.getOffer_max_token_amount_per_DH(import_id);
+		amounts[3] = Storage.getOffer_min_stake_amount_per_DH(import_id);
+		amounts[4] = Storage.getOffer_min_reputation(import_id);
+		if(amounts[1] == 0) amounts[1] = 1;
 
-		uint256 stake_amount;
-		if (this_DH.stake_amount_per_byte_minute == 0) stake_amount = 1;
-		else stake_amount = this_DH.stake_amount_per_byte_minute * this_offer.total_escrow_time_in_minutes.mul(this_offer.data_size_in_bytes);
-		uint256 token_amount = this_DH.token_amount_per_byte_minute * this_offer.total_escrow_time_in_minutes.mul(this_offer.data_size_in_bytes);
 
-		uint256 reputation;
-		if(this_DH.number_of_escrows == 0 || this_DH.reputation == 0) reputation = 1;
-		else reputation = (log2(this_DH.reputation / this_DH.number_of_escrows) * corrective_factor / 115) / (corrective_factor / 100);
+		uint256 number_of_escrows = Storage.getProfile_number_of_escrows(DH_wallet);
+		uint256 reputation = Storage.getProfile_reputation(DH_wallet);
+		if(number_of_escrows == 0 || reputation == 0) reputation = 1;
+		else reputation = (logs2(reputation / number_of_escrows) * corrective_factor / 115) / (corrective_factor / 100);
 		if(reputation == 0) reputation = 1;
 
-		uint256 hash_difference = absoluteDifference(uint256(uint128(this_offer.data_hash)), uint256(uint128(keccak256(DH_wallet))));
+		uint256 hash_difference = absoluteDifference(data_hash, uint256(uint128(keccak256(abi.encodePacked(DH_wallet)))));
 
-		uint256 hash_f = ((uint256(uint128(this_offer.data_hash)) * (2**128)) / (hash_difference + uint256(uint128(this_offer.data_hash))));
-		uint256 price_f = corrective_factor - ((corrective_factor * token_amount) / this_offer.max_token_amount_per_DH);
-		uint256 stake_f = ((corrective_factor - ((this_offer.min_stake_amount_per_DH * corrective_factor) / stake_amount)) * uint256(uint128(this_offer.data_hash))) / (hash_difference + uint256(uint128(this_offer.data_hash)));
-		uint256 rep_f = (corrective_factor - (this_offer.min_reputation * corrective_factor / reputation));
-		distance = ((hash_f * (corrective_factor + price_f + stake_f + rep_f)) / 4) / corrective_factor;
+		uint256 hash_f = ((data_hash * (2**128)) / (hash_difference + data_hash));
+		uint256 price_f = corrective_factor - ((corrective_factor * amounts[0]) / amounts[2]);
+		uint256 stake_f = ((corrective_factor - ((amounts[3] * corrective_factor) / amounts[1])) * data_hash) / (hash_difference + data_hash);
+		uint256 rep_f = (corrective_factor - (amounts[4] * corrective_factor / reputation));
+		ranking = ((hash_f * (corrective_factor + price_f + stake_f + rep_f)) / 4) / corrective_factor;
 	}
 }
