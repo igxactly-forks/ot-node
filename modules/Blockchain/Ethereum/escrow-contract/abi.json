@@ -54,21 +54,7 @@
   {
     "constant": true,
     "inputs": [],
-    "name": "Hub",
-    "outputs": [
-      {
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "owner",
+    "name": "escrowStorage",
     "outputs": [
       {
         "name": "",
@@ -81,33 +67,25 @@
   },
   {
     "constant": false,
-    "inputs": [
-      {
-        "name": "import_id",
-        "type": "bytes32"
-      },
-      {
-        "name": "DH_wallet",
-        "type": "address"
-      },
-      {
-        "name": "requested_data_index",
-        "type": "uint256"
-      },
-      {
-        "name": "hash_array",
-        "type": "bytes32[]"
-      }
-    ],
-    "name": "initiateLitigation",
+    "inputs": [],
+    "name": "initiate",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "Hub",
     "outputs": [
       {
-        "name": "newLitigationInitiated",
-        "type": "bool"
+        "name": "",
+        "type": "address"
       }
     ],
     "payable": false,
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -159,50 +137,9 @@
     "type": "function"
   },
   {
-    "constant": false,
-    "inputs": [
-      {
-        "name": "import_id",
-        "type": "bytes32"
-      }
-    ],
-    "name": "cancelInactiveLitigation",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "constant": false,
-    "inputs": [
-      {
-        "name": "import_id",
-        "type": "bytes32"
-      },
-      {
-        "name": "DH_wallet",
-        "type": "address"
-      },
-      {
-        "name": "proof_data",
-        "type": "bytes32"
-      }
-    ],
-    "name": "proveLitigaiton",
-    "outputs": [
-      {
-        "name": "DH_was_penalized",
-        "type": "bool"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "constant": true,
     "inputs": [],
-    "name": "Storage",
+    "name": "readingStorage",
     "outputs": [
       {
         "name": "",
@@ -214,17 +151,17 @@
     "type": "function"
   },
   {
-    "constant": false,
-    "inputs": [
+    "constant": true,
+    "inputs": [],
+    "name": "profileStorage",
+    "outputs": [
       {
-        "name": "newOwner",
+        "name": "",
         "type": "address"
       }
     ],
-    "name": "transferOwnership",
-    "outputs": [],
     "payable": false,
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -246,34 +183,21 @@
     "type": "function"
   },
   {
-    "constant": false,
-    "inputs": [
-      {
-        "name": "import_id",
-        "type": "bytes32"
-      },
-      {
-        "name": "requested_data",
-        "type": "bytes32"
-      }
-    ],
-    "name": "answerLitigation",
+    "constant": true,
+    "inputs": [],
+    "name": "litigationStorage",
     "outputs": [
       {
-        "name": "answer_accepted",
-        "type": "bool"
+        "name": "",
+        "type": "address"
       }
     ],
     "payable": false,
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      {
-        "name": "storage_address",
-        "type": "address"
-      },
       {
         "name": "hub_address",
         "type": "address"
@@ -381,101 +305,6 @@
       }
     ],
     "name": "EscrowCompleted",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "name": "import_id",
-        "type": "bytes32"
-      },
-      {
-        "indexed": false,
-        "name": "DH_wallet",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "name": "requested_data_index",
-        "type": "uint256"
-      }
-    ],
-    "name": "LitigationInitiated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "name": "import_id",
-        "type": "bytes32"
-      },
-      {
-        "indexed": false,
-        "name": "DH_wallet",
-        "type": "address"
-      }
-    ],
-    "name": "LitigationAnswered",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "name": "import_id",
-        "type": "bytes32"
-      },
-      {
-        "indexed": false,
-        "name": "DH_wallet",
-        "type": "address"
-      }
-    ],
-    "name": "LitigationTimedOut",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "name": "import_id",
-        "type": "bytes32"
-      },
-      {
-        "indexed": false,
-        "name": "DH_wallet",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "name": "DH_was_penalized",
-        "type": "bool"
-      }
-    ],
-    "name": "LitigationCompleted",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "name": "previousOwner",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "name": "newOwner",
-        "type": "address"
-      }
-    ],
-    "name": "OwnershipTransferred",
     "type": "event"
   }
 ]

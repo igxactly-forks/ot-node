@@ -78,7 +78,6 @@ contract ContractHub{
 
      address public profileStorageAddress;
      address public escrowStorageAddress;
-     address public litigationAddress;
      address public litigationStorageAddress;
      address public readingStorageAddress;
 }
@@ -97,7 +96,7 @@ contract EscrowHolder{
           require ( hub_address != address(0));
           Hub = ContractHub(hub_address);
      }
-
+     // TODO Check if these functions didn't pass because Hub wasn't deployed
      function initiate() public {
           profileStorage = ProfileStorage(Hub.profileStorageAddress());
           escrowStorage  = EscrowStorage(Hub.escrowStorageAddress());
