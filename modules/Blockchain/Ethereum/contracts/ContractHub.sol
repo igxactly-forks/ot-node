@@ -41,6 +41,7 @@ pragma solidity ^0.4.21;
 contract ContractHub is Ownable{
      address public fingerprintAddress;
      address public tokenAddress;
+     address public profileAddress;
      address public biddingAddress;
      address public escrowAddress;
      address public litigationAddress;
