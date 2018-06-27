@@ -1,22 +1,18 @@
 /* eslint indent: 0 */
-var Hub = artifacts.require('ContractHub'); // eslint-disable-line no-undef
+var ContractHub = artifacts.require('ContractHub'); // eslint-disable-line no-undef
 
 var TracToken = artifacts.require('TracToken'); // eslint-disable-line no-undef
 var OTFingerprintStore = artifacts.require('OTFingerprintStore'); // eslint-disable-line no-undef
-
+var StorageContract = artifacts.require('StorageContract'); // eslint-disable-line no-undef
 var EscrowHolder = artifacts.require('EscrowHolder'); // eslint-disable-line no-undef
 var BiddingTest = artifacts.require('BiddingTest'); // eslint-disable-line no-undef
 var Bidding = artifacts.require('Bidding'); // eslint-disable-line no-undef
 var Reading = artifacts.require('Reading'); // eslint-disable-line no-undef
 
-var MockEscrowHolder = artifacts.require('MockEscrowHolder'); // eslint-disable-line no-undef
-var MockBidding = artifacts.require('MockBidding'); // eslint-disable-line no-undef
-var MockReading = artifacts.require('MockReading'); // eslint-disable-line no-undef
-
 var TestingUtilities = artifacts.require('TestingUtilities'); // eslint-disable-line no-undef
 
 const giveMeHub = async function giveMeHub() {
-    const hub = Hub.deployed();
+    const hub = ContractHub.deployed();
     return hub;
 };
 
@@ -43,20 +39,6 @@ const giveMeBiddingTest = async function giveMeBiddingTest() {
 };
 const giveMeReading = async function givemere() {
     const reading = Reading.deployed();
-    return reading;
-};
-
-
-const giveMeMockEscrowHolder = async function giveMeMockEscrowHolder() {
-    const escrow = MockEscrowHolder.deployed();
-    return escrow;
-};
-const giveMeMockBidding = async function giveMeMockBidding() {
-    const bidding = MockBidding.deployed();
-    return bidding;
-};
-const giveMeMockReading = async function giveMeMockReading() {
-    const reading = MockReading.deployed();
     return reading;
 };
 
@@ -151,47 +133,42 @@ module.exports = (deployer, network, accounts) => {
         });
         break;
     case 'test':
-        deployer.deploy(TracToken, accounts[0], accounts[1], accounts[2])
-        .then(() => giveMeTracToken())
-        .then(async (result) => {
-            token = result;
-            await deployer.deploy(EscrowHolder, token.address, { gas: 8000000, from: accounts[0] })
-        .then(() => giveMeEscrowHolder())
-        .then(async (result) => {
-            escrow = result;
-            await deployer.deploy(Reading, escrow.address, { gas: 8000000, from: accounts[0] })
-        .then(() => giveMeReading())
-        .then(async (result) => {
-            reading = result;
-            await deployer.deploy(BiddingTest, token.address, escrow.address, reading.address)
-        .then(() => giveMeBiddingTest())
-        .then(async (result) => {
-            bidding = result;
-            await deployer.deploy(
-                Hub,
-                token.address, // Irrelevant, truffle tests don't use OT contract
-                token.address,
-                bidding.address,
-                escrow.address,
-                reading.address,
-            )
+        deployer.deploy(ContractHub, { gas: 8000000, from: accounts[0] })
         .then(() => giveMeHub())
         .then(async (result) => {
             hub = result;
+            await deployer.deploy(StorageContract, hub.address, { gas: 90000000, from: accounts[0] })
+        .then(() => giveMeStorage())
+        .then(async (result) => {
+            storage = result;
+            await deployer.deploy(TracToken, accounts[0], accounts[1], accounts[2])
+        .then(() => giveMeTracToken())
+        .then(async (result) => {
+            token = result;
+            hub.setToken(token.address);
+            await deployer.deploy(
+                EscrowHolder,
+                hub.address,
+                storage.address,
+                { gas: 8000000, from: accounts[0] },
+            )
+        .then(() => giveMeEscrowHolder())
+        .then(async (result) => {
+            escrow = result;
+            hub.setEscrow(escrow.address);
+            await deployer.deploy(Reading, storage.address, { gas: 8000000, from: accounts[0] })
+        .then(() => giveMeReading())
+        .then(async (result) => {
+            reading = result;
+            hub.setReading(reading.address);
+            await deployer.deploy(BiddingTest, hub.address, storage.address)
+        .then(() => giveMeBiddingTest())
+        .then(async (result) => {
+            bidding = result;
+            hub.setBidding(bidding.address);
             await deployer.deploy(StorageContracts, hub.address)
         .then(async () => {
             await deployer.deploy(TestingUtilities)
-        .then(async () => {
-            await escrow.setBidding(bidding.address, { from: accounts[0] })
-        .then(async () => {
-            await escrow.setReading(reading.address, { from: accounts[0] })
-        .then(async () => {
-            await reading.setBidding(bidding.address, { from: accounts[0] })
-        .then(async () => {
-            await reading.transferOwnership(escrow.address, { from: accounts[0] })
-        .then(async () => {
-            await escrow.transferOwnership(bidding.address, { from: accounts[0] })
-        .then(async () => {
             var amounts = [];
             var recepients = [];
             for (let i = 0; i < 10; i += 1) {
@@ -208,11 +185,6 @@ module.exports = (deployer, network, accounts) => {
             console.log(`\t Escrow contract address: \t ${escrow.address}`);
             console.log(`\t Bidding contract address: \t ${bidding.address}`);
             console.log(`\t Reading contract address: \t ${reading.address}`);
-        });
-        });
-        });
-        });
-        });
         });
         });
         });
@@ -293,58 +265,8 @@ module.exports = (deployer, network, accounts) => {
         });
         });
         break;
-    case 'mock':
-        DC_wallet = accounts[0]; // eslint-disable-line prefer-destructuring
-        DH_wallet = accounts[1]; // eslint-disable-line prefer-destructuring
-        deployer.deploy(TracToken, accounts[0], accounts[1], accounts[2])
-        .then(() => giveMeTracToken())
-        .then(async (result) => {
-            token = result;
-            await deployer.deploy(MockEscrowHolder, token.address)
-        .then(() => giveMeMockEscrowHolder())
-        .then(async (result) => {
-            escrow = result;
-            await deployer.deploy(MockReading, escrow.address)
-        .then(() => giveMeMockReading())
-        .then(async (result) => {
-            reading = result;
-            await deployer.deploy(MockBidding, token.address, escrow.address, reading.address)
-        .then(() => giveMeMockBidding())
-        .then(async (result) => {
-            bidding = result;
-            await deployer.deploy(OTFingerprintStore)
-        .then(() => giveMeFingerprint())
-        .then(async (result) => {
-            fingerprint = result;
-            await escrow.transferOwnership(bidding.address)
-        .then(async () => {
-            var amounts = [];
-            var recepients = [];
-            for (var i = 0; i < 10; i += 1) {
-                amounts.push(amountToMint);
-                recepients.push(accounts[i]);
-            }
-            await token.mintMany(recepients, amounts, { from: accounts[0] })
-        .then(async () => {
-            await token.finishMinting({ from: accounts[0] })
-        .then(() => {
-            console.log('\n\n \t Contract adressess on ganache (mock versions):');
-            console.log('\t OT-fingerprint address: \t' + fingerprint.address); // eslint-disable-line
-            console.log('\t Token contract address: \t' + token.address); // eslint-disable-line
-            console.log('\t Escrow contract address: \t' + escrow.address); // eslint-disable-line
-            console.log('\t Bidding contract address: \t' + bidding.address); // eslint-disable-line
-            console.log('\t Reading contract address: \t' + reading.address); // eslint-disable-line
-        });
-        });
-        });
-        });
-        });
-        });
-        });
-        });
-        break;
     default:
-        console.warn('Please use one of the following network identifiers: ganache, mock, test, or rinkeby');
+        console.warn('Please use one of the following network identifiers: ganache, test, or rinkeby');
         break;
     }
 };
