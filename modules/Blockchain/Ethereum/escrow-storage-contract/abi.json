@@ -1,0 +1,696 @@
+[
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			}
+		],
+		"name": "getEscrow_tokens_sent",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			}
+		],
+		"name": "getEscrow_distribution_root_hash",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			},
+			{
+				"name": "distribution_root_hash",
+				"type": "bytes32"
+			}
+		],
+		"name": "setEscrow_distribution_root_hash",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			}
+		],
+		"name": "getEscrow_checksum",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			},
+			{
+				"name": "escrow_status",
+				"type": "uint8"
+			}
+		],
+		"name": "setEscrow_escrow_status",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			}
+		],
+		"name": "getEscrow_end_time",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			},
+			{
+				"name": "token_amount",
+				"type": "uint256"
+			}
+		],
+		"name": "setEscrow_token_amount",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "hub",
+		"outputs": [
+			{
+				"name": "",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			}
+		],
+		"name": "getEscrow_last_confirmation_time",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			},
+			{
+				"name": "total_time_in_seconds",
+				"type": "uint256"
+			}
+		],
+		"name": "setEscrow_total_time_in_seconds",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			},
+			{
+				"name": "end_time",
+				"type": "uint256"
+			}
+		],
+		"name": "setEscrow_end_time",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			}
+		],
+		"name": "getEscrow_escrow_status",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint8"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			}
+		],
+		"name": "getEscrow_litigation_interval_in_minutes",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			}
+		],
+		"name": "getEscrow_token_amount",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			},
+			{
+				"name": "stake_amount",
+				"type": "uint256"
+			}
+		],
+		"name": "setEscrow_stake_amount",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			},
+			{
+				"name": "checksum",
+				"type": "uint256"
+			}
+		],
+		"name": "setEscrow_checksum",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			}
+		],
+		"name": "getEscrow_total_time_in_seconds",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			},
+			{
+				"name": "DC_wallet",
+				"type": "address"
+			}
+		],
+		"name": "setEscrow_DC_wallet",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "owner",
+		"outputs": [
+			{
+				"name": "",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			},
+			{
+				"name": "last_confirmation_time",
+				"type": "uint256"
+			}
+		],
+		"name": "setEscrow_last_confirmation_time",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			},
+			{
+				"name": "tokens_sent",
+				"type": "uint256"
+			}
+		],
+		"name": "setEscrow_tokens_sent",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			},
+			{
+				"name": "litigation_interval_in_minutes",
+				"type": "uint256"
+			}
+		],
+		"name": "setEscrow_litigation_interval_in_minutes",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "",
+				"type": "bytes32"
+			},
+			{
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "escrow",
+		"outputs": [
+			{
+				"name": "DC_wallet",
+				"type": "address"
+			},
+			{
+				"name": "token_amount",
+				"type": "uint256"
+			},
+			{
+				"name": "tokens_sent",
+				"type": "uint256"
+			},
+			{
+				"name": "stake_amount",
+				"type": "uint256"
+			},
+			{
+				"name": "last_confirmation_time",
+				"type": "uint256"
+			},
+			{
+				"name": "end_time",
+				"type": "uint256"
+			},
+			{
+				"name": "total_time_in_seconds",
+				"type": "uint256"
+			},
+			{
+				"name": "litigation_interval_in_minutes",
+				"type": "uint256"
+			},
+			{
+				"name": "litigation_root_hash",
+				"type": "bytes32"
+			},
+			{
+				"name": "distribution_root_hash",
+				"type": "bytes32"
+			},
+			{
+				"name": "checksum",
+				"type": "uint256"
+			},
+			{
+				"name": "escrow_status",
+				"type": "uint8"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			}
+		],
+		"name": "getEscrow_litigation_root_hash",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			}
+		],
+		"name": "getEscrow_stake_amount",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			},
+			{
+				"name": "litigation_root_hash",
+				"type": "bytes32"
+			}
+		],
+		"name": "setEscrow_litigation_root_hash",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "transferOwnership",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			}
+		],
+		"name": "getEscrow_DC_wallet",
+		"outputs": [
+			{
+				"name": "",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"name": "hub_address",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"indexed": false,
+				"name": "DH_wallet",
+				"type": "address"
+			}
+		],
+		"name": "EscrowChange",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"name": "previousOwner",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "OwnershipTransferred",
+		"type": "event"
+	}
+]
