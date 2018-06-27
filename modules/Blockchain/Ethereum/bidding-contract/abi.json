@@ -99,6 +99,20 @@
     "type": "function"
   },
   {
+    "constant": true,
+    "inputs": [],
+    "name": "biddingStorage",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "constant": false,
     "inputs": [
       {
@@ -355,7 +369,7 @@
   {
     "constant": true,
     "inputs": [],
-    "name": "Storage",
+    "name": "profileStorage",
     "outputs": [
       {
         "name": "",
