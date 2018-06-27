@@ -48,6 +48,7 @@ contract ContractHub is Ownable {
 
 contract ProfileStorage is Ownable{
 	ContractHub public hub;
+	event ProfileChange(address wallet);
 
 	constructor(address hub_address) public {
 		require(hub_address != address(0));
