@@ -43,6 +43,7 @@ contract ContractHub is Ownable {
 	address public tokenAddress;
 	address public biddingAddress;
 	address public escrowAddress;
+	address public litigationAddress;
 	address public readingAddress;
 }
 
@@ -61,6 +62,7 @@ contract LitigationStorage is Ownable{
 			|| msg.sender == hub.tokenAddress()
 			|| msg.sender == hub.biddingAddress()
 			|| msg.sender == hub.escrowAddress()
+			|| msg.sender == hub.litigationAddress()
 			|| msg.sender == hub.owner()
 			|| msg.sender == hub.readingAddress());
 		_;
