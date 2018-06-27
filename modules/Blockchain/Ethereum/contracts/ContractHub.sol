@@ -43,11 +43,13 @@ contract ContractHub is Ownable{
      address public tokenAddress;
      address public biddingAddress;
      address public escrowAddress;
+     address public litigationAddress;
      address public readingAddress;
 
      address public profileStorageAddress;
      address public biddingStorageAddress;
      address public escrowStorageAddress;
+     address public litigationStorageAddress;
      address public readingStorageAddress;
 
      function setFingerprint(address newFingerprintAddress)
@@ -70,6 +72,11 @@ contract ContractHub is Ownable{
           escrowAddress = newEscrowAddress;
      }
 
+     function setLitgation(address newLitigationAddress)
+     public onlyOwner{
+          litigationAddress = newLitigationAddress;
+     }
+
      function setReading(address newReadingAddress)
      public onlyOwner{
           readingAddress = newReadingAddress;
@@ -86,6 +93,10 @@ contract ContractHub is Ownable{
       function setEscrowStorageAddress(address newEscrowStorageAddress)
       public onlyOwner{
           escrowStorageAddress = newEscrowStorageAddress;
+      }
+      function setLitigationStorageAddress(address newLitigationStorageAddress)
+      public onlyOwner{
+          litigationStorageAddress = newLitigationStorageAddress;
       }
       function setReadingStorageAddress(address newReadingStorageAddress)
       public onlyOwner{
