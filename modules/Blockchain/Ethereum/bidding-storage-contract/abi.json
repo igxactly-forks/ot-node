@@ -1,0 +1,1173 @@
+[
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "index",
+				"type": "uint256"
+			},
+			{
+				"name": "ranking",
+				"type": "uint256"
+			}
+		],
+		"name": "setBid_ranking",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "finalized",
+				"type": "bool"
+			}
+		],
+		"name": "setOffer_finalized",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			}
+		],
+		"name": "getOffer_litigation_interval_in_minutes",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "bid_index",
+				"type": "uint256"
+			}
+		],
+		"name": "getBid_chosen",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "bid_index",
+				"type": "uint256"
+			}
+		],
+		"name": "getBid_DH_wallet",
+		"outputs": [
+			{
+				"name": "",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "bid_index",
+				"type": "uint256"
+			}
+		],
+		"name": "getBid_stake_amount_for_escrow",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "min_stake_amount_per_DH",
+				"type": "uint256"
+			}
+		],
+		"name": "setOffer_min_stake_amount_per_DH",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "hub",
+		"outputs": [
+			{
+				"name": "",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "bid_array_length",
+				"type": "uint256"
+			}
+		],
+		"name": "setOffer_bid_array_length",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "bid_index",
+				"type": "uint256"
+			}
+		],
+		"name": "getBid_next_bid_index",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			}
+		],
+		"name": "getOffer_data_hash",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "bid_index",
+				"type": "uint256"
+			}
+		],
+		"name": "getBid_DH_node_id",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "first_bid_index",
+				"type": "uint256"
+			}
+		],
+		"name": "setOffer_first_bid_index",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "index",
+				"type": "uint256"
+			},
+			{
+				"name": "token_amount_for_escrow",
+				"type": "uint256"
+			}
+		],
+		"name": "setBid_token_amount_for_escrow",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			}
+		],
+		"name": "getOffer_finalized",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			}
+		],
+		"name": "getOffer_first_bid_index",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "index",
+				"type": "uint256"
+			},
+			{
+				"name": "DH_node_id",
+				"type": "bytes32"
+			}
+		],
+		"name": "setBid_DH_node_id",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "total_escrow_time_in_minutes",
+				"type": "uint256"
+			}
+		],
+		"name": "setOffer_total_escrow_time_in_minutes",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			}
+		],
+		"name": "getOffer_min_stake_amount_per_DH",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "data_hash",
+				"type": "bytes32"
+			}
+		],
+		"name": "setOffer_data_hash",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "index",
+				"type": "uint256"
+			},
+			{
+				"name": "next_bid_index",
+				"type": "uint256"
+			}
+		],
+		"name": "setBid_next_bid_index",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "index",
+				"type": "uint256"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			}
+		],
+		"name": "setBid_DH_wallet",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "bid_index",
+				"type": "uint256"
+			}
+		],
+		"name": "getBid_active",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "bid_index",
+				"type": "uint256"
+			}
+		],
+		"name": "getBid_token_amount_for_escrow",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "owner",
+		"outputs": [
+			{
+				"name": "",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "index",
+				"type": "uint256"
+			},
+			{
+				"name": "active",
+				"type": "bool"
+			}
+		],
+		"name": "setBid_active",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "replication_factor",
+				"type": "uint256"
+			}
+		],
+		"name": "setOffer_replication_factor",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			}
+		],
+		"name": "getOffer_active",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			}
+		],
+		"name": "getOffer_offer_creation_timestamp",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "min_reputation",
+				"type": "uint256"
+			}
+		],
+		"name": "setOffer_min_reputation",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "index",
+				"type": "uint256"
+			},
+			{
+				"name": "stake_amount_for_escrow",
+				"type": "uint256"
+			}
+		],
+		"name": "setBid_stake_amount_for_escrow",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "active",
+				"type": "bool"
+			}
+		],
+		"name": "setOffer_active",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			}
+		],
+		"name": "getOffer_replication_factor",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "max_token_amount_per_DH",
+				"type": "uint256"
+			}
+		],
+		"name": "setOffer_max_token_amount_per_DH",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "index",
+				"type": "uint256"
+			},
+			{
+				"name": "next_bid_index",
+				"type": "uint256"
+			}
+		],
+		"name": "setBidNextBidIndex",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "index",
+				"type": "uint256"
+			},
+			{
+				"name": "chosen",
+				"type": "bool"
+			}
+		],
+		"name": "setBid_chosen",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "offer_creation_timestamp",
+				"type": "uint256"
+			}
+		],
+		"name": "setOffer_offer_creation_timestamp",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "data_size_in_bytes",
+				"type": "uint256"
+			}
+		],
+		"name": "setOffer_data_size_in_bytes",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "",
+				"type": "bytes32"
+			},
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "bid",
+		"outputs": [
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			},
+			{
+				"name": "DH_node_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "token_amount_for_escrow",
+				"type": "uint256"
+			},
+			{
+				"name": "stake_amount_for_escrow",
+				"type": "uint256"
+			},
+			{
+				"name": "ranking",
+				"type": "uint256"
+			},
+			{
+				"name": "next_bid_index",
+				"type": "uint256"
+			},
+			{
+				"name": "active",
+				"type": "bool"
+			},
+			{
+				"name": "chosen",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "bid_index",
+				"type": "uint256"
+			},
+			{
+				"name": "DH_wallet",
+				"type": "address"
+			},
+			{
+				"name": "DH_node_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "token_amount_for_escrow",
+				"type": "uint256"
+			},
+			{
+				"name": "stake_amount_for_escrow",
+				"type": "uint256"
+			},
+			{
+				"name": "ranking",
+				"type": "uint256"
+			},
+			{
+				"name": "next_bid_index",
+				"type": "uint256"
+			},
+			{
+				"name": "active",
+				"type": "bool"
+			},
+			{
+				"name": "chosen",
+				"type": "bool"
+			}
+		],
+		"name": "setBid",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			}
+		],
+		"name": "getOffer_DC_wallet",
+		"outputs": [
+			{
+				"name": "",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			}
+		],
+		"name": "getOffer_bid_array_length",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			}
+		],
+		"name": "getOffer_total_escrow_time_in_minutes",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "bid_index",
+				"type": "uint256"
+			}
+		],
+		"name": "getBid_ranking",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"name": "offer",
+		"outputs": [
+			{
+				"name": "DC_wallet",
+				"type": "address"
+			},
+			{
+				"name": "max_token_amount_per_DH",
+				"type": "uint256"
+			},
+			{
+				"name": "min_stake_amount_per_DH",
+				"type": "uint256"
+			},
+			{
+				"name": "min_reputation",
+				"type": "uint256"
+			},
+			{
+				"name": "total_escrow_time_in_minutes",
+				"type": "uint256"
+			},
+			{
+				"name": "data_size_in_bytes",
+				"type": "uint256"
+			},
+			{
+				"name": "litigation_interval_in_minutes",
+				"type": "uint256"
+			},
+			{
+				"name": "data_hash",
+				"type": "bytes32"
+			},
+			{
+				"name": "first_bid_index",
+				"type": "uint256"
+			},
+			{
+				"name": "bid_array_length",
+				"type": "uint256"
+			},
+			{
+				"name": "replication_factor",
+				"type": "uint256"
+			},
+			{
+				"name": "offer_creation_timestamp",
+				"type": "uint256"
+			},
+			{
+				"name": "active",
+				"type": "bool"
+			},
+			{
+				"name": "finalized",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			}
+		],
+		"name": "getOffer_data_size_in_bytes",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			}
+		],
+		"name": "getOffer_max_token_amount_per_DH",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "litigation_interval_in_minutes",
+				"type": "uint256"
+			}
+		],
+		"name": "setOffer_litigation_interval_in_minutes",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "transferOwnership",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"name": "DC_wallet",
+				"type": "address"
+			}
+		],
+		"name": "setOffer_DC_wallet",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			}
+		],
+		"name": "getOffer_min_reputation",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"name": "hub_address",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "import_id",
+				"type": "bytes32"
+			}
+		],
+		"name": "OfferChange",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
+				"indexed": false,
+				"name": "bid_index",
+				"type": "uint256"
+			}
+		],
+		"name": "BidChange",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"name": "previousOwner",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "OwnershipTransferred",
+		"type": "event"
+	}
+]
