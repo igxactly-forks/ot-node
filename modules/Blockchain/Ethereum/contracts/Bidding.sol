@@ -1,6 +1,6 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.23;
 
-library SafeMath {
+library MyMath {
 	function mul(uint256 a, uint256 b) internal pure returns (uint256) {
 		uint256 c = a * b;
 		assert(a == 0 || c / a == b);
@@ -24,20 +24,44 @@ library SafeMath {
 		assert(c >= a);
 		return c;
 	}
-}
 
-contract ERC20Basic {
-	uint256 public totalSupply;
-	function balanceOf(address who) public constant returns (uint256);
-	function transfer(address to, uint256 value) public returns (bool);
-	event Transfer(address indexed from, address indexed to, uint256 value);
-}
+	function logs2(uint x) internal pure returns (uint y){
+		require(x > 0);
+		assembly {
+			let arg := x
+			x := sub(x,1)
+			x := or(x, div(x, 0x02))
+			x := or(x, div(x, 0x04))
+			x := or(x, div(x, 0x10))
+			x := or(x, div(x, 0x100))
+			x := or(x, div(x, 0x10000))
+			x := or(x, div(x, 0x100000000))
+			x := or(x, div(x, 0x10000000000000000))
+			x := or(x, div(x, 0x100000000000000000000000000000000))
+			x := add(x, 1)
+			let m := mload(0x40)
+			mstore(m,           0xf8f9cbfae6cc78fbefe7cdc3a1793dfcf4f0e8bbd8cec470b6a28a7a5a3e1efd)
+			mstore(add(m,0x20), 0xf5ecf1b3e9debc68e1d9cfabc5997135bfb7a7a3938b7b606b5b4b3f2f1f0ffe)
+			mstore(add(m,0x40), 0xf6e4ed9ff2d6b458eadcdf97bd91692de2d4da8fd2d0ac50c6ae9a8272523616)
+			mstore(add(m,0x60), 0xc8c0b887b0a8a4489c948c7f847c6125746c645c544c444038302820181008ff)
+			mstore(add(m,0x80), 0xf7cae577eec2a03cf3bad76fb589591debb2dd67e0aa9834bea6925f6a4a2e0e)
+			mstore(add(m,0xa0), 0xe39ed557db96902cd38ed14fad815115c786af479b7e83247363534337271707)
+			mstore(add(m,0xc0), 0xc976c13bb96e881cb166a933a55e490d9d56952b8d4e801485467d2362422606)
+			mstore(add(m,0xe0), 0x753a6d1b65325d0c552a4d1345224105391a310b29122104190a110309020100)
+			mstore(0x40, add(m, 0x100))
+			let magic := 0x818283848586878898a8b8c8d8e8f929395969799a9b9d9e9faaeb6bedeeff
+			let shift := 0x100000000000000000000000000000000000000000000000000000000000000
+			let a := div(mul(x, magic), shift)
+			y := div(mload(add(m,sub(255,a))), shift)
+			y := add(y, mul(256, gt(arg, 0x8000000000000000000000000000000000000000000000000000000000000000)))
+		}
+	}
 
-contract ERC20 is ERC20Basic {
-	function allowance(address owner, address spender) public constant returns (uint256);
-	function transferFrom(address from, address to, uint256 value) public returns (bool);
-	function approve(address spender, uint256 value) public returns (bool);
-	event Approval(address indexed owner, address indexed spender, uint256 value);
+	function absoluteDifference(uint256 a, uint256 b) internal pure returns (uint256) {
+		if (a > b) return a-b;
+		else return b-a;
+	}
+
 }
 
 contract EscrowHolder {
@@ -45,68 +69,26 @@ contract EscrowHolder {
 }
 
 contract ContractHub{
-	address public fingerprintAddress;
-	address public tokenAddress;
-	address public biddingAddress;
 	address public escrowAddress;
-	address public readingAddress;
 
 	address public profileStorageAddress;
 	address public biddingStorageAddress;
-	address public escrowStorageAddress;
 }
 
 contract ProfileStorage {
 
 	function getProfile_token_amount_per_byte_minute(address wallet) public view returns(uint);
 	function getProfile_stake_amount_per_byte_minute(address wallet) public view returns(uint);
-	function getProfile_read_stake_factor(address wallet) public view returns(uint);
 	function getProfile_balance(address wallet) public view returns(uint);
 	function getProfile_reputation(address wallet) public view returns(uint);
 	function getProfile_number_of_escrows(address wallet) public view returns(uint);
 	function getProfile_max_escrow_time_in_minutes(address wallet) public view returns(uint);
-	function getProfile_active(address wallet) public view returns(bool);
-	function setProfile(
-		address wallet,
-		uint token_amount_per_byte_minute, uint stake_amount_per_byte_minute, uint read_stake_factor,
-		uint balance, uint reputation, uint number_of_escrows, uint max_escrow_time_in_minutes, bool active) 
-	public;
-	function setProfile_token_amount_per_byte_minute(address wallet, uint256 token_amount_per_byte_minute) public;
-	function setProfile_stake_amount_per_byte_minute(address wallet, uint256 stake_amount_per_byte_minute) public;
-	function setProfile_read_stake_factor(address wallet, uint256 read_stake_factor) public;
+
 	function setProfile_balance(address wallet, uint256 balance) public;
-	function setProfile_reputation(address wallet, uint256 reputation) public;
-	function setProfile_number_of_escrows(address wallet, uint256 number_of_escrows) public;
-	function setProfile_max_escrow_time_in_minutes(address wallet, uint256 max_escrow_time_in_minutes) public;
-	function setProfile_active(address wallet, bool active) public;
 }
 
 contract BiddingStorage {
-	struct OfferDefinition{
-		address DC_wallet;
-
-		//Parameters for DH filtering
-		uint max_token_amount_per_DH;
-		uint min_stake_amount_per_DH; 
-		uint min_reputation;
-
-		//Data holding parameters
-		uint total_escrow_time_in_minutes;
-		uint data_size_in_bytes;
-		uint litigation_interval_in_minutes;
-
-		//Parameters for the bidding ranking
-		bytes32 data_hash;
-		uint first_bid_index;
-		uint bid_array_length;
-
-		uint replication_factor;
-		
-		uint256 offer_creation_timestamp;
-		bool active;
-		bool finalized;
-	}
-	mapping(bytes32 => OfferDefinition) public offer; // offer[import_id]
+	
 	function getOffer_DC_wallet(bytes32 import_id) public view returns(address);
 	function getOffer_max_token_amount_per_DH(bytes32 import_id) public view returns(uint);
 	function getOffer_min_stake_amount_per_DH(bytes32 import_id) public view returns(uint);
@@ -137,21 +119,6 @@ contract BiddingStorage {
 	function setOffer_active(bytes32 import_id, bool active) public;
 	function setOffer_finalized(bytes32 import_id, bool finalized) public;
 
-	struct BidDefinition{
-		address DH_wallet;
-		bytes32 DH_node_id;
-
-		uint token_amount_for_escrow;
-		uint stake_amount_for_escrow;
-
-		uint256 ranking;
-
-		uint next_bid;
-
-		bool active;
-		bool chosen;
-	}
-	mapping(bytes32 => mapping (uint256 => BidDefinition ) ) public bid; // bid[import_id][bid_index]
 	function getBid_DH_wallet(bytes32 import_id, uint bid_index) public view returns (address);
 	function getBid_DH_node_id(bytes32 import_id, uint bid_index) public view returns (bytes32);
 	function getBid_token_amount_for_escrow(bytes32 import_id, uint bid_index) public view returns (uint);
@@ -160,24 +127,21 @@ contract BiddingStorage {
 	function getBid_next_bid_index(bytes32 import_id, uint bid_index) public view returns (uint);
 	function getBid_active(bytes32 import_id, uint bid_index) public view returns (bool);
 	function getBid_chosen(bytes32 import_id, uint bid_index) public view returns (bool);
+	
 	function setBid(
 		bytes32 import_id, uint256 bid_index,
 		address DH_wallet, bytes32 DH_node_id,
 		uint token_amount_for_escrow, uint stake_amount_for_escrow,
 		uint256 ranking, uint next_bid, bool active, bool chosen)
 	public;
-	function setBid_DH_wallet(bytes32 import_id, uint index, address DH_wallet) public;
-	function setBid_DH_node_id(bytes32 import_id, uint index, bytes32 DH_node_id) public;
-	function setBid_token_amount_for_escrow(bytes32 import_id, uint index, uint token_amount_for_escrow) public;
-	function setBid_stake_amount_for_escrow(bytes32 import_id, uint index, uint stake_amount_for_escrow) public;
-	function setBid_ranking(bytes32 import_id, uint index, uint ranking) public;
+
 	function setBid_next_bid_index(bytes32 import_id, uint index, uint next_bid_index) public;
 	function setBid_active(bytes32 import_id, uint index, bool active) public;
 	function setBid_chosen(bytes32 import_id, uint index, bool chosen) public;
 }
 
 contract Bidding {
-	using SafeMath for uint256;
+	using MyMath for uint256;
 
 	ContractHub public hub;
 
@@ -186,13 +150,16 @@ contract Bidding {
 
 	uint256 activated_nodes;
 
-	constructor(address hub_address, address storage_address)
+	constructor(address hub_address)
 	public{
-		require (hub_address != address(0) && storage_address != address(0));
+		require (hub_address != address(0));
 		hub = ContractHub(hub_address);
+		activated_nodes = 0;
+	}
+
+	function initiate() public {
 		profileStorage = ProfileStorage(hub.profileStorageAddress());
 		biddingStorage = BiddingStorage(hub.biddingStorageAddress());
-		activated_nodes = 0;
 	}
 
 	/*    ----------------------------- EVENTS -----------------------------     */
@@ -237,13 +204,11 @@ contract Bidding {
 		
 		DC_balance = DC_balance.sub(max_token_amount_per_DH.mul(predetermined_DH_wallet.length.mul(2).add(1)));
 		profileStorage.setProfile_balance(msg.sender, DC_balance);
-		emit BalanceModified(msg.sender, DC_balance);
 
 		//Writing the predetermined DC into the bid list
 		for(uint256 i = 0; i < predetermined_DH_wallet.length; i = i + 1) {
 			biddingStorage.setBid(import_id, i, predetermined_DH_wallet[i], predetermined_DH_node_id[i], 0, 0, 0, 0, false, false);
-			// BidDefinition memory bid_def = BidDefinition(predetermined_DH_wallet[biddingStorage.bid.length], predetermined_DH_node_id[biddingStorage.bid.length], 0, 0, 0, 0, false, false);
-			// biddingStorage.bid.push(bid_def);
+
 			emit AddedPredeterminedBid(import_id, predetermined_DH_wallet[i], predetermined_DH_node_id[i], i, 
 				total_escrow_time_in_minutes, max_token_amount_per_DH, min_stake_amount_per_DH, 
 				data_size_in_bytes, litigation_interval_in_minutes);
@@ -270,14 +235,16 @@ contract Bidding {
 
 	function cancelOffer(bytes32 import_id)
 	public{
-		// OfferDefinition storage this_offer = offer[import_id];
-		(address s_DC_wallet, uint s_max_token_amount_per_DH, , , ,  , , , , , 
-			uint s_replication_factor, , bool s_active, bool s_finalized) = biddingStorage.offer(import_id);
+		
+		require(biddingStorage.getOffer_active(import_id) 
+			&& biddingStorage.getOffer_DC_wallet(import_id) == msg.sender 
+			&& biddingStorage.getOffer_finalized(import_id) == false);
 
-		require(s_active && s_DC_wallet == msg.sender && s_finalized == false);
+		uint max_token_amount_per_DH = biddingStorage.getOffer_max_token_amount_per_DH(import_id);
+		uint replication_factor = biddingStorage.getOffer_replication_factor(import_id);
 
 		// Returns the alloted token amount back to DC
-		uint max_total_token_amount = s_max_token_amount_per_DH.mul(s_replication_factor.mul(2).add(1));
+		uint max_total_token_amount = max_token_amount_per_DH.mul(replication_factor.mul(2).add(1));
 		uint DC_balance = profileStorage.getProfile_balance(msg.sender);
 		DC_balance = DC_balance.add(max_total_token_amount);
 		profileStorage.setProfile_balance(msg.sender, DC_balance);
@@ -301,36 +268,6 @@ contract Bidding {
 		biddingStorage.setBid(import_id, bid_index, msg.sender, DH_node_id, 
 			token_amount_for_escrow, stake_amount_for_escrow,
 			0, 0, true, false);
-		// this_bid.token_amount_for_escrow = p_token_amount_per_byte_minute * scope;
-		// this_bid.stake_amount_for_escrow = p_stake_amount_per_byte_minute * scope;
-		// this_bid.active = true;
-	}
-
-	function getDistanceParameters(bytes32 import_id)
-	public view returns (bytes32 node_hash, bytes32 data_hash, uint256 ranking, uint256 current_ranking, uint256 required_bid_amount, uint256 activated_nodes_){
-		// OfferDefinition storage this_offer = offer[import_id];
-		node_hash = bytes32(uint128(keccak256(abi.encodePacked(msg.sender))));
-		data_hash = bytes32(uint128(biddingStorage.getOffer_data_hash(import_id)));
-
-		uint256 scope = biddingStorage.getOffer_total_escrow_time_in_minutes(import_id).mul(biddingStorage.getOffer_data_size_in_bytes(import_id));
-		ranking = calculateRanking(import_id, msg.sender, scope);
-		required_bid_amount = biddingStorage.getOffer_replication_factor(import_id);
-		required_bid_amount = required_bid_amount.mul(2).add(1);
-		activated_nodes_ = activated_nodes; // TODO Find a way to remove this
-
-		uint256 current_index = biddingStorage.getOffer_first_bid_index(import_id);
-		if(current_index == uint(-1)){
-			current_ranking = 0;
-		}
-		else{
-			current_ranking = 0;
-			(, , , , uint b_ranking, uint b_next_bid, , ) = biddingStorage.bid(import_id, current_index);
-			while(b_next_bid != uint(-1) && b_ranking >= ranking){
-				// current_index = biddingStorage.bid[current_index].next_bid;
-				(, , , , b_ranking, b_next_bid, , ) = biddingStorage.bid(import_id, current_index);
-				current_ranking++;
-			}
-		}
 	}
 
 	function bidRequirements(bytes32 import_id, address wallet) internal view returns(bool passed_requirements) {
@@ -378,7 +315,8 @@ contract Bidding {
 		else{
 			uint256 current_index = biddingStorage.getOffer_first_bid_index(import_id);
 			uint256 previous_index = uint(-1);
-			(, , , , uint b_ranking, uint b_next_bid, , ) = biddingStorage.bid(import_id, current_index);
+			uint b_ranking = biddingStorage.getBid_ranking(import_id, current_index);
+			uint b_next_bid = biddingStorage.getBid_next_bid_index(import_id, current_index);
 			if(b_ranking < ranking){
 				biddingStorage.setOffer_first_bid_index(import_id, this_bid_index);
 				biddingStorage.setBid(import_id, this_bid_index, msg.sender, DH_node_id, 
@@ -389,7 +327,8 @@ contract Bidding {
 				while(current_index != uint(-1) && b_ranking >= ranking){
 					previous_index = current_index;
 					current_index = b_next_bid;
-					(, , , , b_ranking, b_next_bid, , ) = biddingStorage.bid(import_id, current_index);
+					b_ranking = biddingStorage.getBid_ranking(import_id, current_index);
+					b_next_bid = biddingStorage.getBid_next_bid_index(import_id, current_index);
 				}
 				if(current_index == uint(-1)){
 					// Set the bid[previous_bid_index].next_bid to this_bid_index
@@ -419,19 +358,6 @@ contract Bidding {
 		emit AddedBid(import_id, msg.sender, DH_node_id, this_bid_index);
 	}
 
-	function getBidIndex(bytes32 import_id, bytes32 DH_node_id) public view returns(uint256 index){
-		// OfferDefinition storage this_offer = offer[import_id];
-		( , , , , , , , , , uint s_bid_array_length, , , , ) = biddingStorage.offer(import_id);
-
-		index = 0;
-		(address t_DH_wallet, bytes32 t_DH_node_id,  ,  ,  ,  ,  ,  ) = biddingStorage.bid(import_id, index);
-		while(index < s_bid_array_length && (t_DH_wallet != msg.sender || t_DH_node_id != DH_node_id)){
-			index = index + 1;
-			(t_DH_wallet, t_DH_node_id,  ,  ,  ,  ,  ,  ) = biddingStorage.bid(import_id, index);
-		}
-		if( index == s_bid_array_length) return uint(-1);
-	}
-
 	function cancelBid(bytes32 import_id, uint bid_index)
 	public{
 		require(biddingStorage.getBid_DH_wallet(import_id, bid_index) == msg.sender);
@@ -439,7 +365,7 @@ contract Bidding {
 	}
 
 	function chooseBids(bytes32 import_id) public returns (uint256[] chosen_data_holders){
-		// OfferDefinition storage this_offer = offer[import_id];
+
 		uint256[] memory parameters;
 		require(biddingStorage.getOffer_active(import_id) && !biddingStorage.getOffer_finalized(import_id));
 		parameters[0] = biddingStorage.getOffer_replication_factor(import_id); // replication_factor
@@ -524,117 +450,9 @@ contract Bidding {
 		uint DC_balance = profileStorage.getProfile_balance(msg.sender);
 		DC_balance = DC_balance.add(parameters[4].sub(parameters[3]));
 		profileStorage.setProfile_balance(msg.sender, DC_balance);
-		emit BalanceModified(msg.sender, DC_balance);
 		
 		emit OfferFinalized(import_id); 
 	}
-
-	/*    ----------------------------- PROFILE -----------------------------    */
-
-	event ProfileCreated(address wallet);
-	event BalanceModified(address wallet, uint new_balance);
-	event ReputationModified(address wallet, uint new_balance);
-
-	function createProfile(uint price_per_byte_minute, uint stake_per_byte_minute, uint read_stake_factor, uint max_time_in_minutes) public{
-		bool active = profileStorage.getProfile_active(msg.sender);
-		if(!active) {
-			activated_nodes = activated_nodes.add(1);
-			profileStorage.setProfile_active(msg.sender, true);
-		}
-
-		profileStorage.setProfile_token_amount_per_byte_minute(msg.sender, price_per_byte_minute);
-		profileStorage.setProfile_stake_amount_per_byte_minute(msg.sender, stake_per_byte_minute);
-		profileStorage.setProfile_read_stake_factor(msg.sender, read_stake_factor);
-		profileStorage.setProfile_max_escrow_time_in_minutes(msg.sender, max_time_in_minutes);
-
-		emit ProfileCreated(msg.sender);
-	}
-
-	function setPrice(uint new_price_per_byte_minute) public {
-		profileStorage.setProfile_token_amount_per_byte_minute(msg.sender, new_price_per_byte_minute);
-	}
-
-	function setStake(uint new_stake_per_byte_minute) public {
-		profileStorage.setProfile_stake_amount_per_byte_minute(msg.sender, new_stake_per_byte_minute);
-	}
-
-	function setMaxTime(uint new_max_time_in_minutes) public {
-		profileStorage.setProfile_max_escrow_time_in_minutes(msg.sender, new_max_time_in_minutes);
-	}
-
-	function depositToken(uint amount) public {
-		require(token.balanceOf(msg.sender) >= amount && token.allowance(msg.sender, this) >= amount);
-		uint amount_to_transfer = amount;
-		amount = 0;
-		if(amount_to_transfer > 0) {
-			ERC20 token = ERC20(hub.tokenAddress());
-			token.transferFrom(msg.sender, this, amount_to_transfer);
-			uint balance = profileStorage.getProfile_balance(msg.sender);
-
-			balance = balance.add(amount_to_transfer);
-			profileStorage.setProfile_balance(msg.sender, balance);
-			emit BalanceModified(msg.sender, balance);
-		}
-	}
-
-	function withdrawToken(uint amount) public {
-		uint256 amount_to_transfer;
-		uint balance = profileStorage.getProfile_balance(msg.sender);
-
-		if(balance >= amount){
-			amount_to_transfer = amount;
-			balance = balance.sub(amount);
-		}
-		else{ 
-			amount_to_transfer = balance;
-			balance = 0;
-		}
-		amount = 0;
-		if(amount_to_transfer > 0){
-			ERC20 token = ERC20(hub.tokenAddress());
-			token.transfer(msg.sender, amount_to_transfer);
-			profileStorage.setProfile_balance(msg.sender, balance);
-			emit BalanceModified(msg.sender, balance);
-		} 
-	}
-
-	function absoluteDifference(uint256 a, uint256 b) public pure returns (uint256) {
-		if (a > b) return a-b;
-		else return b-a;
-	}
-
-	function logs2(uint x) internal pure returns (uint y){
-		require(x > 0);
-		assembly {
-			let arg := x
-			x := sub(x,1)
-			x := or(x, div(x, 0x02))
-			x := or(x, div(x, 0x04))
-			x := or(x, div(x, 0x10))
-			x := or(x, div(x, 0x100))
-			x := or(x, div(x, 0x10000))
-			x := or(x, div(x, 0x100000000))
-			x := or(x, div(x, 0x10000000000000000))
-			x := or(x, div(x, 0x100000000000000000000000000000000))
-			x := add(x, 1)
-			let m := mload(0x40)
-			mstore(m,           0xf8f9cbfae6cc78fbefe7cdc3a1793dfcf4f0e8bbd8cec470b6a28a7a5a3e1efd)
-			mstore(add(m,0x20), 0xf5ecf1b3e9debc68e1d9cfabc5997135bfb7a7a3938b7b606b5b4b3f2f1f0ffe)
-			mstore(add(m,0x40), 0xf6e4ed9ff2d6b458eadcdf97bd91692de2d4da8fd2d0ac50c6ae9a8272523616)
-			mstore(add(m,0x60), 0xc8c0b887b0a8a4489c948c7f847c6125746c645c544c444038302820181008ff)
-			mstore(add(m,0x80), 0xf7cae577eec2a03cf3bad76fb589591debb2dd67e0aa9834bea6925f6a4a2e0e)
-			mstore(add(m,0xa0), 0xe39ed557db96902cd38ed14fad815115c786af479b7e83247363534337271707)
-			mstore(add(m,0xc0), 0xc976c13bb96e881cb166a933a55e490d9d56952b8d4e801485467d2362422606)
-			mstore(add(m,0xe0), 0x753a6d1b65325d0c552a4d1345224105391a310b29122104190a110309020100)
-			mstore(0x40, add(m, 0x100))
-			let magic := 0x818283848586878898a8b8c8d8e8f929395969799a9b9d9e9faaeb6bedeeff
-			let shift := 0x100000000000000000000000000000000000000000000000000000000000000
-			let a := div(mul(x, magic), shift)
-			y := div(mload(add(m,sub(255,a))), shift)
-			y := add(y, mul(256, gt(arg, 0x8000000000000000000000000000000000000000000000000000000000000000)))
-		}
-	}
-
 	
 	/* corrective_factor = 10^10;
 	DH_stake = 10^20
@@ -671,10 +489,10 @@ contract Bidding {
 		uint256 number_of_escrows = profileStorage.getProfile_number_of_escrows(DH_wallet);
 		uint256 reputation = profileStorage.getProfile_reputation(DH_wallet);
 		if(number_of_escrows == 0 || reputation == 0) reputation = 1;
-		else reputation = (logs2(reputation / number_of_escrows) * corrective_factor / 115) / (corrective_factor / 100);
+		else reputation = (MyMath.logs2(reputation / number_of_escrows) * corrective_factor / 115) / (corrective_factor / 100);
 		if(reputation == 0) reputation = 1;
 
-		uint256 hash_difference = absoluteDifference(data_hash, uint256(uint128(keccak256(abi.encodePacked(DH_wallet)))));
+		uint256 hash_difference = MyMath.absoluteDifference(data_hash, uint256(uint128(keccak256(abi.encodePacked(DH_wallet)))));
 
 		uint256 hash_f = ((data_hash * (2**128)) / (hash_difference + data_hash));
 		uint256 price_f = corrective_factor - ((corrective_factor * amounts[0]) / amounts[2]);
