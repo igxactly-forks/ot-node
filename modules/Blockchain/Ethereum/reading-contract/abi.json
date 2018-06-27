@@ -104,7 +104,7 @@
 	{
 		"constant": true,
 		"inputs": [],
-		"name": "owner",
+		"name": "Hub",
 		"outputs": [
 			{
 				"name": "",
@@ -208,7 +208,7 @@
 	{
 		"constant": true,
 		"inputs": [],
-		"name": "Storage",
+		"name": "readingStorage",
 		"outputs": [
 			{
 				"name": "",
@@ -220,23 +220,23 @@
 		"type": "function"
 	},
 	{
-		"constant": false,
-		"inputs": [
+		"constant": true,
+		"inputs": [],
+		"name": "profileStorage",
+		"outputs": [
 			{
-				"name": "newOwner",
+				"name": "",
 				"type": "address"
 			}
 		],
-		"name": "transferOwnership",
-		"outputs": [],
 		"payable": false,
-		"stateMutability": "nonpayable",
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
 		"inputs": [
 			{
-				"name": "storage_address",
+				"name": "hub_address",
 				"type": "address"
 			}
 		],
@@ -401,23 +401,6 @@
 			}
 		],
 		"name": "PurchaseDisputeCompleted",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"name": "previousOwner",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"name": "newOwner",
-				"type": "address"
-			}
-		],
-		"name": "OwnershipTransferred",
 		"type": "event"
 	}
 ]
