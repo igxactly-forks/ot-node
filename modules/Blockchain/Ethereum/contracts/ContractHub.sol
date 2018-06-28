@@ -63,6 +63,11 @@ contract ContractHub is Ownable{
           tokenAddress = newTokenAddress;
      }
 
+     function setProfileAddress(address newProfileAddress)
+     public onlyOwner{
+         profileAddress = newProfileAddress;
+     }
+
      function setBidding(address newBiddingAddress)
      public onlyOwner{
        biddingAddress = newBiddingAddress;
