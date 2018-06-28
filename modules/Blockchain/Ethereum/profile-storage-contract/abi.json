@@ -1,0 +1,473 @@
+[
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "wallet",
+				"type": "address"
+			}
+		],
+		"name": "getProfile_active",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "wallet",
+				"type": "address"
+			},
+			{
+				"name": "reputation",
+				"type": "uint256"
+			}
+		],
+		"name": "setProfile_reputation",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "wallet",
+				"type": "address"
+			}
+		],
+		"name": "getProfile_max_escrow_time_in_minutes",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "wallet",
+				"type": "address"
+			}
+		],
+		"name": "getProfile_number_of_escrows",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "hub",
+		"outputs": [
+			{
+				"name": "",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "wallet",
+				"type": "address"
+			},
+			{
+				"name": "token_amount_per_byte_minute",
+				"type": "uint256"
+			},
+			{
+				"name": "stake_amount_per_byte_minute",
+				"type": "uint256"
+			},
+			{
+				"name": "read_stake_factor",
+				"type": "uint256"
+			},
+			{
+				"name": "balance",
+				"type": "uint256"
+			},
+			{
+				"name": "reputation",
+				"type": "uint256"
+			},
+			{
+				"name": "number_of_escrows",
+				"type": "uint256"
+			},
+			{
+				"name": "max_escrow_time_in_minutes",
+				"type": "uint256"
+			},
+			{
+				"name": "active",
+				"type": "bool"
+			}
+		],
+		"name": "setProfile",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "wallet",
+				"type": "address"
+			},
+			{
+				"name": "stake_amount_per_byte_minute",
+				"type": "uint256"
+			}
+		],
+		"name": "setProfile_stake_amount_per_byte_minute",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "wallet",
+				"type": "address"
+			}
+		],
+		"name": "getProfile_token_amount_per_byte_minute",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "wallet",
+				"type": "address"
+			}
+		],
+		"name": "getProfile_read_stake_factor",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "owner",
+		"outputs": [
+			{
+				"name": "",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "wallet",
+				"type": "address"
+			}
+		],
+		"name": "getProfile_reputation",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "wallet",
+				"type": "address"
+			},
+			{
+				"name": "max_escrow_time_in_minutes",
+				"type": "uint256"
+			}
+		],
+		"name": "setProfile_max_escrow_time_in_minutes",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "profile",
+		"outputs": [
+			{
+				"name": "token_amount_per_byte_minute",
+				"type": "uint256"
+			},
+			{
+				"name": "stake_amount_per_byte_minute",
+				"type": "uint256"
+			},
+			{
+				"name": "read_stake_factor",
+				"type": "uint256"
+			},
+			{
+				"name": "balance",
+				"type": "uint256"
+			},
+			{
+				"name": "reputation",
+				"type": "uint256"
+			},
+			{
+				"name": "number_of_escrows",
+				"type": "uint256"
+			},
+			{
+				"name": "max_escrow_time_in_minutes",
+				"type": "uint256"
+			},
+			{
+				"name": "active",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "wallet",
+				"type": "address"
+			},
+			{
+				"name": "read_stake_factor",
+				"type": "uint256"
+			}
+		],
+		"name": "setProfile_read_stake_factor",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "wallet",
+				"type": "address"
+			}
+		],
+		"name": "getProfile_balance",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "wallet",
+				"type": "address"
+			}
+		],
+		"name": "getProfile_stake_amount_per_byte_minute",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "wallet",
+				"type": "address"
+			},
+			{
+				"name": "token_amount_per_byte_minute",
+				"type": "uint256"
+			}
+		],
+		"name": "setProfile_token_amount_per_byte_minute",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "wallet",
+				"type": "address"
+			},
+			{
+				"name": "balance",
+				"type": "uint256"
+			}
+		],
+		"name": "setProfile_balance",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "transferOwnership",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "wallet",
+				"type": "address"
+			},
+			{
+				"name": "number_of_escrows",
+				"type": "uint256"
+			}
+		],
+		"name": "setProfile_number_of_escrows",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "wallet",
+				"type": "address"
+			},
+			{
+				"name": "active",
+				"type": "bool"
+			}
+		],
+		"name": "setProfile_active",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"name": "hub_address",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "wallet",
+				"type": "address"
+			}
+		],
+		"name": "ProfileChange",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"name": "previousOwner",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "OwnershipTransferred",
+		"type": "event"
+	}
+]

@@ -283,6 +283,20 @@
 		"constant": false,
 		"inputs": [
 			{
+				"name": "newProfileAddress",
+				"type": "address"
+			}
+		],
+		"name": "setProfile",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
 				"name": "newBiddingAddress",
 				"type": "address"
 			}
@@ -348,6 +362,12 @@
 		"payable": false,
 		"stateMutability": "nonpayable",
 		"type": "function"
+	},
+	{
+		"anonymous": false,
+		"inputs": [],
+		"name": "ContractsChanged",
+		"type": "event"
 	},
 	{
 		"anonymous": false,

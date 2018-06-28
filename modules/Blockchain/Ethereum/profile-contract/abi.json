@@ -128,10 +128,6 @@
 			{
 				"name": "hub_address",
 				"type": "address"
-			},
-			{
-				"name": "storage_address",
-				"type": "address"
 			}
 		],
 		"payable": false,

@@ -75,9 +75,9 @@ contract Profile {
 
 	uint256 activated_nodes;
 
-	constructor(address hub_address, address storage_address)
+	constructor(address hub_address)
 	public{
-		require (hub_address != address(0) && storage_address != address(0));
+		require (hub_address != address(0));
 		hub = ContractHub(hub_address);
 		profileStorage = ProfileStorage(hub.profileStorageAddress()); // TODO Maybe move this line to initialize
 		activated_nodes = 0;
