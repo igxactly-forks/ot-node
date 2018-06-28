@@ -1,45 +1,38 @@
 /* eslint indent: 0 */
-var ContractHub = artifacts.require('ContractHub'); // eslint-disable-line no-undef
-
 var TracToken = artifacts.require('TracToken'); // eslint-disable-line no-undef
 var OTFingerprintStore = artifacts.require('OTFingerprintStore'); // eslint-disable-line no-undef
-var StorageContract = artifacts.require('StorageContract'); // eslint-disable-line no-undef
-var EscrowHolder = artifacts.require('EscrowHolder'); // eslint-disable-line no-undef
-var BiddingTest = artifacts.require('BiddingTest'); // eslint-disable-line no-undef
-var Bidding = artifacts.require('Bidding'); // eslint-disable-line no-undef
-var Reading = artifacts.require('Reading'); // eslint-disable-line no-undef
 
+var ContractHub = artifacts.require('ContractHub'); // eslint-disable-line no-undef
+
+// Variable contracts
+var Profile = artifacts.require('Profile'); // eslint-disable-line no-undef
+var profile;
+var Bidding = artifacts.require('Bidding'); // eslint-disable-line no-undef
+var biddingTest;
+var BiddingTest = artifacts.require('BiddingTest'); // eslint-disable-line no-undef
+var Litigation = artifacts.require('Litigation'); // eslint-disable-line no-undef
+var litigation;
+var EscrowHolder = artifacts.require('EscrowHolder'); // eslint-disable-line no-undef
+var escrowHolder;
+var Reading = artifacts.require('Reading'); // eslint-disable-line no-undef
+var reading;
+
+// Storage contracts
+var ProfileStorage = artifacts.require('ProfileStorage'); // eslint-disable-line no-undef
+var profileStorage;
+var BiddingStorage = artifacts.require('BiddingStorage'); // eslint-disable-line no-undef
+var biddingStorage;
+var EscrowStorage = artifacts.require('EscrowStorage'); // eslint-disable-line no-undef
+var escrowStorage;
+var LitigationStorage = artifacts.require('LitigationStorage'); // eslint-disable-line no-undef
+var litigationStorage;
+var ReadingStorage = artifacts.require('ReadingStorage'); // eslint-disable-line no-undef
+var readingStorage;
 var TestingUtilities = artifacts.require('TestingUtilities'); // eslint-disable-line no-undef
 
 const giveMeHub = async function giveMeHub() {
     const hub = ContractHub.deployed();
     return hub;
-};
-
-const giveMeTracToken = async function giveMeTracToken() {
-    const token = TracToken.deployed();
-    return token;
-};
-const giveMeFingerprint = function giveMeFingerprint() {
-    const fingerprint = OTFingerprintStore.deployed();
-    return fingerprint;
-};
-
-const giveMeEscrowHolder = async function giveMeEscrowHolder() {
-    const escrow = EscrowHolder.deployed();
-    return escrow;
-};
-const giveMeBidding = async function giveMeBidding() {
-    const bidding = Bidding.deployed();
-    return bidding;
-};
-const giveMeBiddingTest = async function giveMeBiddingTest() {
-    const bidding = BiddingTest.deployed();
-    return bidding;
-};
-const giveMeReading = async function givemere() {
-    const reading = Reading.deployed();
-    return reading;
 };
 
 var hub;
