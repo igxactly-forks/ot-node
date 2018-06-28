@@ -275,17 +275,12 @@ contract BiddingTest {
 		uint total_escrow_time_in_minutes = biddingStorage.getOffer_total_escrow_time_in_minutes(import_id);
 		uint data_size_in_bytes = biddingStorage.getOffer_data_size_in_bytes(import_id);
 
-		uint token_amount_per_byte_minute = profileStorage.getProfile_token_amount_per_byte_minute(wallet);
-		uint stake_amount_per_byte_minute = profileStorage.getProfile_stake_amount_per_byte_minute(wallet);
-		uint balance = profileStorage.getProfile_balance(wallet);
-		uint max_escrow_time_in_minutes = profileStorage.getProfile_max_escrow_time_in_minutes(wallet);
-
 		//Check if the the DH meets the filters DC set for the offer
 		uint scope = data_size_in_bytes.mul(total_escrow_time_in_minutes);
-		if(total_escrow_time_in_minutes > max_escrow_time_in_minutes) return false;
-		if(max_token_amount_per_DH  < token_amount_per_byte_minute * scope) return false;
-		if(min_stake_amount_per_DH  > stake_amount_per_byte_minute * scope) return false;
-		if(stake_amount_per_byte_minute * scope > balance) return false;
+		if(total_escrow_time_in_minutes > profileStorage.getProfile_max_escrow_time_in_minutes(wallet)) return false;
+		if(max_token_amount_per_DH  < profileStorage.getProfile_token_amount_per_byte_minute(wallet) * scope) return false;
+		if(min_stake_amount_per_DH  > profileStorage.getProfile_stake_amount_per_byte_minute(wallet) * scope) return false;
+		if(profileStorage.getProfile_stake_amount_per_byte_minute(wallet) * scope > profileStorage.getProfile_balance(wallet)) return false;
 		return true;
 	}
 
@@ -467,11 +462,10 @@ contract BiddingTest {
 	rep_f = (corrective_factor - (min_reputation * corrective_factor / reputation))
 	distance = ((hash_f * (corrective_factor + price_f + stake_`f + rep_f)) / 4) / corrective_factor */ 
 
-	// Constant values used for distance calculation
-	uint256 corrective_factor = 10**10;
-
 	function calculateRanking(bytes32 import_id, address DH_wallet, uint256 scope)
 	public view returns (uint256 ranking) {
+		// Constant values used for distance calculation
+		uint256 corrective_factor = 10**10;
 		uint256 data_hash = uint256(uint128(biddingStorage.getOffer_data_hash(import_id)));
 		
 		uint256[] memory amounts;
