@@ -42,7 +42,6 @@ contract ContractHub is Ownable {
 	address public fingerprintAddress;
 	address public tokenAddress;
 	address public biddingAddress;
-	address public litigationAddress;
 	address public escrowAddress;
 	address public litigationAddress;
 	address public readingAddress;
