@@ -6,45 +6,64 @@ var ContractHub = artifacts.require('ContractHub'); // eslint-disable-line no-un
 
 // Variable contracts
 var Profile = artifacts.require('Profile'); // eslint-disable-line no-undef
-var profile;
 var Bidding = artifacts.require('Bidding'); // eslint-disable-line no-undef
-var biddingTest;
 var BiddingTest = artifacts.require('BiddingTest'); // eslint-disable-line no-undef
 var Litigation = artifacts.require('Litigation'); // eslint-disable-line no-undef
-var litigation;
 var EscrowHolder = artifacts.require('EscrowHolder'); // eslint-disable-line no-undef
-var escrowHolder;
 var Reading = artifacts.require('Reading'); // eslint-disable-line no-undef
-var reading;
 
 // Storage contracts
 var ProfileStorage = artifacts.require('ProfileStorage'); // eslint-disable-line no-undef
-var profileStorage;
 var BiddingStorage = artifacts.require('BiddingStorage'); // eslint-disable-line no-undef
-var biddingStorage;
 var EscrowStorage = artifacts.require('EscrowStorage'); // eslint-disable-line no-undef
-var escrowStorage;
 var LitigationStorage = artifacts.require('LitigationStorage'); // eslint-disable-line no-undef
-var litigationStorage;
 var ReadingStorage = artifacts.require('ReadingStorage'); // eslint-disable-line no-undef
-var readingStorage;
 var TestingUtilities = artifacts.require('TestingUtilities'); // eslint-disable-line no-undef
 
 const giveMeHub = async function giveMeHub() {
     const hub = ContractHub.deployed();
     return hub;
 };
+const giveMeProfileStorage = async function giveMeProfileStorage() {
+    const profileStorage = ProfileStorage.deployed();
+    return profileStorage;
+};
+const giveMeBiddingStorage = async function giveMeBiddingStorage() {
+    const biddingStorage = BiddingStorage.deployed();
+    return biddingStorage;
+};
+const giveMeEscrowStorage = async function giveMeEscrowStorage() {
+    const escrowStorage = EscrowStorage.deployed();
+    return escrowStorage;
+};
+const giveMeLitigationStorage = async function giveMeLitigationStorage() {
+    const litigationStorage = LitigationStorage.deployed();
+    return litigationStorage;
+};
+const giveMeReadingStorage = async function giveMeReadingStorage() {
+    const readingStorage = ReadingStorage.deployed();
+    return readingStorage;
+};
 
-var hub;
+let hub;
 
-var token;
-var escrow;
-var bidding;
-var fingerprint;
-var reading;
+let profile;
+let bidding;
+let escrow;
+let litigation;
+let reading;
 
-var DC_wallet;
-var DH_wallet;
+let token;
+let fingerprint;
+
+let profileStorage;
+let biddingStorage;
+let escrowStorage;
+let litigationStorage;
+let readingStorage;
+
+let DC_wallet;
+let DH_wallet;
 
 const amountToMint = 5e25;
 
@@ -53,36 +72,80 @@ module.exports = (deployer, network, accounts) => {
     case 'ganache':
         DC_wallet = accounts[0]; // eslint-disable-line prefer-destructuring
         DH_wallet = accounts[1]; // eslint-disable-line prefer-destructuring
-        deployer.deploy(TracToken, accounts[0], accounts[1], accounts[2])
-        .then(() => giveMeTracToken())
+        deployer.deploy(ContractHub)
+        .then(() => giveMeHub())
         .then(async (result) => {
-            token = result;
-            await deployer.deploy(EscrowHolder, token.address, { gas: 8000000, from: accounts[0] })
-        .then(() => giveMeEscrowHolder())
+            hub = result;
+            await deployer.deploy(ProfileStorage, hub.address, { gas: 900000000000, from: accounts[0] })
+        .then(() => giveMeProfileStorage())
         .then(async (result) => {
-            escrow = result;
-            await deployer.deploy(Reading, escrow.address, { gas: 8000000, from: accounts[0] })
-        .then(() => giveMeReading())
+            profileStorage = result;
+            await deployer.deploy(BiddingStorage, hub.address)
+        .then(() => giveMeBiddingStorage())
         .then(async (result) => {
-            reading = result;
-            await deployer.deploy(BiddingTest, token.address, escrow.address, reading.address)
+            biddingStorage = result;
+            await deployer.deploy(EscrowStorage, hub.address)
+        .then(() => giveMeEscrowStorage())
+        .then(async (result) => {
+            escrowStorage = result;
+            await deployer.deploy(LitigationStorage, hub.address)
+        .then(() => giveMeLitigationStorage())
+        .then(async (result) => {
+            litigationStorage = result;
+            await deployer.deploy(ReadingStorage, hub.address)
+        .then(() => giveMeReadingStorage())
+        .then(async (result) => {
+            readingStorage = result;
+            await hub.setProfileStorageAddress(profileStorage.address)
+        .then(async () => {
+            await hub.setBiddingStorageAddress(biddingStorage.address)
+        .then(async () => {
+            await hub.setEscrowStorageAddress(escrowStorage.address)
+        .then(async () => {
+            await hub.setLitigationStorageAddress(litigationStorage.address)
+        .then(async () => {
+            await hub.setReadingStorageAddress(readingStorage.address)
+        .then(async () => {
+            await deployer.deploy(BiddingTest, hub.address)
         .then(() => giveMeBiddingTest())
         .then(async (result) => {
             bidding = result;
+            await deployer.deploy(EscrowHolder, hub.address)
+        .then(() => giveMeEscrowHolder())
+        .then(async (result) => {
+            escrow = result;
+            await deployer.deploy(Litigation, hub.address)
+        .then(() => giveMeLitigation())
+        .then(async (result) => {
+            litigation = result;
+            await deployer.deploy(Reading, hub.address)
+        .then(() => giveMeReading())
+        .then(async (result) => {
+            reading = result;
+            await hub.setProfile(profile.address)
+        .then(async () => {
+            await hub.setBidding(bidding.address)
+        .then(async () => {
+            await hub.setEscrow(escrow.address)
+        .then(async () => {
+            await hub.setLitigation(litigation.address)
+        .then(async () => {
+            await hub.setReading(reading.address)
+        .then(async () => {
+            await bidding.initiate()
+        .then(async () => {
+            await escrow.initiate()
+        .then(async () => {
+            await litigation.initiate()
+        .then(async () => {
+            deployer.deploy(TracToken, accounts[0], accounts[1], accounts[2])
+        .then(() => giveMeTracToken())
+        .then(async (result) => {
+            token = result;
             await deployer.deploy(OTFingerprintStore)
         .then(() => giveMeFingerprint())
         .then(async (result) => {
             fingerprint = result;
-            await escrow.setBidding(bidding.address, { from: accounts[0] })
-        .then(async () => {
-            await escrow.setReading(reading.address, { from: accounts[0] })
-        .then(async () => {
-            await reading.setBidding(bidding.address, { from: accounts[0] })
-        .then(async () => {
-            await reading.transferOwnership(escrow.address, { from: accounts[0] })
-        .then(async () => {
-            await escrow.transferOwnership(bidding.address, { from: accounts[0] })
-        .then(async () => {
             var amounts = [];
             var recepients = [];
             for (let i = 0; i < 10; i += 1) {
@@ -92,25 +155,22 @@ module.exports = (deployer, network, accounts) => {
             await token.mintMany(recepients, amounts, { from: accounts[0] })
         .then(async () => {
             await token.finishMinting({ from: accounts[0] })
-        .then(async () => {
-            await deployer.deploy(
-                Hub,
-                fingerprint.address,
-                token.address,
-                bidding.address,
-                escrow.address,
-                reading.address,
-            )
-        .then(() => giveMeHub())
-        .then(async (result) => {
-            hub = result;
-            console.log('\n\n \t Contract adressess on ganache:');
+        .then(() => {
             console.log(`\t Hub contract address: \t ${hub.address}`); // eslint-disable-line
-            console.log(`\t OT-fingerprint contract address: \t ${fingerprint.address}`); // eslint-disable-line
-            console.log(`\t Token contract address: \t ${token.address}`); // eslint-disable-line
-            console.log(`\t Escrow contract address: \t ${escrow.address}`); // eslint-disable-line
-            console.log(`\t Bidding contract address: \t ${bidding.address}`); // eslint-disable-line
-            console.log(`\t Reading contract address: \t ${reading.address}`); // eslint-disable-line
+        });
+        });
+        });
+        });
+        });
+        });
+        });
+        });
+        });
+        });
+        });
+        });
+        });
+        });
         });
         });
         });
