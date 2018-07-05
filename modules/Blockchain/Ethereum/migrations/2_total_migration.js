@@ -45,6 +45,37 @@ const giveMeReadingStorage = async function giveMeReadingStorage() {
     return readingStorage;
 };
 
+const giveMeProfile = async function giveMeProfile() {
+    const profile = Profile.deployed();
+    return profile;
+};
+const giveMeBiddingTest = async function giveMeBiddingTest() {
+    const bidding = BiddingTest.deployed();
+    return bidding;
+};
+const giveMeEscrowHolder = async function giveMeEscrowHolder() {
+    const escrow = EscrowHolder.deployed();
+    return escrow;
+};
+const giveMeLitigation = async function giveMeLitigation() {
+    const litigation = Litigation.deployed();
+    return litigation;
+};
+const giveMeReading = async function giveMeReading() {
+    const reading = Reading.deployed();
+    return reading;
+};
+
+const giveMeTracToken = async function giveMeTracToken() {
+    const token = TracToken.deployed();
+    return token;
+};
+
+const giveMeFingerprint = async function giveMeFingerprint() {
+    const fingerprint = OTFingerprintStore.deployed();
+    return fingerprint;
+};
+
 let hub;
 
 let profile;
@@ -76,23 +107,23 @@ module.exports = (deployer, network, accounts) => {
         .then(() => giveMeHub())
         .then(async (result) => {
             hub = result;
-            await deployer.deploy(ProfileStorage, hub.address, { gas: 900000000000, from: accounts[0] })
+            await deployer.deploy(ProfileStorage, hub.address, { gas: 900000000, from: accounts[0] })
         .then(() => giveMeProfileStorage())
         .then(async (result) => {
             profileStorage = result;
-            await deployer.deploy(BiddingStorage, hub.address)
+            await deployer.deploy(BiddingStorage, hub.address, { gas: 900000000, from: accounts[0] })
         .then(() => giveMeBiddingStorage())
         .then(async (result) => {
             biddingStorage = result;
-            await deployer.deploy(EscrowStorage, hub.address)
+            await deployer.deploy(EscrowStorage, hub.address, { gas: 900000000, from: accounts[0] })
         .then(() => giveMeEscrowStorage())
         .then(async (result) => {
             escrowStorage = result;
-            await deployer.deploy(LitigationStorage, hub.address)
+            await deployer.deploy(LitigationStorage, hub.address, { gas: 900000000, from: accounts[0] })
         .then(() => giveMeLitigationStorage())
         .then(async (result) => {
             litigationStorage = result;
-            await deployer.deploy(ReadingStorage, hub.address)
+            await deployer.deploy(ReadingStorage, hub.address, { gas: 900000000, from: accounts[0] })
         .then(() => giveMeReadingStorage())
         .then(async (result) => {
             readingStorage = result;
@@ -106,19 +137,23 @@ module.exports = (deployer, network, accounts) => {
         .then(async () => {
             await hub.setReadingStorageAddress(readingStorage.address)
         .then(async () => {
-            await deployer.deploy(BiddingTest, hub.address)
+            await deployer.deploy(Profile, hub.address, { gas: 900000000, from: accounts[0] })
+        .then(() => giveMeProfile())
+        .then(async (result) => {
+            bidding = result;
+            await deployer.deploy(BiddingTest, hub.address, { gas: 900000000, from: accounts[0] })
         .then(() => giveMeBiddingTest())
         .then(async (result) => {
             bidding = result;
-            await deployer.deploy(EscrowHolder, hub.address)
+            await deployer.deploy(EscrowHolder, hub.address, { gas: 900000000, from: accounts[0] })
         .then(() => giveMeEscrowHolder())
         .then(async (result) => {
             escrow = result;
-            await deployer.deploy(Litigation, hub.address)
+            await deployer.deploy(Litigation, hub.address, { gas: 900000000, from: accounts[0] })
         .then(() => giveMeLitigation())
         .then(async (result) => {
             litigation = result;
-            await deployer.deploy(Reading, hub.address)
+            await deployer.deploy(Reading, hub.address, { gas: 900000000, from: accounts[0] })
         .then(() => giveMeReading())
         .then(async (result) => {
             reading = result;
@@ -157,6 +192,7 @@ module.exports = (deployer, network, accounts) => {
             await token.finishMinting({ from: accounts[0] })
         .then(() => {
             console.log(`\t Hub contract address: \t ${hub.address}`); // eslint-disable-line
+        });
         });
         });
         });
