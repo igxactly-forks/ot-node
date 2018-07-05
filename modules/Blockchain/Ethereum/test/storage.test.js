@@ -1,11 +1,14 @@
-const { assert, expect } = require('chai');
+/* eslint-disable max-len, no-undef */
 
-var TestingUtilities = artifacts.require('./TestingUtilities.sol'); // eslint-disable-line no-undef
-var TracToken = artifacts.require('./TracToken.sol'); // eslint-disable-line no-undef
-var EscrowHolder = artifacts.require('./EscrowHolder.sol'); // eslint-disable-line no-undef
-var Bidding = artifacts.require('./BiddingTest.sol'); // eslint-disable-line no-undef
-var Reading = artifacts.require('./Reading.sol'); // eslint-disable-line no-undef
-var StorageContract = artifacts.require('./Storage.sol'); // eslint-disable-line no-undef
+const { assert, expect } = require('chai');
+const { before } = require('mocha');
+
+var TestingUtilities = artifacts.require('./TestingUtilities.sol');
+var TracToken = artifacts.require('./TracToken.sol');
+var EscrowHolder = artifacts.require('./EscrowHolder.sol');
+var Bidding = artifacts.require('./BiddingTest.sol');
+var Reading = artifacts.require('./Reading.sol');
+var StorageContract = artifacts.require('./Storage.sol');
 
 var Web3 = require('web3');
 
@@ -37,7 +40,7 @@ contract('Storage testing', async (accounts) => {
 
     before(async () => {
 
-    	
+
     });
     // createProfile(bytes32 node_id, uint price, uint stake, uint max_time, uint max_size)
     // 0: uint256: token_amount
@@ -47,7 +50,7 @@ contract('Storage testing', async (accounts) => {
     // 4: uint256: reputation
     // 5: uint256: max_escrow_time
     // 6: uint256: size_available
-    // eslint-disable-next-line no-undef
+    // eslint - disable - next - line no - undef
     // it('Should initiatePurchase', async () => {
     //     // Get instances of contracts used in the test
     //     const bidding = await Bidding.deployed();
@@ -60,13 +63,13 @@ contract('Storage testing', async (accounts) => {
     //         DH_stake[i] = (Math.round(Math.random() * 1000) + 10) * 1e15;
     //         DH_read_factor[i] = (Math.round(Math.random() * 5));
     //         promises[i] = bidding.createProfile(
-    //         	node_id[i],
-    //         	DH_price[i],
-    //         	DH_stake[i],
-    //         	DH_read_factor[i],
-    //         	1000,
-    //         	{ from: accounts[i] },
-    //         	);
+    //             node_id[i],
+    //             DH_price[i],
+    //             DH_stake[i],
+    //             DH_read_factor[i],
+    //             1000,
+    //             { from: accounts[i] },
+    //         );
     //     }
     //     await Promise.all(promises);
 
@@ -80,6 +83,4 @@ contract('Storage testing', async (accounts) => {
     //         assert.equal(response[1].toNumber(), DH_stake[i], 'Stake not matching');
     //     }
     // });
-
-
 });

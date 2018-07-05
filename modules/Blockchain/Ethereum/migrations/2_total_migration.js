@@ -1,24 +1,25 @@
 /* eslint indent: 0 */
-var TracToken = artifacts.require('TracToken'); // eslint-disable-line no-undef
-var OTFingerprintStore = artifacts.require('OTFingerprintStore'); // eslint-disable-line no-undef
+/* eslint-disable max-len, no-undef */
+var TracToken = artifacts.require('TracToken');
+var OTFingerprintStore = artifacts.require('OTFingerprintStore');
 
-var ContractHub = artifacts.require('ContractHub'); // eslint-disable-line no-undef
+var ContractHub = artifacts.require('ContractHub');
 
 // Variable contracts
-var Profile = artifacts.require('Profile'); // eslint-disable-line no-undef
-var Bidding = artifacts.require('Bidding'); // eslint-disable-line no-undef
-var BiddingTest = artifacts.require('BiddingTest'); // eslint-disable-line no-undef
-var Litigation = artifacts.require('Litigation'); // eslint-disable-line no-undef
-var EscrowHolder = artifacts.require('EscrowHolder'); // eslint-disable-line no-undef
-var Reading = artifacts.require('Reading'); // eslint-disable-line no-undef
+var Profile = artifacts.require('Profile');
+var Bidding = artifacts.require('Bidding');
+var BiddingTest = artifacts.require('BiddingTest');
+var Litigation = artifacts.require('Litigation');
+var EscrowHolder = artifacts.require('EscrowHolder');
+var Reading = artifacts.require('Reading');
 
 // Storage contracts
-var ProfileStorage = artifacts.require('ProfileStorage'); // eslint-disable-line no-undef
-var BiddingStorage = artifacts.require('BiddingStorage'); // eslint-disable-line no-undef
-var EscrowStorage = artifacts.require('EscrowStorage'); // eslint-disable-line no-undef
-var LitigationStorage = artifacts.require('LitigationStorage'); // eslint-disable-line no-undef
-var ReadingStorage = artifacts.require('ReadingStorage'); // eslint-disable-line no-undef
-var TestingUtilities = artifacts.require('TestingUtilities'); // eslint-disable-line no-undef
+var ProfileStorage = artifacts.require('ProfileStorage');
+var BiddingStorage = artifacts.require('BiddingStorage');
+var EscrowStorage = artifacts.require('EscrowStorage');
+var LitigationStorage = artifacts.require('LitigationStorage');
+var ReadingStorage = artifacts.require('ReadingStorage');
+var TestingUtilities = artifacts.require('TestingUtilities');
 
 const giveMeHub = async function giveMeHub() {
     const hub = ContractHub.deployed();
@@ -257,7 +258,7 @@ module.exports = (deployer, network, accounts) => {
             hub.setBidding(bidding.address);
             await deployer.deploy(StorageContracts, hub.address)
         .then(async () => {
-            await deployer.deploy(TestingUtilities)
+            await deployer.deploy(TestingUtilities);
             var amounts = [];
             var recepients = [];
             for (let i = 0; i < 10; i += 1) {
@@ -284,7 +285,6 @@ module.exports = (deployer, network, accounts) => {
         });
         });
         break;
-    // eslint-disable-next-line
     case 'rinkeby':
         Hub.at('0xaf810f20e36de6dd64eb8fa2e8fac51d085c1de3')
         .then(async (result) => {
