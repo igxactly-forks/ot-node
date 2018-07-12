@@ -85,7 +85,7 @@ contract ContractHub is Ownable{
         emit ContractsChanged();
     }
 
-    function setLitgationAddress(address newLitigationAddress)
+    function setLitigationAddress(address newLitigationAddress)
     public onlyOwner {
         litigationAddress = newLitigationAddress;
         emit ContractsChanged();
