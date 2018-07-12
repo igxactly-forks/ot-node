@@ -99,12 +99,49 @@ let DH_wallet;
 
 const amountToMint = 5e25;
 
-module.exports = (deployer, network, accounts) => {
+module.exports =  async (deployer, network, accounts) => {
     switch (network) {
+    case 'ganache2':
+
+        await deployer.deploy(ContractHub, { gas: 9000000, from: accounts[0] })
+        await giveMeHub().then(result => hub = result);
+        console.log(hub.address);
+
+        // await deployer.deploy(BiddingStorage, hub.address, { gas: 9000000, from: accounts[0] });
+        // biddingStorage = await giveMeBiddingStorage();
+        // console.log(biddingStorage.address);
+        // await hub.setBiddingStorageAddress(biddingStorage.address);
+
+        // await deployer.deploy(EscrowStorage, hub.address, { gas: 9000000, from: accounts[0] });
+        // escrowStorage = await giveMeEscrowStorage();
+        // console.log(escrowStorage.address)
+        // await hub.setEscrowStorageAddress(escrowStorage.address);
+
+        await deployer.deploy(LitigationStorage, hub.address, { gas: 9000000, from: accounts[0] });
+        litigationStorage = await giveMeLitigationStorage();
+        console.log(litigationStorage.address);
+        // await hub.setLitigationStorageAddress(litigationStorage.address);
+
+        await deployer.deploy(ReadingStorage, hub.address, { gas: 9000000, from: accounts[0] });
+        readingStorage = await giveMeReadingStorage();
+        console.log(readingStorage.address);
+        await hub.setReadingStorageAddress(readingStorage.address, { from: accounts[0] });
+
+
+        // await deployer.deploy(ProfileStorage, hub.address, { gas: 9000000, from: accounts[0] });
+        // profileStorage = await giveMeProfileStorage();
+        // console.log(profileStorage.address);
+        // await hub.setProfileStorageAddress(profileStorage.address);
+
+
+
+
+
+        break;
     case 'ganache':
         DC_wallet = accounts[0]; // eslint-disable-line prefer-destructuring
         DH_wallet = accounts[1]; // eslint-disable-line prefer-destructuring
-        deployer.deploy(ContractHub)
+        deployer.deploy(ContractHub, { gas: 9000000, from: accounts[0] })
         .then(() => giveMeHub())
         .then(async (result) => {
             hub = result;

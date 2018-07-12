@@ -19,6 +19,13 @@ module.exports = {
             network_id: '5777',
         },
 
+        ganache2: {
+            host: 'localhost',
+            port: 7545,
+            gas: 6000000,
+            network_id: '5777',
+        },
+
         mock: {
             host: 'localhost',
             port: 7545,

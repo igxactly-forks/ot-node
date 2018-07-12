@@ -42,7 +42,7 @@ contract ContractHub is Ownable {
 	address public biddingAddress;
 }
 
-contract BidStorage is Ownable{
+contract BiddingStorage is Ownable{
 	ContractHub public hub;
 
 	constructor(address hub_address) public {
