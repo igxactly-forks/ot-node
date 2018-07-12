@@ -104,7 +104,7 @@ module.exports =  async (deployer, network, accounts) => {
     case 'ganache2':
 
         await deployer.deploy(ContractHub, { gas: 9000000, from: accounts[0] })
-        await giveMeHub().then(result => hub = result);
+        .then(result => hub = result);
         console.log(hub.address);
 
         // await deployer.deploy(BiddingStorage, hub.address, { gas: 9000000, from: accounts[0] });
@@ -117,13 +117,13 @@ module.exports =  async (deployer, network, accounts) => {
         // console.log(escrowStorage.address)
         // await hub.setEscrowStorageAddress(escrowStorage.address);
 
-        await deployer.deploy(LitigationStorage, hub.address, { gas: 9000000, from: accounts[0] });
-        litigationStorage = await giveMeLitigationStorage();
+        await deployer.deploy(LitigationStorage, hub.address, { gas: 9000000, from: accounts[0] })
+        .then(result => litigationStorage = result);
         console.log(litigationStorage.address);
-        // await hub.setLitigationStorageAddress(litigationStorage.address);
+        await hub.setLitigationStorageAddress(litigationStorage.address);
 
-        await deployer.deploy(ReadingStorage, hub.address, { gas: 9000000, from: accounts[0] });
-        readingStorage = await giveMeReadingStorage();
+        await deployer.deploy(ReadingStorage, hub.address, { gas: 9000000, from: accounts[0] })
+        .then(result => readingStorage = result);
         console.log(readingStorage.address);
         await hub.setReadingStorageAddress(readingStorage.address, { from: accounts[0] });
 

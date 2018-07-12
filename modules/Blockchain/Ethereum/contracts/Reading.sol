@@ -227,8 +227,10 @@ contract Reading{
     public {
         require(readingStorage.getPurchase_purchase_status(msg.sender, DV_wallet, import_id) == ReadingStorage.PurchaseStatus.confirmed);
 
-
-        (address ps_DC_wallet, bytes32 ps_distribution_root_hash, uint ps_checksum) = readingStorage.purchased_data(import_id,msg.sender);
+        address ps_DC_wallet;
+        bytes32 ps_distribution_root_hash;
+        uint ps_checksum;
+        (ps_DC_wallet, ps_distribution_root_hash, ps_checksum) = readingStorage.purchased_data(import_id,msg.sender);
 
 
         readingStorage.setPurchase_encrypted_block(msg.sender, DV_wallet, import_id, encrypted_block);
