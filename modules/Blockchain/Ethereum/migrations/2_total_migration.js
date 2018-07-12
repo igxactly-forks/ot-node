@@ -101,163 +101,77 @@ const amountToMint = 5e25;
 
 module.exports =  async (deployer, network, accounts) => {
     switch (network) {
-    case 'ganache2':
-
-        await deployer.deploy(ContractHub, { gas: 9000000, from: accounts[0] })
-        .then(result => hub = result);
+    case 'ganache':
+        await deployer.deploy(ContractHub).then(result => hub = result);
         console.log(hub.address);
 
-        // await deployer.deploy(BiddingStorage, hub.address, { gas: 9000000, from: accounts[0] });
-        // biddingStorage = await giveMeBiddingStorage();
-        // console.log(biddingStorage.address);
-        // await hub.setBiddingStorageAddress(biddingStorage.address);
+        await deployer.deploy(ProfileStorage, hub.address, { gas: 9000000, from: accounts[0] })
+        .then(result => profileStorage = result);
+        // console.log(profileStorage.address);
+        await hub.setProfileStorageAddress(profileStorage.address);
 
-        // await deployer.deploy(EscrowStorage, hub.address, { gas: 9000000, from: accounts[0] });
-        // escrowStorage = await giveMeEscrowStorage();
+        await deployer.deploy(BiddingStorage, hub.address, { gas: 9000000, from: accounts[0] });
+        biddingStorage = await giveMeBiddingStorage();
+        // console.log(biddingStorage.address);
+        await hub.setBiddingStorageAddress(biddingStorage.address);
+
+        await deployer.deploy(EscrowStorage, hub.address, { gas: 9000000, from: accounts[0] });
+        escrowStorage = await giveMeEscrowStorage();
         // console.log(escrowStorage.address)
-        // await hub.setEscrowStorageAddress(escrowStorage.address);
+        await hub.setEscrowStorageAddress(escrowStorage.address);
 
         await deployer.deploy(LitigationStorage, hub.address, { gas: 9000000, from: accounts[0] })
         .then(result => litigationStorage = result);
-        console.log(litigationStorage.address);
+        // console.log(litigationStorage.address);
         await hub.setLitigationStorageAddress(litigationStorage.address);
 
         await deployer.deploy(ReadingStorage, hub.address, { gas: 9000000, from: accounts[0] })
         .then(result => readingStorage = result);
-        console.log(readingStorage.address);
+        // console.log(readingStorage.address);
         await hub.setReadingStorageAddress(readingStorage.address, { from: accounts[0] });
 
 
-        // await deployer.deploy(ProfileStorage, hub.address, { gas: 9000000, from: accounts[0] });
-        // profileStorage = await giveMeProfileStorage();
-        // console.log(profileStorage.address);
-        // await hub.setProfileStorageAddress(profileStorage.address);
+        await deployer.deploy(TracToken, accounts[0], accounts[1], accounts[2])
+        .then(result => token = result);
+        await hub.setTokenAddress(token.address);
 
+        await deployer.deploy(OTFingerprintStore)
+        .then(result => fingerprint = result);
+        await hub.setFingerprintAddress(fingerprint.address);
+       
+        await deployer.deploy(Profile, hub.address, { gas: 9000000, from: accounts[0] })
+        .then(result => profile = result);
+        await hub.setProfileAddress(profile.address);
 
+        await deployer.deploy(BiddingTest, hub.address, { gas: 10000000, from: accounts[0] })
+        .then(result => bidding = result);
+        await hub.setBiddingAddress(bidding.address);
 
+        await deployer.deploy(EscrowHolder, hub.address, { gas: 9000000, from: accounts[0] })
+        .then(result => escrow = result);
+        await hub.setEscrowAddress(escrow.address);
 
+        await deployer.deploy(Litigation, hub.address, { gas: 9000000, from: accounts[0] })
+        .then(result => litigation = result);
+        await hub.setLitigationAddress(litigation.address);
 
-        break;
-    case 'ganache':
-        DC_wallet = accounts[0]; // eslint-disable-line prefer-destructuring
-        DH_wallet = accounts[1]; // eslint-disable-line prefer-destructuring
-        deployer.deploy(ContractHub, { gas: 9000000, from: accounts[0] })
-        .then(() => giveMeHub())
-        .then(async (result) => {
-            hub = result;
-            await deployer.deploy(ProfileStorage, hub.address, { gas: 900000000, from: accounts[0] })
-        .then(() => giveMeProfileStorage())
-        .then(async (result) => {
-            profileStorage = result;
-            await deployer.deploy(BiddingStorage, hub.address, { gas: 900000000, from: accounts[0] })
-        .then(() => giveMeBiddingStorage())
-        .then(async (result) => {
-            biddingStorage = result;
-            await deployer.deploy(EscrowStorage, hub.address, { gas: 900000000, from: accounts[0] })
-        .then(() => giveMeEscrowStorage())
-        .then(async (result) => {
-            escrowStorage = result;
-            await deployer.deploy(LitigationStorage, hub.address, { gas: 900000000, from: accounts[0] })
-        .then(() => giveMeLitigationStorage())
-        .then(async (result) => {
-            litigationStorage = result;
-            await deployer.deploy(ReadingStorage, hub.address, { gas: 900000000, from: accounts[0] })
-        .then(() => giveMeReadingStorage())
-        .then(async (result) => {
-            readingStorage = result;
-            await hub.setProfileStorageAddress(profileStorage.address)
-        .then(async () => {
-            await hub.setBiddingStorageAddress(biddingStorage.address)
-        .then(async () => {
-            await hub.setEscrowStorageAddress(escrowStorage.address)
-        .then(async () => {
-            await hub.setLitigationStorageAddress(litigationStorage.address)
-        .then(async () => {
-            await hub.setReadingStorageAddress(readingStorage.address)
-        .then(async () => {
-            await deployer.deploy(Profile, hub.address, { gas: 900000000, from: accounts[0] })
-        .then(() => giveMeProfile())
-        .then(async (result) => {
-            bidding = result;
-            await deployer.deploy(BiddingTest, hub.address, { gas: 900000000, from: accounts[0] })
-        .then(() => giveMeBiddingTest())
-        .then(async (result) => {
-            bidding = result;
-            await deployer.deploy(EscrowHolder, hub.address, { gas: 900000000, from: accounts[0] })
-        .then(() => giveMeEscrowHolder())
-        .then(async (result) => {
-            escrow = result;
-            await deployer.deploy(Litigation, hub.address, { gas: 900000000, from: accounts[0] })
-        .then(() => giveMeLitigation())
-        .then(async (result) => {
-            litigation = result;
-            await deployer.deploy(Reading, hub.address, { gas: 900000000, from: accounts[0] })
-        .then(() => giveMeReading())
-        .then(async (result) => {
-            reading = result;
-            await hub.setProfile(profile.address)
-        .then(async () => {
-            await hub.setBidding(bidding.address)
-        .then(async () => {
-            await hub.setEscrow(escrow.address)
-        .then(async () => {
-            await hub.setLitigation(litigation.address)
-        .then(async () => {
-            await hub.setReading(reading.address)
-        .then(async () => {
-            await bidding.initiate()
-        .then(async () => {
-            await escrow.initiate()
-        .then(async () => {
-            await litigation.initiate()
-        .then(async () => {
-            deployer.deploy(TracToken, accounts[0], accounts[1], accounts[2])
-        .then(() => giveMeTracToken())
-        .then(async (result) => {
-            token = result;
-            await deployer.deploy(OTFingerprintStore)
-        .then(() => giveMeFingerprint())
-        .then(async (result) => {
-            fingerprint = result;
-            var amounts = [];
-            var recepients = [];
-            for (let i = 0; i < 10; i += 1) {
-                amounts.push(amountToMint);
-                recepients.push(accounts[i]);
-            }
-            await token.mintMany(recepients, amounts, { from: accounts[0] })
-        .then(async () => {
-            await token.finishMinting({ from: accounts[0] })
-        .then(() => {
-            console.log(`\t Hub contract address: \t ${hub.address}`); // eslint-disable-line
-        });
-        });
-        });
-        });
-        });
-        });
-        });
-        });
-        });
-        });
-        });
-        });
-        });
-        });
-        });
-        });
-        });
-        });
-        });
-        });
-        });
-        });
-        });
-        });
-        });
-        });
-        });
-        });
+        await deployer.deploy(Reading, hub.address, { gas: 9000000, from: accounts[0] })
+        .then(result => reading = result);
+        await hub.setReadingAddress(reading.address);
+
+        await bidding.initiate();
+        await escrow.initiate();
+        await litigation.initiate();
+        
+        var amounts = [];
+        var recepients = [];
+        for (let i = 0; i < 10; i += 1) {
+            amounts.push(amountToMint);
+            recepients.push(accounts[i]);
+        }
+        await token.mintMany(recepients, amounts, { from: accounts[0] });
+        await token.finishMinting({ from: accounts[0] });
+
         break;
     case 'test':
         deployer.deploy(ContractHub, { gas: 8000000, from: accounts[0] })
