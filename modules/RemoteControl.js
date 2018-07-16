@@ -11,7 +11,8 @@ const Utilities = require('./Utilities');
 const web3 = new Web3(new Web3.providers.HttpProvider('https://rinkeby.infura.io/1WRiEqAQ9l4SW6fGdiDt'));
 
 class SocketDecorator {
-    constructor() {
+    constructor(log) {
+        this.log = log;
         this.socket = null;
     }
 
@@ -21,7 +22,11 @@ class SocketDecorator {
 
     emit(event, data) {
         if (this.socket && this.socket.connected) {
-            this.socket.emit(event, data);
+            try {
+                this.socket.emit(event, data);
+            } catch (e) {
+                this.log.warn('Failed to emmit the event to the front end.');
+            }
         }
     }
 
@@ -40,7 +45,7 @@ class RemoteControl {
         this.log = ctx.logger;
         this.config = ctx.config;
         this.web3 = ctx.web3;
-        this.socket = new SocketDecorator();
+        this.socket = new SocketDecorator(ctx.logger);
 
 
         remote.set('authorization', (handshakeData, callback) => {
@@ -100,16 +105,10 @@ class RemoteControl {
             });
 
             this.socket.on('config-update', (data) => {
-                let query = '';
-                for (var key in data) {
-                    query += `UPDATE node_config SET value = '${data[key]}' WHERE key = '${key}';`;
-                }
-                Storage.db.query(query).then(async (res) => {
+                this.updateConfigRow(data).then(async (res) => {
                     await this.updateProfile();
-                    this.socket.emit('update-complete');
                     this.restartNode();
-                }).catch((err) => {
-                    console.log(err);
+                    await this.socket.emit('updateComplete');
                 });
             });
 
@@ -209,6 +208,17 @@ class RemoteControl {
                 contact: this.node.contact,
                 peers,
             });
+        });
+    }
+    updateConfigRow(data) {
+        return new Promise((resolve, reject) => {
+            for (var key in data) {
+                const query = `UPDATE node_config SET value = '${data[key]}' WHERE key = '${key}';`;
+                Storage.db.query(query).then((res) => {
+
+                });
+            }
+            resolve();
         });
     }
 
