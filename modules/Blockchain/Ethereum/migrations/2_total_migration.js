@@ -119,7 +119,7 @@ module.exports =  async (deployer, network, accounts) => {
         break;
     case 'test':
         await deployer.deploy(ContractHub).then(result => hub = result);
-        console.log(hub.address);
+        // console.log(hub.address);
 
         await deployer.deploy(ProfileStorage, hub.address, { gas: 9000000, from: accounts[0] })
         .then(result => profileStorage = result);
