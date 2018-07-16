@@ -1,10 +1,21 @@
 const { assert, expect } = require('chai');
 
-var TestingUtilities = artifacts.require('./TestingUtilities.sol'); // eslint-disable-line no-undef
+// Functional contracts
+var ContractHub = artifacts.require('./ContractHub.sol'); // eslint-disable-line no-undef
 var TracToken = artifacts.require('./TracToken.sol'); // eslint-disable-line no-undef
-var EscrowHolder = artifacts.require('./EscrowHolder.sol'); // eslint-disable-line no-undef
+var Profile = artifacts.require('./Profile.sol'); // eslint-disable-line no-undef
 var Bidding = artifacts.require('./BiddingTest.sol'); // eslint-disable-line no-undef
+var Litigation = artifacts.require('./Litigation.sol'); // eslint-disable-line no-undef
+var EscrowHolder = artifacts.require('./EscrowHolder.sol'); // eslint-disable-line no-undef
 var Reading = artifacts.require('./Reading.sol'); // eslint-disable-line no-undef
+
+// Storage contracts
+var ProfileStorage = artifacts.require('./ProfileStorage.sol'); // eslint-disable-line no-undef
+var BiddingStorage = artifacts.require('./BiddingStorage.sol'); // eslint-disable-line no-undef
+var EscrowStorage = artifacts.require('./EscrowStorage.sol'); // eslint-disable-line no-undef
+var LitigationStorage = artifacts.require('./LitigationStorage.sol'); // eslint-disable-line no-undef
+var ReadingStorage = artifacts.require('./ReadingStorage.sol'); // eslint-disable-line no-undef
+var TestingUtilities = artifacts.require('./TestingUtilities.sol'); // eslint-disable-line no-undef
 
 var Web3 = require('web3');
 
@@ -33,17 +44,23 @@ var DH_read_factor = [];
 // eslint-disable-next-line no-undef
 contract('Bidding testing', async (accounts) => {
     // eslint-disable-next-line no-undef
-    it('Should get TracToken contract', async () => {
-        await TracToken.deployed().then((res) => {
-            console.log(`\t TracToken address: ${res.address}`);
-        }).catch(err => console.log(err));
+    it('Should get ContractHub contract', async () => {
+        const res =  await ContractHub.deployed();
+        console.log(`\t ContractHub address: ${res.address}`);
+    });
+
+    // eslint-disable-next-line no-undef
+    it('Should get Bidding contract', async () => {
+        const hub = await ContractHub.deployed();
+        const res = await hub.biddingAddress.call();
+        console.log(`\t Bidding address: ${res}`);
     });
 
     // eslint-disable-next-line no-undef
     it('Should get Escrow contract', async () => {
-        await EscrowHolder.deployed().then((res) => {
-            console.log(`\t Escrow address: ${res.address}`);
-        }).catch(err => console.log(err));
+        const hub = await ContractHub.deployed();
+        const res = await hub.escrowAddress.call();
+        console.log(`\t Escrow address: ${res}`);
     });
 
     // eslint-disable-next-line no-undef
@@ -311,16 +328,16 @@ contract('Bidding testing', async (accounts) => {
     });
 
     // Merkle tree structure
-    /*      / \
-           /   \
-          /     \
-         /       \
-        /         \
-       / \       / \
-      /   \     /   \
-     /\   /\   /\   /\
-    A  B C  D E  F G  H
-    */
+    //         / \
+    //        /   \
+    //       /     \
+    //      /       \
+    //     /         \
+    //    / \       / \
+    //   /   \     /   \
+    //  /\   /\   /\   /\
+    // A  B C  D E  F G  H
+    
     var requested_data_index = 5;
     var requested_data = [];
     var hashes = [];
