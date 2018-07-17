@@ -1,21 +1,22 @@
+/* eslint-disable max-len, no-undef */
 const { assert, expect } = require('chai');
 
 // Functional contracts
-var ContractHub = artifacts.require('./ContractHub.sol'); // eslint-disable-line no-undef
-var TracToken = artifacts.require('./TracToken.sol'); // eslint-disable-line no-undef
-var Profile = artifacts.require('./Profile.sol'); // eslint-disable-line no-undef
-var Bidding = artifacts.require('./BiddingTest.sol'); // eslint-disable-line no-undef
-var Litigation = artifacts.require('./Litigation.sol'); // eslint-disable-line no-undef
-var EscrowHolder = artifacts.require('./EscrowHolder.sol'); // eslint-disable-line no-undef
-var Reading = artifacts.require('./Reading.sol'); // eslint-disable-line no-undef
+var ContractHub = artifacts.require('./ContractHub.sol');
+var TracToken = artifacts.require('./TracToken.sol');
+var Profile = artifacts.require('./Profile.sol');
+var Bidding = artifacts.require('./BiddingTest.sol');
+var Litigation = artifacts.require('./Litigation.sol');
+var EscrowHolder = artifacts.require('./EscrowHolder.sol');
+var Reading = artifacts.require('./Reading.sol');
 
 // Storage contracts
-var ProfileStorage = artifacts.require('./ProfileStorage.sol'); // eslint-disable-line no-undef
-var BiddingStorage = artifacts.require('./BiddingStorage.sol'); // eslint-disable-line no-undef
-var EscrowStorage = artifacts.require('./EscrowStorage.sol'); // eslint-disable-line no-undef
-var LitigationStorage = artifacts.require('./LitigationStorage.sol'); // eslint-disable-line no-undef
-var ReadingStorage = artifacts.require('./ReadingStorage.sol'); // eslint-disable-line no-undef
-var TestingUtilities = artifacts.require('./TestingUtilities.sol'); // eslint-disable-line no-undef
+var ProfileStorage = artifacts.require('./ProfileStorage.sol');
+var BiddingStorage = artifacts.require('./BiddingStorage.sol');
+var EscrowStorage = artifacts.require('./EscrowStorage.sol');
+var LitigationStorage = artifacts.require('./LitigationStorage.sol');
+var ReadingStorage = artifacts.require('./ReadingStorage.sol');
+var TestingUtilities = artifacts.require('./TestingUtilities.sol');
 
 var Web3 = require('web3');
 
@@ -41,50 +42,41 @@ var DH_price = [];
 var DH_stake = [];
 var DH_read_factor = [];
 
-// eslint-disable-next-line no-undef
-contract('Bidding testing', async (accounts) => {
 
-    // eslint-disable-next-line no-undef
+contract('Bidding testing', async (accounts) => {
     it('Should wait for end of contract migration', async () => {
         await new Promise(resolve => setTimeout(resolve, 10000));
     });
 
-    // eslint-disable-next-line no-undef
     it('Should get ContractHub contract', async () => {
-        const res =  await ContractHub.deployed();
+        const res = await ContractHub.deployed();
         console.log(`\t ContractHub address: ${res.address}`);
-
     });
 
-    // eslint-disable-next-line no-undef
     it('Should get Token contract', async () => {
         const hub = await ContractHub.deployed();
         const res = await hub.tokenAddress.call();
         console.log(`\t Bidding address: ${res}`);
     });
 
-    // eslint-disable-next-line no-undef
     it('Should get Escrow contract', async () => {
         const hub = await ContractHub.deployed();
         const res = await hub.escrowAddress.call();
         console.log(`\t Escrow address: ${res}`);
     });
 
-    // eslint-disable-next-line no-undef
     it('Should get Bidding contract', async () => {
         const hub = await ContractHub.deployed();
         const res = await hub.biddingAddress.call();
         console.log(`\t Escrow address: ${res}`);
     });
 
-    // eslint-disable-next-line no-undef
     it('Should get Reading contract', async () => {
         const hub = await ContractHub.deployed();
         const res = await hub.readingAddress.call();
         console.log(`\t Escrow address: ${res}`);
     });
 
-    // eslint-disable-next-line no-undef
     it('Should get TestingUtilities contract', async () => {
         const util = await TestingUtilities.deployed();
         console.log(`\t TestingUtilities address: ${util.address}`);
@@ -92,7 +84,7 @@ contract('Bidding testing', async (accounts) => {
 
     DC_wallet = accounts[0]; // eslint-disable-line prefer-destructuring
 
-    // eslint-disable-next-line no-undef
+
     it('Should make node_id for every profile (as keccak256(wallet_address))', async () => {
         // Get instances of contracts used in the test
         const util = await TestingUtilities.deployed();
@@ -112,7 +104,7 @@ contract('Bidding testing', async (accounts) => {
     // 4: uint256: reputation
     // 5: uint256: max_escrow_time
     // 6: uint256: size_available
-    // eslint-disable-next-line no-undef
+
     it('Should create 10 profiles', async () => {
         // Get instances of contracts used in the test
         const bidding = await Bidding.deployed();
@@ -146,7 +138,6 @@ contract('Bidding testing', async (accounts) => {
         }
     });
 
-    // eslint-disable-next-line no-undef
     it('Should increase node-bidding approval before depositing', async () => {
         // Get instances of contracts used in the test
         const token = await TracToken.deployed();
@@ -169,7 +160,6 @@ contract('Bidding testing', async (accounts) => {
         }
     });
 
-    // eslint-disable-next-line no-undef
     it('Should deposit tokens from every node to bidding', async () => {
         // Get instances of contracts used in the test
         const bidding = await Bidding.deployed();
@@ -191,7 +181,6 @@ contract('Bidding testing', async (accounts) => {
         }
     });
 
-    // eslint-disable-next-line no-undef
     it('Should create escrow offer, with acc[1] and [2] as predetermined', async () => {
         // Get instances of contracts used in the test
         const bidding = await Bidding.deployed();
@@ -265,7 +254,6 @@ contract('Bidding testing', async (accounts) => {
         assert.equal(replication_factor, predetermined_wallet.length, 'replication_factor not matching');
     });
 
-    // eslint-disable-next-line no-undef
     it('Should get a bid index of accounts[2]', async () => {
         // Get instances of contracts used in the test
         const bidding = await Bidding.deployed();
@@ -277,7 +265,6 @@ contract('Bidding testing', async (accounts) => {
         assert.equal(actual_index, 1, 'Bid index not equal 1');
     });
 
-    // eslint-disable-next-line no-undef
     it('Should activate predetermined bid for acc[2]', async () => {
         // Get instances of contracts used in the test
         const bidding = await Bidding.deployed();
@@ -285,7 +272,6 @@ contract('Bidding testing', async (accounts) => {
         await bidding.activatePredeterminedBid(import_id, node_id[2], 1, { from: accounts[2] });
     });
 
-    // eslint-disable-next-line no-undef
     it('Should add 7 more bids', async () => {
         // Get instances of contracts used in the test
         const bidding = await Bidding.deployed();
@@ -317,7 +303,6 @@ contract('Bidding testing', async (accounts) => {
     // 4: uint end_time
     // 5: uint total_time
 
-    // eslint-disable-next-line no-undef
     it('Should choose bids', async () => {
         // Get instances of contracts used in the test
         const bidding = await Bidding.deployed();
@@ -343,7 +328,7 @@ contract('Bidding testing', async (accounts) => {
     //   /   \     /   \
     //  /\   /\   /\   /\
     // A  B C  D E  F G  H
-    
+
     var requested_data_index = 5;
     var requested_data = [];
     var hashes = [];
@@ -357,7 +342,6 @@ contract('Bidding testing', async (accounts) => {
 
     const checksum = 0;
 
-    // eslint-disable-next-line no-undef
     it('Should calculate and add all root hashes and checksums', async () => {
         // Get instances of contracts used in the test
         const escrow = await EscrowHolder.deployed();
@@ -397,7 +381,6 @@ contract('Bidding testing', async (accounts) => {
         }
     });
 
-    // eslint-disable-next-line no-undef
     it('Should verify all escrows', async () => {
         // Get instances of contracts used in the test
         const escrow = await EscrowHolder.deployed();
@@ -452,7 +435,6 @@ contract('Bidding testing', async (accounts) => {
 
     var litigators = [];
 
-    // eslint-disable-next-line no-undef
     it('Should create 2 litigations about data no 6', async () => {
         // Get instances of contracts used in the test
         const escrow = await EscrowHolder.deployed();
@@ -483,7 +465,6 @@ contract('Bidding testing', async (accounts) => {
         );
     });
 
-    // eslint-disable-next-line no-undef
     it('Should answer litigations, one correctly, one incorrectly', async () => {
         // Get instances of contracts used in the test
         const escrow = await EscrowHolder.deployed();
@@ -506,8 +487,6 @@ contract('Bidding testing', async (accounts) => {
         }
     });
 
-
-    // eslint-disable-next-line no-undef
     it('Should prove litigations, both correctly', async () => {
         // Get instances of contracts used in the test
         const escrow = await EscrowHolder.deployed();
@@ -531,8 +510,6 @@ contract('Bidding testing', async (accounts) => {
         }
     });
 
-
-    // eslint-disable-next-line no-undef
     it('Should wait a 30 seconds, then pay all DHs', async () => {
         // Get instances of contracts used in the test
         const escrow = await EscrowHolder.deployed();
@@ -564,7 +541,6 @@ contract('Bidding testing', async (accounts) => {
         }
     });
 
-    // eslint-disable-next-line no-undef
     it('Should wait another 30 seconds, then pay out all DH_s', async () => {
         // Get instances of contracts used in the test
         const escrow = await EscrowHolder.deployed();
@@ -641,7 +617,6 @@ contract('Bidding testing', async (accounts) => {
 
     var read_token_amount = 10e10;
 
-    // eslint-disable-next-line no-undef
     it('Should initiate reading between acc[2] and acc[1]', async () => {
         // Get instances of contracts used in the test
         const reading = await Reading.deployed();

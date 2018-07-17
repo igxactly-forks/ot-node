@@ -42,8 +42,10 @@ let DC_wallet;
 let DH_wallet;
 
 const amountToMint = 5e25;
+const amounts = [];
+const recepients = [];
 
-module.exports =  async (deployer, network, accounts) => {
+module.exports = async (deployer, network, accounts) => {
     switch (network) {
     case 'ganache':
         await deployer.deploy(ContractHub).then(result => hub = result);
@@ -82,7 +84,7 @@ module.exports =  async (deployer, network, accounts) => {
         await deployer.deploy(OTFingerprintStore)
         .then(result => fingerprint = result);
         await hub.setFingerprintAddress(fingerprint.address);
-       
+
         await deployer.deploy(Profile, hub.address, { gas: 9000000, from: accounts[0] })
         .then(result => profile = result);
         await hub.setProfileAddress(profile.address);
@@ -106,9 +108,7 @@ module.exports =  async (deployer, network, accounts) => {
         await bidding.initiate();
         await escrow.initiate();
         await litigation.initiate();
-        
-        var amounts = [];
-        var recepients = [];
+
         for (let i = 0; i < 10; i += 1) {
             amounts.push(amountToMint);
             recepients.push(accounts[i]);
@@ -154,7 +154,7 @@ module.exports =  async (deployer, network, accounts) => {
         await deployer.deploy(OTFingerprintStore)
         .then(result => fingerprint = result);
         await hub.setFingerprintAddress(fingerprint.address);
-       
+
         await deployer.deploy(Profile, hub.address, { gas: 9000000, from: accounts[0] })
         .then(result => profile = result);
         await hub.setProfileAddress(profile.address);
@@ -178,9 +178,7 @@ module.exports =  async (deployer, network, accounts) => {
         await bidding.initiate();
         await escrow.initiate();
         await litigation.initiate();
-        
-        var amounts = [];
-        var recepients = [];
+
         for (let i = 0; i < 10; i += 1) {
             amounts.push(amountToMint);
             recepients.push(accounts[i]);
@@ -193,7 +191,7 @@ module.exports =  async (deployer, network, accounts) => {
         break;
     case 'rinkeby':
         await Hub.at('0xaf810f20e36de6dd64eb8fa2e8fac51d085c1de3');
-        
+
         await deployer.deploy(Profile, hub.address, { gas: 9000000, from: accounts[0] })
         .then(result => profile = result);
         await hub.setProfileAddress(profile.address);
