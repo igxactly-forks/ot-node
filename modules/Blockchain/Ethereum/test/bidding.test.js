@@ -43,16 +43,23 @@ var DH_read_factor = [];
 
 // eslint-disable-next-line no-undef
 contract('Bidding testing', async (accounts) => {
+
+    // eslint-disable-next-line no-undef
+    it('Should wait for end of contract migration', async () => {
+        await new Promise(resolve => setTimeout(resolve, 10000));
+    });
+
     // eslint-disable-next-line no-undef
     it('Should get ContractHub contract', async () => {
         const res =  await ContractHub.deployed();
         console.log(`\t ContractHub address: ${res.address}`);
+
     });
 
     // eslint-disable-next-line no-undef
-    it('Should get Bidding contract', async () => {
+    it('Should get Token contract', async () => {
         const hub = await ContractHub.deployed();
-        const res = await hub.biddingAddress.call();
+        const res = await hub.tokenAddress.call();
         console.log(`\t Bidding address: ${res}`);
     });
 
@@ -65,23 +72,22 @@ contract('Bidding testing', async (accounts) => {
 
     // eslint-disable-next-line no-undef
     it('Should get Bidding contract', async () => {
-        await Bidding.deployed().then((res) => {
-            console.log(`\t Bidding address: ${res.address}`);
-        }).catch(err => console.log(err));
+        const hub = await ContractHub.deployed();
+        const res = await hub.biddingAddress.call();
+        console.log(`\t Escrow address: ${res}`);
     });
 
     // eslint-disable-next-line no-undef
     it('Should get Reading contract', async () => {
-        await Reading.deployed().then((res) => {
-            console.log(`\t Reading address: ${res.address}`);
-        }).catch(err => console.log(err));
+        const hub = await ContractHub.deployed();
+        const res = await hub.readingAddress.call();
+        console.log(`\t Escrow address: ${res}`);
     });
 
     // eslint-disable-next-line no-undef
     it('Should get TestingUtilities contract', async () => {
-        await TestingUtilities.deployed().then((res) => {
-            console.log(`\t TestingUtilities address: ${res.address}`);
-        }).catch(err => console.log(err));
+        const util = await TestingUtilities.deployed();
+        console.log(`\t TestingUtilities address: ${util.address}`);
     });
 
     DC_wallet = accounts[0]; // eslint-disable-line prefer-destructuring
