@@ -462,10 +462,6 @@ class GraphStorage {
                         const fromMap = fromQuantityList.map(q => q.flat);
                         const toMap = toQuantityList.map(q => q.flat);
 
-                        fromMap[3] = 'dtfghjk_23';
-                        toMap.shift();
-                        fromMap.pop();
-
                         const n = fromMap.length;
                         const m = toMap.length;
 
