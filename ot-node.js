@@ -39,7 +39,7 @@ process.on('unhandledRejection', (reason, p) => {
     if (reason.message.startsWith('Invalid JSON RPC response')) {
         return;
     }
-    log.error('Unhandled Rejection at: Promise', p, 'reason:', reason);
+    console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
     // application specific logging, throwing an error, or other logic here
 });
 
@@ -347,7 +347,7 @@ class OTNode {
      * Creates profile on the contract
      */
     async createProfile(blockchain) {
-        const { identity } = config;
+        const {identity} = config;
         const profileInfo = await blockchain.getProfile(config.node_wallet);
         if (profileInfo.active) {
             log.info(`Profile has already been created for ${identity}`);
@@ -364,25 +364,26 @@ class OTNode {
                 return;
             }
 
-        log.notify(`Profile is being created for ${identity}. This could take a while...`);
-        await blockchain.createProfile(
-            config.identity,
-            new BN(config.dh_price, 10),
-            new BN(config.dh_stake_factor, 10),
-            config.read_stake_factor,
-            config.dh_max_time_mins,
-        );
-        const event = await blockchain.subscribeToEvent('ProfileCreated', null, 5 * 60 * 1000, null, (eventData) => {
-            if (eventData.node_id) {
-                return eventData.node_id.includes(identity);
+            log.notify(`Profile is being created for ${identity}. This could take a while...`);
+            await blockchain.createProfile(
+                config.identity,
+                new BN(config.dh_price, 10),
+                new BN(config.dh_stake_factor, 10),
+                config.read_stake_factor,
+                config.dh_max_time_mins,
+            );
+            const event = await blockchain.subscribeToEvent('ProfileCreated', null, 5 * 60 * 1000, null, (eventData) => {
+                if (eventData.node_id) {
+                    return eventData.node_id.includes(identity);
+                }
+                return false;
+            });
+            if (event) {
+                log.notify(`Profile created for node ${identity}`);
+            } else {
+                log.error('Profile could not be confirmed in timely manner. Please, try again later.');
+                process.exit(1);
             }
-            return false;
-        });
-        if (event) {
-            log.notify(`Profile created for node ${identity}`);
-        } else {
-            log.error('Profile could not be confirmed in timely manner. Please, try again later.');
-            process.exit(1);
         }
     }
 
