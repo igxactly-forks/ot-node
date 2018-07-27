@@ -715,6 +715,14 @@ class OTNode {
                 response: res,
             });
         });
+
+        server.get('/api/nonconsensus', (req, res) => {
+            log.api('GET: Non-consensus events request received.');
+
+            emitter.emit('api-nonconsensus', {
+                response: res,
+            });
+        });
     }
 }
 

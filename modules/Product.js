@@ -142,6 +142,10 @@ class Product {
     getImports(inputQuery) {
         return this.graphStorage.findImportIds(inputQuery);
     }
+
+    getNonconsensusEvents() {
+        return this.graphStorage.getNonconsensusEvents();
+    }
 }
 
 module.exports = Product;

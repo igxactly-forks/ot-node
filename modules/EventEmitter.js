@@ -955,6 +955,15 @@ class EventEmitter {
                 remoteControl.replicationVerificationStatus(`Key verification for import ${import_id} failed`);
             }
         });
+
+        this._on('api-nonconsensus', async (request) => {
+            const { response } = request;
+
+            const data = await this.product.getNonconsensusEvents();
+
+            response.send(data);
+        });
+
     }
 
     /**

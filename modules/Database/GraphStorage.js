@@ -411,6 +411,165 @@ class GraphStorage {
         });
     }
 
+    getNonconsensusEvents() {
+        return new Promise((resolve, reject) => {
+            if (!this.db) {
+                reject(Error('Not connected to graph database'));
+            } else if (this.db.identify === 'Neo4j') {
+                reject(Error('Method not implemented for Neo4j database yet'));
+            } else {
+                const query = `FOR e IN ot_edges 
+                                LET vertices = (
+                                    FOR v IN ot_vertices
+                                        LET to_vertex = (
+                                        FOR w IN ot_vertices
+                                            FILTER w._id == e._to
+                                            RETURN w
+                                    )
+                                    FILTER v._id == e._from
+                                    RETURN {from: v, to: to_vertex[0]}
+                                )
+                            FILTER e.edge_type == 'EVENT_CONNECTION' and e.transaction_flow == 'INPUT' 
+                            RETURN vertices[0]`;
+                this.db.runQuery(query, {}).then((response) => {
+                    const badEvents = [];
+
+                    for (const pair of response) {
+                        const { from, to } = pair;
+
+                        let fromQuantityList = from.data.quantities.outputs;
+                        let toQuantityList = to.data.quantities.inputs;
+
+                        fromQuantityList = fromQuantityList.map((q) => {
+                            const filtered = {};
+                            filtered.quantity = q.private.quantity;
+                            filtered.object = q.private.object;
+                            filtered.flat = `${q.private.object}_${q.private.quantity}`;
+                            return filtered;
+                        });
+
+                        toQuantityList = toQuantityList.map((q) => {
+                            const filtered = {};
+                            filtered.quantity = q.private.quantity;
+                            filtered.object = q.private.object;
+                            filtered.flat = `${q.private.object}_${q.private.quantity}`;
+                            return filtered;
+                        });
+
+                        fromQuantityList.sort();
+                        toQuantityList.sort();
+
+                        const fromMap = fromQuantityList.map(q => q.flat);
+                        const toMap = toQuantityList.map(q => q.flat);
+
+                        fromMap[3] = 'dtfghjk_23';
+                        toMap.shift();
+                        fromMap.pop();
+
+                        const n = fromMap.length;
+                        const m = toMap.length;
+
+                        const table = [];
+
+                        for (let i = 0; i <= n; i += 1) {
+                            table[i] = [];
+                            for (let j = 0; j <= m; j += 1) {
+                                table[i].push({ value: 0, parent: { i: 0, j: 0 } });
+                            }
+                        }
+
+                        for (let i = 1; i <= n; i += 1) {
+                            table[i][0].value = i;
+                            table[i][0].parent.i = i - 1;
+                            table[i][0].parent.j = 0;
+                        }
+
+                        for (let j = 1; j <= m; j += 1) {
+                            table[0][j].value = j;
+                            table[0][j].parent.i = 0;
+                            table[0][j].parent.j = j - 1;
+                        }
+
+                        for (let i = 1; i <= n; i += 1) {
+                            for (let j = 1; j <= m; j += 1) {
+                                table[i][j].value = Math.min(
+                                    table[i - 1][j].value + 1,
+                                    (table[i - 1][j - 1].value) +
+                                    (1 * (fromMap[i - 1] !== toMap[j - 1])),
+                                    table[i][j - 1].value + 1,
+                                );
+
+                                if (table[i][j].value === table[i - 1][j - 1].value +
+                                    (1 * (fromMap[i - 1] !== toMap[j - 1]))) {
+                                    table[i][j].parent.i = i - 1;
+                                    table[i][j].parent.j = j - 1;
+                                } else if (table[i][j].value === table[i - 1][j].value) {
+                                    table[i][j].parent.i = i - 1;
+                                    table[i][j].parent.j = j;
+                                } else {
+                                    table[i][j].parent.i = i;
+                                    table[i][j].parent.j = j - 1;
+                                }
+                            }
+                        }
+
+                        let fromConsensus = [];
+                        let toConsensus = [];
+
+                        var ii = n;
+                        var jj = m;
+
+                        while (ii !== 0 || jj !== 0) {
+                            const { parent } = table[ii][jj];
+
+                            if (parent.i === ii - 1 && parent.j === jj - 1) {
+                                fromConsensus = [fromMap[ii - 1]].concat(fromConsensus);
+                                toConsensus = [toMap[jj - 1]].concat(toConsensus);
+                            } else if (parent.i === ii - 1) {
+                                fromConsensus = [fromMap[ii - 1]].concat(fromConsensus);
+                                toConsensus = [-1].concat(toConsensus);
+                            } else {
+                                fromConsensus = [-1].concat(fromConsensus);
+                                toConsensus = [toMap[jj - 1]].concat(toConsensus);
+                            }
+
+                            ii = parent.i;
+                            jj = parent.j;
+                        }
+
+                        for (let i = 0; i < fromConsensus.length; i += 1) {
+                            if (fromConsensus[i] === -1) {
+                                toQuantityList[i].missing = true;
+                            } else if (toConsensus[i] === -1) {
+                                fromQuantityList[i].missing = true;
+                            } else if (fromConsensus[i] !== toConsensus[i]) {
+                                fromQuantityList[i].incorrect = true;
+                                toQuantityList[i].incorrect = true;
+                            }
+                        }
+
+                        if (table[n - 1][m - 1].value !== 0) {
+                            badEvents.push({
+                                shipping: {
+                                    eventId: from.identifiers.uid,
+                                    senderId: from.sender_id,
+                                    quantities: fromQuantityList,
+                                },
+                                receiving: {
+                                    eventId: to.identifiers.uid,
+                                    senderId: to.sender_id,
+                                    quantities: toQuantityList,
+                                },
+                            });
+                        }
+                    }
+
+                    resolve(badEvents);
+                });
+            }
+        });
+    }
+
     /**
      * Mimics commit opertaion
      * Removes inTransaction fields

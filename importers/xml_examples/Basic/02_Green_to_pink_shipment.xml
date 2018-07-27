@@ -3,18 +3,18 @@
     <EPCISHeader>
         <sbdh:StandardBusinessDocumentHeader>
             <sbdh:HeaderVersion>1.0</sbdh:HeaderVersion>
-            <sbdh:Sender>
-                <sbdh:Identifier Authority="OriginTrail">urn:ot:object:actor:id:Company_Green</sbdh:Identifier> 
-                <sbdh:ContactInformation> 
-                    <sbdh:Contact>Abraham Smith</sbdh:Contact> 
-                    <sbdh:EmailAddress>abraham_Smith@green.com</sbdh:EmailAddress>	
-                </sbdh:ContactInformation>
-            </sbdh:Sender>
-            <sbdh:Receiver> 
+            <sbdh:Sender> 
                 <sbdh:Identifier Authority="OriginTrail">urn:ot:object:actor:id:Company_Pink</sbdh:Identifier>  
                 <sbdh:ContactInformation> 
                     <sbdh:Contact>Betty Johnson</sbdh:Contact> 
                     <sbdh:EmailAddress>betty@pink.com</sbdh:EmailAddress> 
+                </sbdh:ContactInformation>
+            </sbdh:Sender>
+            <sbdh:Receiver>
+                <sbdh:Identifier Authority="OriginTrail">urn:ot:object:actor:id:Company_Green</sbdh:Identifier> 
+                <sbdh:ContactInformation> 
+                    <sbdh:Contact>Abraham Smith</sbdh:Contact> 
+                    <sbdh:EmailAddress>abraham_Smith@green.com</sbdh:EmailAddress>	
                 </sbdh:ContactInformation>
             </sbdh:Receiver>
             <sbdh:DocumentIdentification> 
