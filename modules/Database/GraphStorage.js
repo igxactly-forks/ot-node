@@ -411,6 +411,15 @@ class GraphStorage {
         });
     }
 
+    // _strcmp(str1, str2) {
+    //     if (str1 < str2) {
+    //         return -1;
+    //     } else if (str2 < str1) {
+    //         return 1;
+    //     }
+    //     return 0;
+    // }
+
     getNonconsensusEvents() {
         return new Promise((resolve, reject) => {
             if (!this.db) {
@@ -432,7 +441,7 @@ class GraphStorage {
                             FILTER e.edge_type == 'EVENT_CONNECTION' and e.transaction_flow == 'INPUT' 
                             RETURN vertices[0]`;
                 this.db.runQuery(query, {}).then((response) => {
-                    const badEvents = [];
+                    const returnArray = [];
 
                     for (const pair of response) {
                         const { from, to } = pair;
@@ -452,115 +461,73 @@ class GraphStorage {
                             const filtered = {};
                             filtered.quantity = q.private.quantity;
                             filtered.object = q.private.object;
-                            filtered.flat = `${q.private.object}_${q.private.quantity}`;
                             return filtered;
                         });
 
-                        fromQuantityList.sort();
-                        toQuantityList.sort();
+                        const fromSet = {};
+                        const toSet = {};
+                        const union = {};
+                        const badArray = [];
 
-                        const fromMap = fromQuantityList.map(q => q.flat);
-                        const toMap = toQuantityList.map(q => q.flat);
+                        let flag = false;
 
-                        const n = fromMap.length;
-                        const m = toMap.length;
+                        for (const obj of fromQuantityList) {
+                            if (fromSet[obj.object] == null) {
+                                fromSet[obj.object] = obj;
+                            }
 
-                        const table = [];
-
-                        for (let i = 0; i <= n; i += 1) {
-                            table[i] = [];
-                            for (let j = 0; j <= m; j += 1) {
-                                table[i].push({ value: 0, parent: { i: 0, j: 0 } });
+                            if (union[obj.object] == null) {
+                                union[obj.object] = { object: obj.object };
                             }
                         }
 
-                        for (let i = 1; i <= n; i += 1) {
-                            table[i][0].value = i;
-                            table[i][0].parent.i = i - 1;
-                            table[i][0].parent.j = 0;
-                        }
+                        for (const obj of toQuantityList) {
+                            if (toSet[obj.object] == null) {
+                                toSet[obj.object] = obj;
+                            }
 
-                        for (let j = 1; j <= m; j += 1) {
-                            table[0][j].value = j;
-                            table[0][j].parent.i = 0;
-                            table[0][j].parent.j = j - 1;
-                        }
-
-                        for (let i = 1; i <= n; i += 1) {
-                            for (let j = 1; j <= m; j += 1) {
-                                table[i][j].value = Math.min(
-                                    table[i - 1][j].value + 1,
-                                    (table[i - 1][j - 1].value) +
-                                    (1 * (fromMap[i - 1] !== toMap[j - 1])),
-                                    table[i][j - 1].value + 1,
-                                );
-
-                                if (table[i][j].value === table[i - 1][j - 1].value +
-                                    (1 * (fromMap[i - 1] !== toMap[j - 1]))) {
-                                    table[i][j].parent.i = i - 1;
-                                    table[i][j].parent.j = j - 1;
-                                } else if (table[i][j].value === table[i - 1][j].value) {
-                                    table[i][j].parent.i = i - 1;
-                                    table[i][j].parent.j = j;
-                                } else {
-                                    table[i][j].parent.i = i;
-                                    table[i][j].parent.j = j - 1;
-                                }
+                            if (union[obj.object] == null) {
+                                union[obj.object] = { object: obj.object };
                             }
                         }
 
-                        let fromConsensus = [];
-                        let toConsensus = [];
-
-                        var ii = n;
-                        var jj = m;
-
-                        while (ii !== 0 || jj !== 0) {
-                            const { parent } = table[ii][jj];
-
-                            if (parent.i === ii - 1 && parent.j === jj - 1) {
-                                fromConsensus = [fromMap[ii - 1]].concat(fromConsensus);
-                                toConsensus = [toMap[jj - 1]].concat(toConsensus);
-                            } else if (parent.i === ii - 1) {
-                                fromConsensus = [fromMap[ii - 1]].concat(fromConsensus);
-                                toConsensus = [-1].concat(toConsensus);
+                        for (const key in union) {
+                            if (fromSet[key] == null) {
+                                union[key].shipping = null;
+                                union[key].bad = true;
+                                flag = true;
                             } else {
-                                fromConsensus = [-1].concat(fromConsensus);
-                                toConsensus = [toMap[jj - 1]].concat(toConsensus);
+                                union[key].shipping = fromSet[key].quantity;
                             }
 
-                            ii = parent.i;
-                            jj = parent.j;
-                        }
-
-                        for (let i = 0; i < fromConsensus.length; i += 1) {
-                            if (fromConsensus[i] === -1) {
-                                toQuantityList[i].missing = true;
-                            } else if (toConsensus[i] === -1) {
-                                fromQuantityList[i].missing = true;
-                            } else if (fromConsensus[i] !== toConsensus[i]) {
-                                fromQuantityList[i].incorrect = true;
-                                toQuantityList[i].incorrect = true;
+                            if (toSet[key] == null) {
+                                union[key].receiving = null;
+                                union[key].bad = true;
+                                flag = true;
+                            } else {
+                                union[key].receiving = toSet[key].quantity;
                             }
+
+                            if (union[key].shipping !== union[key].receiving) {
+                                union[key].bad = true;
+                                flag = true;
+                            }
+
+                            badArray.push(union[key]);
                         }
 
-                        if (table[n - 1][m - 1].value !== 0) {
-                            badEvents.push({
-                                shipping: {
-                                    eventId: from.identifiers.uid,
-                                    senderId: from.sender_id,
-                                    quantities: fromQuantityList,
-                                },
-                                receiving: {
-                                    eventId: to.identifiers.uid,
-                                    senderId: to.sender_id,
-                                    quantities: toQuantityList,
-                                },
+                        if (flag) {
+                            returnArray.push({
+                                eventId: from.identifiers.uid,
+                                senderId: from.sender_id,
+                                quantities: badArray,
                             });
                         }
+
+                        resolve(returnArray);
                     }
 
-                    resolve(badEvents);
+                    resolve(returnArray);
                 });
             }
         });
