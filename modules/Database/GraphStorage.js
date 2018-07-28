@@ -438,7 +438,7 @@ class GraphStorage {
                                     FILTER v._id == e._from
                                     RETURN {from: v, to: to_vertex[0]}
                                 )
-                            FILTER e.edge_type == 'EVENT_CONNECTION' and e.transaction_flow == 'INPUT' 
+                            FILTER e.edge_type == 'EVENT_CONNECTION' and e.transaction_flow == 'OUTPUT' 
                             RETURN vertices[0]`;
                 this.db.runQuery(query, {}).then((response) => {
                     const returnArray = [];
