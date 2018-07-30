@@ -1011,6 +1011,18 @@ class EventEmitter {
             response.send(data);
         });
 
+        this._on('api-clear', async (request) => {
+            const { response } = request;
+
+            try {
+                await this.graphStorage.clearDatabase();
+                response.send({ message: 'Database cleared' });
+            } catch (e) {
+                response.status(500);
+                response.send({ message: 'Error occurred' });
+                console.log(e);
+            }
+        });
     }
 
     /**

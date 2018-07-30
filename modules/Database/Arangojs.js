@@ -653,6 +653,14 @@ class ArangoJS {
         }
         return document;
     }
+
+    async clearDatabase() {
+        const otVertices = this.db.collection('ot_vertices');
+        await otVertices.truncate();
+
+        const otEdges = this.db.collection('ot_edges');
+        await otEdges.truncate();
+    }
 }
 
 module.exports = ArangoJS;

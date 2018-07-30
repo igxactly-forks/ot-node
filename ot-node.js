@@ -483,9 +483,9 @@ class OTNode {
         server.post('/api/import', (req, res) => {
             log.api('POST: Import of data request received.');
 
-            if (!authorize(req, res)) {
-                return;
-            }
+            // if (!authorize(req, res)) {
+            //     return;
+            // }
 
             if (req.body === undefined) {
                 res.status(400);
@@ -762,6 +762,13 @@ class OTNode {
             });
         });
 
+        server.get('/api/clear', (req, res) => {
+            log.api('GET: Clear database request received.');
+
+            emitter.emit('api-clear', {
+                response: res,
+            });
+        });
 
         server.post('/api/deposit', (req, res) => {
             log.api('POST: Deposit tokens request received.');

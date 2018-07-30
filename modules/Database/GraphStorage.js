@@ -552,6 +552,10 @@ class GraphStorage {
         await this.db.rollback();
     }
 
+    async clearDatabase() {
+        await this.db.clearDatabase();
+    }
+
     /**
      * Initializes database with predefined collections and vertices.
      * @returns {Promise<void>}
