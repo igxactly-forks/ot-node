@@ -352,12 +352,6 @@ class EventEmitter {
             try {
                 const dataSize = bytes(JSON.stringify(vertices));
 
-                const tx = await blockchain.writeRootHash(import_id, root_hash).catch((err) => {
-                    throw Error(`Failed to write fingerprint on blockchain. ${err}`);
-                });
-
-                const { transactionHash } = tx;
-
                 await Models.data_info
                     .create({
                         import_id,
@@ -366,7 +360,6 @@ class EventEmitter {
                         import_timestamp: new Date(),
                         total_documents,
                         data_size: dataSize,
-                        transaction_hash: transactionHash,
                     }).catch((error) => {
                         logger.error(error);
                         data.response.status(500);
@@ -376,6 +369,23 @@ class EventEmitter {
                         remoteControl.importFailed(error);
                     });
 
+                const tx = await blockchain.writeRootHash(import_id, root_hash).catch((err) => {
+                    throw Error(`Failed to write fingerprint on blockchain. ${err}`);
+                });
+
+                const { transactionHash } = tx;
+
+                const importRecord = await Models.data_info.findOne({
+                    where: {
+                        import_id,
+                    },
+                });
+
+                importRecord.transaction_hash = transactionHash;
+
+                await importRecord.save();
+
+                logger.info('Root hash written on blockchain');
 
                 if (data.replicate) {
                     this.emit('api-create-offer', { import_id, response: data.response });
@@ -1025,8 +1035,13 @@ class EventEmitter {
                 const importToInfo = await Models.data_info.findOne({
                     where: { import_id: event.importTo },
                 });
-                event.fromImportTx = `https://rinkeby.etherscan.io/tx/${importFromInfo.transaction_hash}`;
-                event.toImportTx = `https://rinkeby.etherscan.io/tx/${importToInfo.transaction_hash}`;
+                if (importFromInfo.transaction_hash) {
+                    event.fromImportTx = `https://rinkeby.etherscan.io/tx/${importFromInfo.transaction_hash}`;
+                }
+                if (importToInfo.transaction_hash) {
+                    event.toImportTx = `https://rinkeby.etherscan.io/tx/${importToInfo.transaction_hash}`;
+                }
+
                 event.fromImportHash = importFromInfo.root_hash;
                 event.toImportHash = importToInfo.root_hash;
             }
