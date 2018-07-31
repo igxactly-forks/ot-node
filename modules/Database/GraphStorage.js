@@ -516,7 +516,7 @@ class GraphStorage {
                             badArray.push(union[key]);
                         }
 
-                        if (!flag) {
+                        if (flag) {
                             returnArray.push({
                                 shippingEventId: from.identifiers.uid,
                                 receivingEventId: to.identifiers.uid,
