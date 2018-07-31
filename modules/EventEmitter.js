@@ -343,8 +343,21 @@ class EventEmitter {
                 vertices,
             } = response;
 
+            data.response.status(201);
+            data.response.send({
+                import_id,
+            });
+            remoteControl.importSucceeded();
+
             try {
                 const dataSize = bytes(JSON.stringify(vertices));
+
+                const tx = await blockchain.writeRootHash(import_id, root_hash).catch((err) => {
+                    throw Error(`Failed to write fingerprint on blockchain. ${err}`);
+                });
+
+                const { transactionHash } = tx;
+
                 await Models.data_info
                     .create({
                         import_id,
@@ -353,6 +366,7 @@ class EventEmitter {
                         import_timestamp: new Date(),
                         total_documents,
                         data_size: dataSize,
+                        transaction_hash: transactionHash,
                     }).catch((error) => {
                         logger.error(error);
                         data.response.status(500);
@@ -365,12 +379,6 @@ class EventEmitter {
 
                 if (data.replicate) {
                     this.emit('api-create-offer', { import_id, response: data.response });
-                } else {
-                    data.response.status(201);
-                    data.response.send({
-                        import_id,
-                    });
-                    remoteControl.importSucceeded();
                 }
             } catch (error) {
                 logger.error(`Failed to register import. Error ${error}.`);
@@ -1007,6 +1015,21 @@ class EventEmitter {
             const { response } = request;
 
             const data = await this.product.getNonconsensusEvents();
+
+            for (const event of data) {
+                // eslint-disable-next-line
+                const importFromInfo = await Models.data_info.findOne({
+                    where: { import_id: event.importFrom },
+                });
+                // eslint-disable-next-line
+                const importToInfo = await Models.data_info.findOne({
+                    where: { import_id: event.importTo },
+                });
+                event.fromImportTx = `https://rinkeby.etherscan.io/tx/${importFromInfo.transaction_hash}`;
+                event.toImportTx = `https://rinkeby.etherscan.io/tx/${importToInfo.transaction_hash}`;
+                event.fromImportHash = importFromInfo.root_hash;
+                event.toImportHash = importToInfo.root_hash;
+            }
 
             response.send(data);
         });

@@ -516,12 +516,14 @@ class GraphStorage {
                             badArray.push(union[key]);
                         }
 
-                        if (flag) {
+                        if (!flag) {
                             returnArray.push({
                                 shippingEventId: from.identifiers.uid,
                                 receivingEventId: to.identifiers.uid,
                                 documentId: from.identifiers.document_id,
                                 quantities: badArray,
+                                importFrom: from.imports[0],
+                                importTo: to.imports[0],
                             });
                         }
 
