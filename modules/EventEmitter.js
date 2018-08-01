@@ -1054,6 +1054,9 @@ class EventEmitter {
 
             try {
                 await this.graphStorage.clearDatabase();
+                await Models.data_info.destroy({ truncate: true });
+                await Models.holding_data.destroy({ truncate: true });
+                await Models.replicated_data.destroy({ truncate: true });
                 response.send({ message: 'Database cleared' });
             } catch (e) {
                 response.status(500);
