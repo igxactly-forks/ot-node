@@ -118,6 +118,7 @@ module.exports = async (deployer, network, accounts) => {
 
         break;
     case 'test':
+            deployer.deploy(TestingUtilities);
             deployer.deploy(ContractHub).then((result) => {
             hub = result;
             deployer.deploy(ProfileStorage, hub.address, { gas: 9000000, from: accounts[0] })
@@ -198,10 +199,7 @@ module.exports = async (deployer, network, accounts) => {
             token.mintMany(recepients, amounts, { from: accounts[0] })
         .then(() => {
             token.finishMinting({ from: accounts[0] })
-        .then(() => {
-            deployer.deploy(TestingUtilities)
         .then(() => console.log("Finished migrations"))
-        });
         });
         });
         });
