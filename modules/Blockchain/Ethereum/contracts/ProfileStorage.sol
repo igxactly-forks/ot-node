@@ -42,6 +42,7 @@ contract ContractHub is Ownable {
 	address public fingerprintAddress;
 	address public tokenAddress;
 	address public biddingAddress;
+	address public profileAddress;
 	address public escrowAddress;
 	address public litigationAddress;
 	address public readingAddress;
@@ -61,6 +62,7 @@ contract ProfileStorage is Ownable{
 			msg.sender == hub.fingerprintAddress()
 			|| msg.sender == hub.tokenAddress()
 			|| msg.sender == hub.biddingAddress()
+			|| msg.sender == hub.profileAddress()
 			|| msg.sender == hub.escrowAddress()
 			|| msg.sender == hub.litigationAddress()
 			|| msg.sender == hub.owner()
@@ -119,7 +121,7 @@ contract ProfileStorage is Ownable{
 		uint number_of_escrows,
 		uint max_escrow_time_in_minutes,
 		bool active) 
-	public onlyOwner {
+	public onlyContracts {
 		if(profile[wallet].token_amount_per_byte_minute != token_amount_per_byte_minute)
 		profile[wallet].token_amount_per_byte_minute = token_amount_per_byte_minute;
 
@@ -149,35 +151,35 @@ contract ProfileStorage is Ownable{
 
 		emit ProfileChange(wallet);
 	}
-	function setProfile_token_amount_per_byte_minute(address wallet, uint256 token_amount_per_byte_minute) public onlyOwner {
+	function setProfile_token_amount_per_byte_minute(address wallet, uint256 token_amount_per_byte_minute) public onlyContracts {
 		if(profile[wallet].token_amount_per_byte_minute != token_amount_per_byte_minute)
 		profile[wallet].token_amount_per_byte_minute = token_amount_per_byte_minute;
 	}
-	function setProfile_stake_amount_per_byte_minute(address wallet, uint256 stake_amount_per_byte_minute) public onlyOwner {
+	function setProfile_stake_amount_per_byte_minute(address wallet, uint256 stake_amount_per_byte_minute) public onlyContracts {
 		if(profile[wallet].stake_amount_per_byte_minute != stake_amount_per_byte_minute)
 		profile[wallet].stake_amount_per_byte_minute = stake_amount_per_byte_minute;
 	}
-	function setProfile_read_stake_factor(address wallet, uint256 read_stake_factor) public onlyOwner {
+	function setProfile_read_stake_factor(address wallet, uint256 read_stake_factor) public onlyContracts {
 		if(profile[wallet].read_stake_factor != read_stake_factor)
 		profile[wallet].read_stake_factor = read_stake_factor;
 	}
-	function setProfile_balance(address wallet, uint256 balance) public onlyOwner {
+	function setProfile_balance(address wallet, uint256 balance) public onlyContracts {
 		if(profile[wallet].balance != balance)
 		profile[wallet].balance = balance;
 	}
-	function setProfile_reputation(address wallet, uint256 reputation) public onlyOwner {
+	function setProfile_reputation(address wallet, uint256 reputation) public onlyContracts {
 		if(profile[wallet].reputation != reputation)
 		profile[wallet].reputation = reputation;
 	}
-	function setProfile_number_of_escrows(address wallet, uint256 number_of_escrows) public onlyOwner {
+	function setProfile_number_of_escrows(address wallet, uint256 number_of_escrows) public onlyContracts {
 		if(profile[wallet].number_of_escrows != number_of_escrows)
 		profile[wallet].number_of_escrows = number_of_escrows;
 	}
-	function setProfile_max_escrow_time_in_minutes(address wallet, uint256 max_escrow_time_in_minutes) public onlyOwner {
+	function setProfile_max_escrow_time_in_minutes(address wallet, uint256 max_escrow_time_in_minutes) public onlyContracts {
 		if(profile[wallet].max_escrow_time_in_minutes != max_escrow_time_in_minutes)
 		profile[wallet].max_escrow_time_in_minutes = max_escrow_time_in_minutes;
 	}
-	function setProfile_active(address wallet, bool active) public onlyOwner {
+	function setProfile_active(address wallet, bool active) public onlyContracts {
 		if(profile[wallet].active != active)
 		profile[wallet].active = active;
 	}
