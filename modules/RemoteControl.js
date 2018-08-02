@@ -7,6 +7,7 @@ const pjson = require('../package.json');
 const Storage = require('./Storage');
 const Web3 = require('web3');
 const Utilities = require('./Utilities');
+const Product = require('./Product');
 
 const web3 = new Web3(new Web3.providers.HttpProvider('https://rinkeby.infura.io/1WRiEqAQ9l4SW6fGdiDt'));
 
@@ -242,42 +243,21 @@ class RemoteControl {
      */
     getImport(import_id) {
         return new Promise((resolve, reject) => {
-            const verticesPromise = this.graphStorage.findVerticesByImportId(import_id);
-            const edgesPromise = this.graphStorage.findEdgesByImportId(import_id);
 
-            Promise.all([verticesPromise, edgesPromise]).then((values) => {
-                var nodes = [];
-                var edges = [];
-                values[0].forEach((vertex) => {
-                    const isRoot = !!((vertex._id === 'ot_vertices/Transport'
-                        || vertex._id === 'ot_vertices/Transformation'
-                        || vertex._id === 'ot_vertices/Product'
-                        || vertex._id === 'ot_vertices/Ownership'
-                        || vertex._id === 'ot_vertices/Observation'
-                        || vertex._id === 'ot_vertices/Location'
-                        || vertex._id === 'ot_vertices/Actor'
-                    ));
-                    const caption = (vertex.vertex_type === 'CLASS') ?
-                        vertex._key : vertex.identifiers.uid;
-                    nodes.push({
-                        id: vertex._id,
-                        type: caption,
-                        caption,
-                        root: isRoot,
-                        data: vertex,
-                    });
-                });
-                values[1].forEach((edge) => {
-                    edges.push({
-                        source: edge._from,
-                        target: edge._to,
-                        type: edge.edge_type,
-                        caption: edge.edge_type,
-                        github: edge,
-                    });
-                });
+            const verticesPromise = Product.getVerticesForImport(import_id);
 
-                this.socket.emit('visualise', { nodes, edges });
+            Promise(verticesPromise).then((result) => {
+
+                // const isRoot = !!((vertex._id === 'ot_vertices/Transport'
+                //             || vertex._id === 'ot_vertices/Transformation'
+                //             || vertex._id === 'ot_vertices/Product'
+                //             || vertex._id === 'ot_vertices/Ownership'
+                //             || vertex._id === 'ot_vertices/Observation'
+                //             || vertex._id === 'ot_vertices/Location'
+                //             || vertex._id === 'ot_vertices/Actor'
+                //         ));
+
+                this.socket.emit('visualise', { result });
                 resolve();
             });
         });

@@ -145,7 +145,7 @@ class EventEmitter {
             const { import_id: importId } = data;
             logger.info(`Get vertices trigered for import ID ${importId}`);
             try {
-                const result = await dhService.getVerticesForImport(importId);
+                const result = await this.product.getVerticesForImport(importId);
 
                 if (result.vertices.length === 0) {
                     data.response.status(204);
