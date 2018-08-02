@@ -56,7 +56,7 @@ contract('Bidding testing', async (accounts) => {
     it('Should get Token contract', async () => {
         const hub = await ContractHub.deployed();
         const res = await hub.tokenAddress.call();
-        console.log(`\t Bidding address: ${res}`);
+        console.log(`\t Token address: ${res}`);
     });
 
     it('Should get Escrow contract', async () => {
@@ -68,13 +68,13 @@ contract('Bidding testing', async (accounts) => {
     it('Should get Bidding contract', async () => {
         const hub = await ContractHub.deployed();
         const res = await hub.biddingAddress.call();
-        console.log(`\t Escrow address: ${res}`);
+        console.log(`\t Bidding address: ${res}`);
     });
 
     it('Should get Reading contract', async () => {
         const hub = await ContractHub.deployed();
         const res = await hub.readingAddress.call();
-        console.log(`\t Escrow address: ${res}`);
+        console.log(`\t Reading address: ${res}`);
     });
 
     it('Should get TestingUtilities contract', async () => {
