@@ -44,8 +44,12 @@ var DH_read_factor = [];
 
 
 contract('Bidding testing', async (accounts) => {
-    it('Should wait for end of contract migration', async () => {
-        await new Promise(resolve => setTimeout(resolve, 10000));
+
+    before('Should wait for end of contract migration', async () => {
+        await new Promise((resolve) => {
+            setTimeout(resolve, 10000);
+            console.log("Finished waiting");
+        });
     });
 
     it('Should get ContractHub contract', async () => {
