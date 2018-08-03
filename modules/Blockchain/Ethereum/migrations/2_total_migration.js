@@ -8,7 +8,6 @@ var ContractHub = artifacts.require('ContractHub');
 // Variable contracts
 var Profile = artifacts.require('Profile');
 var Bidding = artifacts.require('Bidding');
-var BiddingTest = artifacts.require('BiddingTest');
 var Litigation = artifacts.require('Litigation');
 var EscrowHolder = artifacts.require('EscrowHolder');
 var Reading = artifacts.require('Reading');
@@ -166,7 +165,7 @@ module.exports = async (deployer, network, accounts) => {
             profile = result;
             hub.setProfileAddress(profile.address)
         .then(() => {
-            deployer.deploy(BiddingTest, hub.address, { gas: 10000000, from: accounts[0] })
+            deployer.deploy(Bidding, hub.address, { gas: 10000000, from: accounts[0] })
         .then((result) => {
             bidding = result;
             hub.setBiddingAddress(bidding.address)
@@ -237,7 +236,7 @@ module.exports = async (deployer, network, accounts) => {
         .then(result => profile = result);
         await hub.setProfileAddress(profile.address);
 
-        await deployer.deploy(BiddingTest, hub.address, { gas: 9000000, from: accounts[0] })
+        await deployer.deploy(Bidding, hub.address, { gas: 9000000, from: accounts[0] })
         .then(result => bidding = result);
         await hub.setBiddingAddress(bidding.address);
 
