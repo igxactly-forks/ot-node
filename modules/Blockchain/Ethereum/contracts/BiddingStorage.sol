@@ -341,12 +341,4 @@ contract BiddingStorage is Ownable{
 		if(bid[import_id][index].chosen != chosen)
 		bid[import_id][index].chosen = chosen;
 	}
-
-	function setBidNextBidIndex(bytes32 import_id, uint index, uint next_bid_index)
-	public onlyContracts{
-		if(bid[import_id][index].next_bid_index != next_bid_index)
-		bid[import_id][index].next_bid_index = next_bid_index;
-
-		emit BidChange(import_id, index);
-	}  
 }
