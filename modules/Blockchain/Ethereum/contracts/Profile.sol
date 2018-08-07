@@ -117,11 +117,11 @@ contract Profile {
 	}
 
 	function depositToken(uint amount) public {
+		ERC20 token = ERC20(hub.tokenAddress());
 		require(token.balanceOf(msg.sender) >= amount && token.allowance(msg.sender, this) >= amount);
 		uint amount_to_transfer = amount;
 		amount = 0;
 		if(amount_to_transfer > 0) {
-			ERC20 token = ERC20(hub.tokenAddress());
 			token.transferFrom(msg.sender, this, amount_to_transfer);
 			uint balance = profileStorage.getProfile_balance(msg.sender);
 

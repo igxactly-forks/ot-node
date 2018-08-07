@@ -292,40 +292,43 @@ contract Bidding {
 	function addBid(bytes32 import_id, bytes32 DH_node_id)
 	public {
 		//Check if the the DH meets the filters DC set for the offer
-		require(bidRequirements(import_id, msg.sender));
-		require(biddingStorage.getOffer_min_reputation(import_id) <= profileStorage.getProfile_reputation(msg.sender));
+		require(bidRequirements(import_id, msg.sender), "Sender does not meet the offer requirements");
+		require(biddingStorage.getOffer_min_reputation(import_id) <= profileStorage.getProfile_reputation(msg.sender), "DH reputation too low");
 
-		uint scope = biddingStorage.getOffer_data_size_in_bytes(import_id) * biddingStorage.getOffer_total_escrow_time_in_minutes(import_id);
-		uint token_amount_for_escrow = profileStorage.getProfile_token_amount_per_byte_minute(msg.sender).mul(scope);
-		uint stake_amount_for_escrow = profileStorage.getProfile_stake_amount_per_byte_minute(msg.sender).mul(scope);
-		uint ranking = calculateRanking(import_id, msg.sender, scope);
+		uint256 scope = biddingStorage.getOffer_data_size_in_bytes(import_id) * biddingStorage.getOffer_total_escrow_time_in_minutes(import_id);
+		uint256 token_amount_for_escrow = profileStorage.getProfile_token_amount_per_byte_minute(msg.sender).mul(scope);
+		uint256 stake_amount_for_escrow = profileStorage.getProfile_stake_amount_per_byte_minute(msg.sender).mul(scope);
 
 		uint this_bid_index = biddingStorage.getOffer_bid_array_length(import_id);
+		
+		uint256 ranking = calculateRanking(import_id, msg.sender, scope);
 
 		//Insert the bid in the proper place in the list
 		if(biddingStorage.getOffer_first_bid_index(import_id) == uint(-1)){
 			biddingStorage.setOffer_first_bid_index(import_id, this_bid_index);
 			biddingStorage.setBid(import_id, this_bid_index, msg.sender, DH_node_id, 
 				token_amount_for_escrow, stake_amount_for_escrow,
-				uint(-1), ranking, true, false);
+				ranking, uint(-1), true, false);
 		}
 		else{
+
 			uint256 current_index = biddingStorage.getOffer_first_bid_index(import_id);
 			uint256 previous_index = uint(-1);
-			uint b_ranking = biddingStorage.getBid_ranking(import_id, current_index);
-			uint b_next_bid = biddingStorage.getBid_next_bid_index(import_id, current_index);
-			if(b_ranking < ranking){
+			uint256 current_index_ranking = biddingStorage.getBid_ranking(import_id, current_index);
+			uint current_index_next_bid = biddingStorage.getBid_next_bid_index(import_id, current_index);
+			
+			if(current_index_ranking < ranking){
 				biddingStorage.setOffer_first_bid_index(import_id, this_bid_index);
 				biddingStorage.setBid(import_id, this_bid_index, msg.sender, DH_node_id, 
 					token_amount_for_escrow, stake_amount_for_escrow,
-					current_index, ranking, true, false);
+					ranking, current_index, true, false);
 			}
 			else {
-				while(current_index != uint(-1) && b_ranking >= ranking){
+				while(current_index != uint(-1) && current_index_ranking >= ranking){
 					previous_index = current_index;
-					current_index = b_next_bid;
-					b_ranking = biddingStorage.getBid_ranking(import_id, current_index);
-					b_next_bid = biddingStorage.getBid_next_bid_index(import_id, current_index);
+					current_index = current_index_next_bid;
+					current_index_ranking = biddingStorage.getBid_ranking(import_id, current_index);
+					current_index_next_bid = biddingStorage.getBid_next_bid_index(import_id, current_index);
 				}
 				if(current_index == uint(-1)){
 					// Set the bid[previous_bid_index].next_bid to this_bid_index
@@ -333,7 +336,7 @@ contract Bidding {
 					// Add new bid to storage
 					biddingStorage.setBid(import_id, this_bid_index, msg.sender, DH_node_id, 
 						token_amount_for_escrow, stake_amount_for_escrow,
-						uint(-1), ranking, true, false);
+						ranking, uint(-1), true, false);
 				}
 				else{
 					// Set the bid[previous_bid_index].next_bid to this_bid_index
@@ -341,7 +344,7 @@ contract Bidding {
 					// Add new bid to storage
 					biddingStorage.setBid(import_id, this_bid_index, msg.sender, DH_node_id, 
 						token_amount_for_escrow, stake_amount_for_escrow,
-						current_index, ranking, true, false);
+						ranking, current_index, true, false);
 				}
 			}
 
@@ -363,12 +366,12 @@ contract Bidding {
 
 	function chooseBids(bytes32 import_id) public returns (uint256[] chosen_data_holders){
 
-		uint256[] memory parameters;
-		require(biddingStorage.getOffer_active(import_id) && !biddingStorage.getOffer_finalized(import_id));
+		uint256[] memory parameters = new uint256[](9);
+		require(biddingStorage.getOffer_active(import_id) && !biddingStorage.getOffer_finalized(import_id), "Offer state not valid (either inactive or finalized)");
 		parameters[0] = biddingStorage.getOffer_replication_factor(import_id); // replication_factor
 
-		require(parameters[0].mul(3).add(1) <= biddingStorage.getOffer_bid_array_length(import_id));
-		require(biddingStorage.getOffer_offer_creation_timestamp(import_id) + 5 seconds < block.timestamp); // TODO Vrati ovo na minute
+		require(parameters[0].mul(3).add(1) <= biddingStorage.getOffer_bid_array_length(import_id), "Not enough bids to finalize offer");
+		require(biddingStorage.getOffer_offer_creation_timestamp(import_id) + 1 seconds < block.timestamp, "Trying to finalize offer too soon"); // TODO Vrati ovo na minute
 		
 		chosen_data_holders = new uint256[](parameters[0].mul(2).add(1));
 
@@ -409,7 +412,7 @@ contract Bidding {
 		//Sending escrow requests to network bids
 		parameters[1] = biddingStorage.getOffer_first_bid_index(import_id);
 		while(parameters[2] < parameters[0].mul(2).add(1)) {
-			uint next_bid;
+			uint256 next_bid = biddingStorage.getBid_next_bid_index(import_id, parameters[1]);
 
 			while(parameters[1] != uint(-1) && !biddingStorage.getBid_active(import_id, parameters[1])){
 				parameters[1] = next_bid;
@@ -420,6 +423,9 @@ contract Bidding {
 
 			if(profileStorage.getProfile_balance(biddingStorage.getBid_DH_wallet(import_id, parameters[1])) >= biddingStorage.getBid_stake_amount_for_escrow(import_id, parameters[1])){
 				//Initiating new escrow
+				parameters[5] = biddingStorage.getBid_token_amount_for_escrow(import_id, parameters[1]);
+				parameters[6] = biddingStorage.getBid_stake_amount_for_escrow(import_id, parameters[1]);
+
 				escrow.initiateEscrow(msg.sender, biddingStorage.getBid_DH_wallet(import_id, parameters[1]), import_id, 
 					parameters[5], parameters[6], parameters[7], parameters[8]);
 
@@ -438,6 +444,7 @@ contract Bidding {
 				// Set bid to inactive
 				biddingStorage.setBid_active(import_id, parameters[1], false);
 			}
+
 		}
 
 		// Update offer (set finalized flag to true)
@@ -474,7 +481,7 @@ contract Bidding {
 	public view returns (uint256 ranking) {
 		uint256 data_hash = uint256(uint128(biddingStorage.getOffer_data_hash(import_id)));
 		
-		uint256[] memory amounts;
+		uint256[] memory amounts = new uint256[](5);
 		amounts[0] = profileStorage.getProfile_token_amount_per_byte_minute(DH_wallet) * scope;
 		amounts[1] = profileStorage.getProfile_stake_amount_per_byte_minute(DH_wallet) * scope;
 		amounts[2] = biddingStorage.getOffer_max_token_amount_per_DH(import_id);

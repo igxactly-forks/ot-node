@@ -152,23 +152,23 @@ contract Litigation{
             if(amount_to_send > 0) {
                 // Increase tokens sent
                 uint value = escrowStorage.getEscrow_tokens_sent(import_id, msg.sender);
-                value.add(amount_to_send);
+                value = value.add(amount_to_send);
                 escrowStorage.setEscrow_tokens_sent(import_id, msg.sender, value);
 
                 // Send tokens back to DC
                 value = profileStorage.getProfile_balance(escrowStorage.getEscrow_DC_wallet(import_id, msg.sender));
-                value.add(amount_to_send);
+                value = value.add(amount_to_send);
                 profileStorage.setProfile_balance(escrowStorage.getEscrow_DC_wallet(import_id, msg.sender), value);
             }
             //Calculate the amount to send back to DH and transfer the money back
             amount_to_send = SafeMath.sub(escrowStorage.getEscrow_token_amount(import_id, msg.sender), escrowStorage.getEscrow_tokens_sent(import_id, msg.sender));
             if(amount_to_send > 0) {
                 value = escrowStorage.getEscrow_tokens_sent(import_id, msg.sender);
-                value.add(amount_to_send);
+                value = value.add(amount_to_send);
                 escrowStorage.setEscrow_tokens_sent(import_id, msg.sender, value);
 
                 value = profileStorage.getProfile_balance(escrowStorage.getEscrow_DC_wallet(import_id, msg.sender));
-                value.add(amount_to_send);
+                value = value.add(amount_to_send);
                 profileStorage.setProfile_balance(escrowStorage.getEscrow_DC_wallet(import_id, msg.sender), value);
             }
 
@@ -176,7 +176,7 @@ contract Litigation{
             escrowStorage.setEscrow_stake_amount(import_id, msg.sender, 0);
             if(amount_to_send > 0) {
                 value = profileStorage.getProfile_balance(escrowStorage.getEscrow_DC_wallet(import_id, msg.sender));
-                value.add(amount_to_send);
+                value = value.add(amount_to_send);
                 profileStorage.setProfile_balance(escrowStorage.getEscrow_DC_wallet(import_id, msg.sender), value);
             }
 
@@ -229,23 +229,23 @@ contract Litigation{
             //Transfer the amount_to_send to DC 
             if(amount_to_send > 0) {
                 uint value = escrowStorage.getEscrow_tokens_sent(import_id, DH_wallet);
-                value.add(amount_to_send);
+                value = value.add(amount_to_send);
                 escrowStorage.setEscrow_tokens_sent(import_id, DH_wallet, value);
 
                 // Send tokens back to DC
                 value = profileStorage.getProfile_balance(msg.sender);
-                value.add(amount_to_send);
+                value = value.add(amount_to_send);
                 profileStorage.setProfile_balance(msg.sender, value);
             }
             //Calculate the amount to send back to DH and transfer the money back
             amount_to_send = SafeMath.sub(escrowStorage.getEscrow_token_amount(import_id, DH_wallet), escrowStorage.getEscrow_tokens_sent(import_id, DH_wallet));
             if(amount_to_send > 0) {
                 value = escrowStorage.getEscrow_tokens_sent(import_id, DH_wallet);
-                value.add(amount_to_send);
+                value = value.add(amount_to_send);
                 escrowStorage.setEscrow_tokens_sent(import_id, DH_wallet, value);
 
                 value = profileStorage.getProfile_balance(msg.sender);
-                value.add(amount_to_send);
+                value = value.add(amount_to_send);
                 profileStorage.setProfile_balance(msg.sender, value);
             }
 
@@ -253,7 +253,7 @@ contract Litigation{
             escrowStorage.setEscrow_stake_amount(import_id, DH_wallet, 0);
             if(amount_to_send > 0) {
                 value = profileStorage.getProfile_balance(msg.sender);
-                value.add(amount_to_send);
+                value = value.add(amount_to_send);
                 profileStorage.setProfile_balance(msg.sender, value);
             }
 
@@ -281,23 +281,23 @@ contract Litigation{
             //Transfer the amount_to_send to DC 
             if(amount_to_send > 0) {
                 value = escrowStorage.getEscrow_tokens_sent(import_id, DH_wallet);
-                value.add(amount_to_send);
+                value = value.add(amount_to_send);
                 escrowStorage.setEscrow_tokens_sent(import_id, DH_wallet, value);
 
                 // Send tokens back to DC
                 value = profileStorage.getProfile_balance(msg.sender);
-                value.add(amount_to_send);
+                value = value.add(amount_to_send);
                 profileStorage.setProfile_balance(msg.sender, value);
             }
             //Calculate the amount to send back to DH and transfer the money back
             amount_to_send = SafeMath.sub(escrowStorage.getEscrow_token_amount(import_id, DH_wallet), escrowStorage.getEscrow_tokens_sent(import_id, DH_wallet));
             if(amount_to_send > 0) {
                 value = escrowStorage.getEscrow_tokens_sent(import_id, DH_wallet);
-                value.add(amount_to_send);
+                value = value.add(amount_to_send);
                 escrowStorage.setEscrow_tokens_sent(import_id, DH_wallet, value);
 
                 value = profileStorage.getProfile_balance(msg.sender);
-                value.add(amount_to_send);
+                value = value.add(amount_to_send);
                 profileStorage.setProfile_balance(msg.sender, value);
             }
 
@@ -305,11 +305,11 @@ contract Litigation{
             escrowStorage.setEscrow_stake_amount(import_id, DH_wallet, 0);
             if(amount_to_send > 0) {
                 value = profileStorage.getProfile_balance(msg.sender);
-                value.add(amount_to_send);
+                value = value.add(amount_to_send);
                 profileStorage.setProfile_balance(msg.sender, value);
             }
 
-            escrowStorage.setEscrow_escrow_status(import_id, DH_wallet, EscrowStorage.EscrowStatus.inactive);
+            escrowStorage.setEscrow_escrow_status(import_id, DH_wallet, EscrowStorage.EscrowStatus.completed);
             litigationStorage.setLitigation_litigation_status(import_id, DH_wallet, LitigationStorage.LitigationStatus.completed);
 
             readingStorage.setPurchasedData(import_id, DH_wallet, address(0), bytes32(0), 0);

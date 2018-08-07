@@ -143,7 +143,7 @@ contract EscrowHolder{
           //Transfer the stake_amount to the escrow
           uint balance = profileStorage.getProfile_balance(msg.sender);
           require(balance >= escrowStorage.getEscrow_stake_amount(import_id, msg.sender));
-          balance.sub(escrowStorage.getEscrow_stake_amount(import_id, msg.sender));
+          balance = balance.sub(escrowStorage.getEscrow_stake_amount(import_id, msg.sender));
           profileStorage.setProfile_balance(msg.sender, balance);
 
           escrowStorage.setEscrow_escrow_status(import_id, msg.sender, EscrowStorage.EscrowStatus.confirmed);
@@ -181,18 +181,24 @@ contract EscrowHolder{
                uint stake_to_send = escrowStorage.getEscrow_stake_amount(import_id, msg.sender);
                escrowStorage.setEscrow_stake_amount(import_id, msg.sender, 0);
                if(stake_to_send > 0) {
+                    // Return stake back to DH
                     uint value = profileStorage.getProfile_balance(msg.sender);
-                    value.add(stake_to_send);
+                    value = value.add(stake_to_send);
                     profileStorage.setProfile_balance(msg.sender, value);
 
+                    // Increase DH reputation
                     value = profileStorage.getProfile_reputation(msg.sender);
-                    value.add(stake_to_send);
+                    value = value.add(stake_to_send);
                     profileStorage.setProfile_reputation(msg.sender, value);
+                    
+                    // Increase DC reputation
                     value = profileStorage.getProfile_reputation(escrowStorage.getEscrow_DC_wallet(import_id, msg.sender));
-                    value.add(stake_to_send);
+                    value = value.add(stake_to_send);
                     profileStorage.setProfile_reputation(escrowStorage.getEscrow_DC_wallet(import_id, msg.sender), value);
                }
+               // Amount to send is the remainder of tokens in the escrow
                amount_to_send = SafeMath.sub(escrowStorage.getEscrow_token_amount(import_id, msg.sender), escrowStorage.getEscrow_tokens_sent(import_id, msg.sender));
+               
                escrowStorage.setEscrow_escrow_status(import_id, msg.sender, EscrowStorage.EscrowStatus.completed);
                emit EscrowCompleted(import_id, msg.sender);
           }
@@ -206,11 +212,11 @@ contract EscrowHolder{
 
           if(amount_to_send > 0) {
                value = escrowStorage.getEscrow_tokens_sent(import_id, msg.sender);
-               value.add(amount_to_send);
+               value = value.add(amount_to_send);
                escrowStorage.setEscrow_tokens_sent(import_id, msg.sender, value);
 
                value = profileStorage.getProfile_balance(msg.sender);
-               value.add(amount_to_send);
+               value = value.add(amount_to_send);
                profileStorage.setProfile_balance(msg.sender, value);
           }
      }
@@ -238,7 +244,7 @@ contract EscrowHolder{
           escrowStorage.setEscrow_token_amount(import_id, msg.sender, 0);
           if(amount_to_send > 0) {
                uint value = profileStorage.getProfile_balance(DC_wallet);
-               value.add(amount_to_send);
+               value = value.add(amount_to_send);
                profileStorage.setProfile_balance(DC_wallet, value);
           }
           if(escrowStorage.getEscrow_escrow_status(import_id, msg.sender) == EscrowStorage.EscrowStatus.confirmed){
@@ -246,7 +252,7 @@ contract EscrowHolder{
                escrowStorage.setEscrow_stake_amount(import_id, msg.sender, 0);
                if(amount_to_send > 0) {
                     value = profileStorage.getProfile_balance(DH_wallet);
-                    value.add(amount_to_send);
+                    value = value.add(amount_to_send);
                     profileStorage.setProfile_balance(DH_wallet, value);
                }
           }

@@ -71,16 +71,16 @@ contract ProfileStorage is Ownable{
 	}
 
 	struct ProfileDefinition{
-		uint token_amount_per_byte_minute;
-		uint stake_amount_per_byte_minute;
+		uint256 token_amount_per_byte_minute;
+		uint256 stake_amount_per_byte_minute;
 
-		uint read_stake_factor;
+		uint256 read_stake_factor;
 
-		uint balance;
-		uint reputation;
-		uint number_of_escrows;
+		uint256 balance;
+		uint256 reputation;
+		uint256 number_of_escrows;
 
-		uint max_escrow_time_in_minutes;
+		uint256 max_escrow_time_in_minutes;
 
 		bool active;
 	}
