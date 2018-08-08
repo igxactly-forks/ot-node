@@ -28,6 +28,17 @@ class Blockchain {
     }
 
     /**
+     * Checks if the node would rank in the top n + 1 network bids.
+     * @param importId Offer import id
+     * @param wallet DH wallet
+     * @param dhNodeId KADemplia ID of the DH node that wants to add bid
+     * @returns {Promisse<any>} boolean whether node would rank in the top n + 1
+     */
+    getDistanceParameters(importId) {
+        return this.blockchain.getDistanceParameters(importId);
+    }
+
+    /**
      * Writes data import root hash on blockchain
      * @param importId
      * @param rootHash
@@ -45,6 +56,10 @@ class Blockchain {
         return this.blockchain.getProfile(wallet);
     }
 
+    getAlphaTracTokenBalance() {
+        return this.blockchain.getAlphaTracTokenBalance();
+    }
+
     /**
      * Get offer by importId
      * @param importId
@@ -52,6 +67,16 @@ class Blockchain {
      */
     getOffer(importId) {
         return this.blockchain.getOffer(importId);
+    }
+
+    /**
+     * Gets the index of the node's bid in the array of one offer
+     * @param importId Offer import id
+     * @param dhNodeId KADemplia ID of the DH node that wants to get index
+     * @returns {Promisse<any>} integer index in the array
+     */
+    getBidIndex(importId, nodeId) {
+        return this.blockchain.getBidIndex(importId, nodeId);
     }
 
     /**
@@ -234,6 +259,26 @@ class Blockchain {
             .getAllPastEvents(contractName);
     }
 
+    async getStakedAmount(importId) {
+        return this.blockchain.getStakedAmount(importId);
+    }
+
+    async getHoldingIncome(importId) {
+        return this.blockchain.getHoldingIncome(importId);
+    }
+
+    async getPurchaseIncome(importId, dvWallet) {
+        return this.blockchain.getPurchaseIncome(importId, dvWallet);
+    }
+
+    async getTotalStakedAmount() {
+        return this.blockchain.getTotalStakedAmount();
+    }
+
+    async getTotalIncome() {
+        return this.blockchain.getTotalIncome();
+    }
+
     /**
      * Adds bid to the offer on Ethereum blockchain
      * @param importId Import ID
@@ -242,6 +287,17 @@ class Blockchain {
      */
     addBid(importId, dhNodeId) {
         return this.blockchain.addBid(importId, dhNodeId);
+    }
+
+    /**
+     * Activates predetermined bid to the offer on Ethereum blockchain
+     * @param importId Import ID
+     * @param dhNodeId KADemlia ID of the DH node that wants to activate bid
+     * @param bidIndex index of the bid
+     * @returns {Promise<any>} Index of the bid.
+     */
+    activatePredeterminedBid(importId, dhNodeId, bidIndex) {
+        return this.blockchain.activatePredeterminedBid(importId, dhNodeId, bidIndex);
     }
 
     /**
@@ -288,8 +344,31 @@ class Blockchain {
         return this.blockchain.getDcWalletFromOffer(importId);
     }
 
+    /**
+     * Gets balance from the profile
+     * @param wallet
+     * @returns {Promise}
+     */
+    getProfileBalance(wallet) {
+        return this.blockchain.getProfileBalance(wallet);
+    }
+
+    /**
+     * Deposits tokens to the profile
+     * @param amount
+     * @returns {Promise<any>}
+     */
     async depositToken(amount) {
         return this.blockchain.depositToken(amount);
+    }
+
+    /**
+     * Withdraws tokens from profile to wallet
+     * @param amount
+     * @returns {Promise<any>}
+     */
+    async withdrawToken(amount) {
+        return this.blockchain.withdrawToken(amount);
     }
 
     async getRootHash(dcWallet, dataId) {
@@ -346,6 +425,26 @@ class Blockchain {
         );
     }
 
+    async getFingerprintAddress() {
+        return this.blockchain.getFingerprintAddress();
+    }
+
+    async getTokenAddress() {
+        return this.blockchain.getTokenAddress();
+    }
+
+    async getEscrowAddress() {
+        return this.blockchain.getEscrowAddress();
+    }
+
+    async getBiddingAddress() {
+        return this.blockchain.getBiddingAddress();
+    }
+
+    async getReadingAddress() {
+        return this.blockchain.getReadingAddress();
+    }
+
     async sendEncryptedBlock(importId, dvWallet, encryptedBlock) {
         return this.blockchain.sendEncryptedBlock(importId, dvWallet, encryptedBlock);
     }
@@ -358,6 +457,13 @@ class Blockchain {
      */
     async payOutForReading(importId, dvWallet) {
         return this.blockchain.payOutForReading(importId, dvWallet);
+    }
+
+    /**
+     * Get replication modifier
+     */
+    async getReplicationModifier() {
+        return this.blockchain.getReplicationModifier();
     }
 }
 

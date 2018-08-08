@@ -15,7 +15,8 @@ const { Database } = require('arangojs');
 const neo4j = require('neo4j-driver').v1;
 const levenshtein = require('js-levenshtein');
 const BN = require('bn.js');
-var numberToBN = require('number-to-bn');
+const KademliaUtils = require('./kademlia/KademliaUtils');
+const numberToBN = require('number-to-bn');
 
 require('dotenv').config();
 require('winston-loggly-bulk');
@@ -121,21 +122,43 @@ class Utilities {
         return msg;
     }
 
+
+    /**
+     * Check if there is a new version of ot-node
+     * @returns {Promise<any>}
+     */
+
+    static checkForUpdates() {
+        return new Promise(async (resolve, reject) => {
+            // eslint-disable-next-line
+            const Update = require('../check-updates');
+            const res = await Update.update();
+            if (res) {
+                resolve(res);
+            }
+        });
+    }
+
     /**
      * Returns winston logger
      * @returns {*} - log function
      */
     static getLogger() {
-        const logLevel = 'trace';
+        let logLevel = 'trace';
+        if (process.env.LOGS_LEVEL_DEBUG === 1) {
+            logLevel = 'debug';
+        }
 
         const customColors = {
             trace: 'grey',
             notify: 'green',
-            debug: 'blue',
+            debug: 'yellow',
             info: 'white',
             warn: 'yellow',
             important: 'magenta',
             error: 'red',
+            api: 'cyan',
+            job: 'cyan',
         };
 
         try {
@@ -143,8 +166,20 @@ class Utilities {
                 [
                     new (winston.transports.Console)({
                         colorize: 'all',
-                        timestamp: false,
+                        timestamp: true,
+                        formatter: this.formatFileLogs,
                         prettyPrint: object => JSON.stringify(object),
+                        stderrLevels: [
+                            'trace',
+                            'notify',
+                            'debug',
+                            'info',
+                            'warn',
+                            'important',
+                            'error',
+                            'api',
+                            'job',
+                        ],
                     }),
                     new (winston.transports.File)({
                         filename: 'node.log',
@@ -153,7 +188,7 @@ class Utilities {
                     }),
                 ];
 
-            if (process.env.SEND_LOGS) {
+            if (process.env.SEND_LOGS && parseInt(process.env.SEND_LOGS, 10)) {
                 transports.push(new (winston.transports.Loggly)({
                     inputToken: 'abfd90ee-ced9-49c9-be1a-850316aaa306',
                     subdomain: 'origintrail.loggly.com',
@@ -168,11 +203,13 @@ class Utilities {
                 levels: {
                     error: 0,
                     important: 1,
-                    warn: 2,
-                    info: 3,
-                    debug: 4,
+                    job: 2,
+                    api: 3,
+                    warn: 4,
                     notify: 5,
-                    trace: 6,
+                    info: 6,
+                    trace: 7,
+                    debug: 8,
                 },
                 transports,
             });
@@ -187,20 +224,17 @@ class Utilities {
                     args[1] = msg.stack;
                     origLog.apply(logger, args);
                 } else {
-                    if (msg.startsWith('updating peer profile')) {
-                        return; // skip logging
+                    const transformed = KademliaUtils.transformLog(level, msg);
+                    if (!transformed) {
+                        return;
                     }
-                    if (msg.startsWith('connect econnrefused')) {
-                        level = 'trace';
-                        const address = msg.substr(21);
-                        msg = `Failed to connect to ${address}`;
-                    }
-                    origLog.apply(logger, [level, msg]);
+                    origLog.apply(logger, [transformed.level, transformed.msg]);
                 }
             };
             return logger;
         } catch (e) {
-            // console.log(e);
+            console.error('Failed to create logger', e);
+            process.exit(1);
         }
     }
 
@@ -279,7 +313,7 @@ class Utilities {
                 }
                 break;
             default:
-                this.getLogger.error(config.database.database_system);
+                Utilities.getLogger.error(config.database.database_system);
                 reject(Error('Database doesn\'t exists'));
             }
         });
@@ -403,50 +437,14 @@ class Utilities {
     }
 
     /**
-     * Get NODE_WALLETs balance in Ether
-     * @return {Promise<any>}
+     * Get wallet's balance in Ether
+     * @param web3 Instance of Web3
+     * @param wallet Address of the wallet.
+     * @returns {Promise<string |  | Object>}
      */
-    static getBalanceInEthers() {
-        return new Promise((resolve, reject) => {
-            this.loadSelectedBlockchainInfo().then((config) => {
-                const web3 = new Web3(new Web3.providers.HttpProvider(`${config.rpc_node_host}:${config.rpc_node_port}`));
-                web3.eth.getBalance(config.wallet_address).then((result) => {
-                    const balance = web3.utils.fromWei(result, 'ether');
-                    resolve(balance);
-                }).catch((error) => {
-                    reject(error);
-                });
-            }).catch((error) => {
-                reject(error);
-            });
-        });
-    }
-
-    /**
-     * Get NODE_WALLETs ATRAC token balance in Ether
-     * @return {Promise<any>}
-     */
-    static getAlphaTracTokenBalance() {
-        return new Promise((resolve, reject) => {
-            this.loadSelectedBlockchainInfo().then((config) => {
-                const web3 = new Web3(new Web3.providers.HttpProvider(`${config.rpc_node_host}:${config.rpc_node_port}`));
-                const wallet_address_minus0x = (config.wallet_address).substring(2);
-                // '0x70a08231' is the contract 'balanceOf()' ERC20 token function in hex.
-                var contractData = (`0x70a08231000000000000000000000000${wallet_address_minus0x}`);
-                web3.eth.call({
-                    to: config.token_contract_address,
-                    data: contractData,
-                }).then((result) => {
-                    const tokensInWei = web3.utils.toBN(result).toString();
-                    const tokensInEther = web3.utils.fromWei(tokensInWei, 'ether');
-                    resolve(tokensInEther);
-                }).catch((error) => {
-                    reject(error);
-                });
-            }).catch((error) => {
-                reject(error);
-            });
-        });
+    static async getBalanceInEthers(web3, wallet) {
+        const result = await web3.eth.getBalance(wallet);
+        return web3.utils.fromWei(result, 'ether');
     }
 
     /**
@@ -515,7 +513,7 @@ class Utilities {
      * @returns {void}
      */
     static checkOtNodeDirStructure() {
-        const log = this.getLogger();
+        const log = Utilities.getLogger();
         try {
             if (!fs.existsSync(`${__dirname}/../keys`)) {
                 fs.mkdirSync(`${__dirname}/../keys`);
@@ -668,8 +666,8 @@ class Utilities {
             throw new Error(`Given input "${num}" is not a number.`);
         }
 
-        var number = Utilities.toBN(num);
-        var result = number.toString(16);
+        const number = Utilities.toBN(num);
+        const result = number.toString(16);
 
         return number.lt(new BN(0)) ? `-0x${result.substr(1)}` : `0x${result}`;
     }
@@ -874,15 +872,74 @@ class Utilities {
     }
 
     /**
-     * Is node a bootstrap node
-     * @return {boolean}
+     * Validates number property type
+     * @param property
+     * @returns {boolean}
+     */
+    static validateNumberParameter(property) {
+        return property == null || parseInt(property, 10) > 0;
+    }
+
+    /**
+     * Validates number property type and allows zero
+     * @param property
+     * @returns {boolean}
+     */
+    static validateNumberParameterAllowZero(property) {
+        return property == null || parseInt(property, 10) >= 0;
+    }
+
+    /**
+     * Validates string property type
+     * @param property
+     * @returns {boolean}
+     */
+    static validateStringParameter(property) {
+        return property == null || typeof property === 'string';
+    }
+
+    /**
+     * Converts minutes to milliseconds
+     * @param minutes
+     * @returns {*}
+     */
+    static convertToMilliseconds(minutes) {
+        if (BN.isBN(minutes)) {
+            return minutes.mul(new BN(60000));
+        }
+        return new BN(minutes).mul(new BN(60000));
+    }
+
+    /**
+     * Converts milliseconds to minutes
+     * @param milliseconds
+     * @returns {BN}
+     */
+    static convertToMinuntes(milliseconds) {
+        if (BN.isBN(milliseconds)) {
+            return milliseconds.div(new BN(60000));
+        }
+        return new BN(milliseconds).div(new BN(60000));
+    }
+
+    /**
+     * Is bootstrap node?
+     * @return {number}
      */
     static isBootstrapNode() {
-        const bootstrapNodes = config.network_bootstrap_nodes;
-        if (bootstrapNodes) {
-            return bootstrapNodes.length === 0;
+        return parseInt(config.is_bootstrap_node, 10);
+    }
+
+    /**
+     * Shuffles array in place
+     * @param {Array} a items An array containing the items.
+     */
+    static shuffle(a) {
+        for (let i = a.length - 1; i > 0; i -= 1) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
         }
-        return true;
+        return a;
     }
 }
 

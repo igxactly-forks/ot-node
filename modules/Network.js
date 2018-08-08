@@ -1,15 +1,18 @@
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
+const async = require('async');
 const levelup = require('levelup');
-const sqldown = require('sqldown');
 const encoding = require('encoding-down');
 const kadence = require('@kadenceproject/kadence');
 const config = require('./Config');
-const async = require('async');
 const fs = require('fs');
 const utilities = require('./Utilities');
-const PeerCache = require('./kademlia/PeerCache');
 const _ = require('lodash');
+const sleep = require('sleep-async')().Promise;
+const leveldown = require('leveldown');
+const PeerCache = require('./kademlia/PeerCache');
+const KadenceUtils = require('@kadenceproject/kadence/lib/utils.js');
+const ip = require('ip');
 
 /**
  * DHT module (Kademlia)
@@ -23,11 +26,12 @@ class Network {
         this.emitter = ctx.emitter;
         this.networkUtilities = ctx.networkUtilities;
 
+        kadence.constants.T_RESPONSETIMEOUT = parseInt(config.request_timeout, 10);
         if (parseInt(config.test_network, 10)) {
             this.log.warn('Node is running in test mode, difficulties are reduced');
             process.env.kadence_TestNetworkEnabled = config.test_network;
-            kadence.constants.SOLUTION_DIFFICULTY = 2;
-            kadence.constants.IDENTITY_DIFFICULTY = 2;
+            kadence.constants.SOLUTION_DIFFICULTY = kadence.constants.TESTNET_DIFFICULTY;
+            kadence.constants.IDENTITY_DIFFICULTY = kadence.constants.TESTNET_DIFFICULTY;
         }
         this.index = parseInt(config.child_derivation_index, 10);
 
@@ -48,20 +52,22 @@ class Network {
 
         this.log.info('Getting the identity');
         this.xprivkey = fs.readFileSync(`${__dirname}/../keys/${config.private_extended_key_path}`).toString();
-        this.identity = new kadence.eclipse.EclipseIdentity(this.xprivkey, this.index);
+        this.identity = new kadence.eclipse.EclipseIdentity(
+            this.xprivkey,
+            this.index,
+            kadence.constants.HD_KEY_DERIVATION_PATH,
+        );
 
         this.log.info('Checking the identity');
-        this.networkUtilities.checkIdentity(
-            this.identity,
-            this.xprivkey,
-        ); // Check if identity is valid
+        // Check if identity is valid
+        this.networkUtilities.checkIdentity(this.identity);
 
-        const { childkey } = this.networkUtilities.getIdentityKeys(
+        const { childKey } = this.networkUtilities.getIdentityKeys(
             this.xprivkey,
             kadence.constants.HD_KEY_DERIVATION_PATH,
             parseInt(config.child_derivation_index, 10),
         );
-        this.identity = kadence.utils.toPublicKeyHash(childkey.publicKey).toString('hex');
+        this.identity = kadence.utils.toPublicKeyHash(childKey.publicKey).toString('hex');
 
         this.log.notify(`My identity: ${this.identity}`);
         config.identity = this.identity;
@@ -74,7 +80,7 @@ class Network {
     async start() {
         this.log.info('Initializing network');
 
-        const { parentkey } = this.networkUtilities.getIdentityKeys(
+        const { parentKey } = this.networkUtilities.getIdentityKeys(
             this.xprivkey,
             kadence.constants.HD_KEY_DERIVATION_PATH,
             parseInt(config.child_derivation_index, 10),
@@ -85,10 +91,11 @@ class Network {
             hostname: config.node_rpc_ip,
             protocol: 'https:',
             port: parseInt(config.node_port, 10),
-            xpub: parentkey.publicExtendedKey,
+            xpub: parentKey.publicExtendedKey,
             index: parseInt(config.child_derivation_index, 10),
             agent: kadence.version.protocol,
             wallet: config.node_wallet,
+            network_id: config.network_id,
         };
 
         const key = fs.readFileSync(`${__dirname}/../keys/${config.ssl_keypath}`);
@@ -104,31 +111,47 @@ class Network {
             transport,
             identity: Buffer.from(this.identity, 'hex'),
             contact,
-            storage: levelup(encoding(sqldown(`${__dirname}/Database/system.db`)), {
-                table: 'node_data',
-            }, (err) => {
-                if (err) {
-                    this.log.error('Failed to create SQLite3 Kademlia adapter');
-                    throw err;
-                }
-            }),
+            storage: levelup(encoding(leveldown(`${__dirname}/../data/kadence.dht`))),
         });
+
+        // Override node's _updateContact method to filter contacts.
+        this.node._updateContact = (identity, contact) => {
+            try {
+                if (ip.isV4Format(contact.hostname) || ip.isV6Format(contact.hostname)) {
+                    if (config.local_network_only && ip.isPublic(contact.hostname)) {
+                        this.log.debug(`Ignored contact ${identity} from remote address: ${contact.hostname}.`);
+                        return;
+                    } else if (!config.local_network_only && ip.isPrivate(contact.hostname)) {
+                        this.log.debug(`Ignored contact ${identity} from local address: ${contact.hostname}.`);
+                        return;
+                    }
+                }
+                if (!contact.network_id || contact.network_id !== config.network_id) {
+                    this.log.debug(`Ignored contact ${identity}. Invalid network ID.`);
+                    return;
+                }
+            } catch (err) {
+                this.log.debug(`Failed to filter contact(${identity}, ${contact}). ${err}.`);
+                return;
+            }
+
+            // Simulate node's "super._updateContact(identity, contact)".
+            this.node.constructor.prototype.constructor.prototype
+                ._updateContact.call(this.node, identity, contact);
+        };
+
         this.log.info('Starting OT Node...');
+        this.node.eclipse = this.node.plugin(kadence.eclipse());
         this.node.quasar = this.node.plugin(kadence.quasar());
         this.log.info('Quasar initialised');
-        // this.node.eclipse = this.node.plugin(kadence.eclipse());
         this.node.peercache = this.node.plugin(PeerCache(`${__dirname}/../data/${config.embedded_peercache_path}`));
         this.log.info('Peercache initialised');
-        // this.node.spartacus = this.node.plugin(kadence.spartacus(
-        //     this.xprivkey,
-        //     parseInt(config.child_derivation_index, 10),
-        // ));
-        // this.log.info('Spartacus initialised');
-        // this.node.hashcash = this.node.plugin(kadence.hashcash({
-        //     methods: ['PUBLISH', 'SUBSCRIBE'],
-        //     difficulty: 2,
-        // }));
-        // this.log.info('Hashcash initialised');
+        this.node.spartacus = this.node.plugin(kadence.spartacus(
+            this.xprivkey,
+            parseInt(config.child_derivation_index, 10),
+            kadence.constants.HD_KEY_DERIVATION_PATH,
+        ));
+        this.log.info('Spartacus initialized');
 
         if (parseInt(config.onion_enabled, 10)) {
             this.enableOnion();
@@ -152,50 +175,68 @@ class Network {
             this._registerRoutes();
         }
 
-        this.node.listen(parseInt(config.node_port, 10), () => {
+        this.node.listen(parseInt(config.node_port, 10), async () => {
             this.log.notify(`OT Node listening at https://${this.node.contact.hostname}:${this.node.contact.port}`);
             this.networkUtilities.registerControlInterface(config, this.node);
 
-            const retryPeriod = 5000;
-            async.retry({
-                times: Infinity,
-                interval: retryPeriod,
-            }, done => this._joinNetwork(done, retryPeriod), (err) => {
-                if (err) {
-                    this.log.error(err.message);
-                    process.exit(1);
+            const connected = false;
+            const retryPeriodSeconds = 5;
+            while (!connected) {
+                try {
+                    // eslint-disable-next-line
+                    const connected = await this._joinNetwork(contact);
+                    if (connected) {
+                        break;
+                    }
+                } catch (e) {
+                    this.log.error(`Failed to join network ${e}`);
                 }
-            });
+
+                this.log.error(`Failed to join network, will retry in ${retryPeriodSeconds} seconds. Bootstrap nodes are probably not online.`);
+                // eslint-disable-next-line
+                await sleep.sleep(retryPeriodSeconds * 1000);
+            }
         });
     }
 
     enableNatTraversal() {
         this.log.info('Trying NAT traversal');
+
+        const remoteAddress = config.reverse_tunnel_address;
+        const remotePort = parseInt(config.reverse_tunnel_port, 10);
+
         this.node.traverse = this.node.plugin(kadence.traverse([
-            new kadence.traverse.UPNPStrategy({
-                mappingTtl: parseInt(config.traverse_port_forward_ttl, 10),
-                publicPort: parseInt(this.node.contact.port, 10),
-            }),
-            new kadence.traverse.NATPMPStrategy({
-                mappingTtl: parseInt(config.traverse_port_forward_ttl, 10),
-                publicPort: parseInt(this.node.contact.port, 10),
+            new kadence.traverse.ReverseTunnelStrategy({
+                remotePort,
+                remoteAddress,
+                privateKey: this.node.spartacus.privateKey,
+                secureLocalConnection: true,
+                verboseLogging: false,
             }),
         ]));
     }
 
+    /**
+     * Enables Onion client
+     */
     enableOnion() {
         this.log.info('Use Tor for an anonymous overlay');
-        kadence.constants.T_RESPONSETIMEOUT = 20000;
         this.node.onion = this.node.plugin(kadence.onion({
             dataDirectory: `${__dirname}/../data/hidden_service`,
             virtualPort: config.onion_virtual_port,
             localMapping: `127.0.0.1:${config.node_port}`,
             torrcEntries: {
-                CircuitBuildTimeout: 10,
-                KeepalivePeriod: 60,
-                NewCircuitPeriod: 60,
-                NumEntryGuards: 8,
-                Log: 'notice stdout',
+                LearnCircuitBuildTimeout: 0,
+                CircuitBuildTimeout: 40,
+                CircuitStreamTimeout: 30,
+                MaxCircuitDirtiness: 7200,
+                MaxClientCircuitsPending: 1024,
+                SocksTimeout: 41,
+                CloseHSClientCircuitsImmediatelyOnTimeout: 1,
+                CloseHSServiceRendCircuitsImmediatelyOnTimeout: 1,
+                SafeLogging: 0,
+                FetchDirInfoEarly: 1,
+                FetchDirInfoExtraEarly: 1,
             },
             passthroughLoggingEnabled: 1,
         }));
@@ -206,62 +247,109 @@ class Network {
      * Try to join network
      * Note: this method tries to find possible bootstrap nodes from cache as well
      */
-    _joinNetwork(callback, retryPeriod) {
+    async _joinNetwork(myContact) {
         const bootstrapNodes = config.network_bootstrap_nodes;
+        utilities.shuffle(bootstrapNodes);
 
         const peercachePlugin = this.node.peercache;
-        peercachePlugin.getBootstrapCandidates().then((peers) => {
-            const isBootstrap = bootstrapNodes.length === 0;
-            const nodes = _.uniq(bootstrapNodes.concat(peers));
+        const peers = await peercachePlugin.getBootstrapCandidates();
+        let nodes = _.uniq(bootstrapNodes.concat(peers));
+        nodes = nodes.slice(0, 5); // take no more than 5 peers for joining
 
-            if (isBootstrap) {
-                this.log.info(`Found ${bootstrapNodes.length} provided bootstrap node(s). Running as a Bootstrap node`);
-                this.log.info(`Found additional ${peers.length} peers in peer cache`);
-                this.log.info(`Trying to contact ${nodes.length} peers from peer cache`);
-            } else {
-                this.log.info(`Found ${bootstrapNodes.length} provided bootstrap node(s)`);
-                this.log.info(`Found additional ${peers.length} peers in peer cache`);
-                this.log.info(`Trying to join the network from ${nodes.length} unique seeds`);
-            }
+        if (utilities.isBootstrapNode()) {
+            this.log.info(`Found ${bootstrapNodes.length} provided bootstrap node(s). Running as a Bootstrap node`);
+            this.log.info(`Found additional ${peers.length} peers in peer cache`);
+        } else {
+            this.log.info(`Found ${bootstrapNodes.length} provided bootstrap node(s)`);
+            this.log.info(`Found additional ${peers.length} peers in peer cache`);
+        }
 
-            if (nodes.length === 0) {
-                this.log.info('No bootstrap seeds provided and no known profiles');
-                this.log.info('Running in seed mode (waiting for connections)');
+        this.log.info(`Sync with network from ${nodes.length} unique peers`);
+        if (nodes.length === 0) {
+            this.log.info('No bootstrap seeds provided and no known profiles');
+            this.log.info('Running in seed mode (waiting for connections)');
 
-                this.node.router.events.once('add', (identity) => {
-                    config.NetworkBootstrapNodes = [
-                        kadence.utils.getContactURL([
-                            identity,
-                            this.node.router.getContactByNodeId(identity),
-                        ]),
-                    ];
-                    this._joinNetwork(callback, retryPeriod);
-                });
-                callback();
-                return;
-            }
-
-            async.detectSeries(nodes, (url, done) => {
-                const contact = kadence.utils.parseContactURL(url);
-                this.node.join(contact, (err) => {
-                    done(null, (!err) && this.node.router.size >= 1);
-                });
-            }, (err, result) => {
-                if (result) {
-                    this.log.important('Joined the network');
-                    const contact = kadence.utils.parseContactURL(result);
-
-                    this.log.info(`Connected to network via ${contact[0]} (https://${contact[1].hostname}:${contact[1].port})`);
-                    this.log.info(`Discovered ${this.node.router.size} peers from seed`);
-                    callback();
-                } else if (!isBootstrap) {
-                    this.log.error(`Failed to join network, will retry in ${retryPeriod / 1000} seconds. Bootstrap nodes are probably not online.`);
-                    callback(new Error('Failed to join network'));
-                } else {
-                    this.log.info('Bootstrap node couldn\'t contact peers from peer cache. Waiting for some peers.');
-                    callback();
-                }
+            this.node.router.events.once('add', async (identity) => {
+                config.network_bootstrap_nodes = [
+                    kadence.utils.getContactURL([
+                        identity,
+                        this.node.router.getContactByNodeId(identity),
+                    ]),
+                ];
+                await this._joinNetwork(myContact);
             });
+            return true;
+        }
+
+        const func = url => new Promise((resolve, reject) => {
+            try {
+                this.log.info(`Syncing with peers via ${url}.`);
+                const contact = kadence.utils.parseContactURL(url);
+
+                this._join(contact, (err) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+                    if (this.node.router.size >= 1) {
+                        resolve(url);
+                    } else {
+                        resolve(null);
+                    }
+                });
+            } catch (err) {
+                reject(err);
+            }
+        });
+
+        let result;
+        for (const node of nodes) {
+            try {
+                // eslint-disable-next-line
+                result = await func(node);
+                if (result) {
+                    break;
+                }
+            } catch (e) {
+                this.log.warn(`Failed to join via ${node}`);
+            }
+        }
+
+        if (result) {
+            this.log.important('Initial sync with other peers done');
+
+            setTimeout(() => {
+                this.node.refresh(this.node.router.getClosestBucket() + 1);
+            }, 5000);
+            return true;
+        } else if (utilities.isBootstrapNode()) {
+            this.log.info('Bootstrap node couldn\'t contact peers. Waiting for some peers.');
+            return true;
+        }
+        return false;
+    }
+
+    _join([identity, contact], callback) {
+        /* istanbul ignore else */
+        if (callback) {
+            this.node.once('join', callback);
+            this.node.once('error', callback);
+        }
+
+        this.node.router.addContactByNodeId(identity, contact);
+        async.series([
+            next => this.node.iterativeFindNode(this.identity.toString('hex'), next),
+        ], (err) => {
+            if (err) {
+                this.node.emit('error', err);
+            } else {
+                this.node.emit('join');
+            }
+
+            if (callback) {
+                this.node.removeListener('join', callback);
+                this.node.removeListener('error', callback);
+            }
         });
     }
 
@@ -269,121 +357,125 @@ class Network {
      * Register Kademlia routes and error handlers
      */
     _registerRoutes() {
-        this.node.quasar.quasarSubscribe('data-location-request', (message, err) => {
+        this.node.quasar.quasarSubscribe('kad-data-location-request', (message, err) => {
             this.log.info('New location request received');
             this.emitter.emit('kad-data-location-request', message);
         });
 
-
-        // add payload-request route
-        this.node.use('payload-request', (request, response, next) => {
-            this.log.info('payload-request received');
-            this.emitter.emit('payload-request', request, response);
+        // async
+        this.node.use('kad-payload-request', (request, response, next) => {
+            this.log.debug('kad-payload-request received');
+            this.emitter.emit('kad-payload-request', request, response);
             response.send({
-                status: 'OK',
+                status: 'RECEIVED',
             });
         });
 
-        // add payload-request error handler
-        this.node.use('payload-request', (err, request, response, next) => {
+        // async
+        this.node.use('kad-replication-request', (request, response, next) => {
+            this.log.debug('kad-replication-request received');
+            this.emitter.emit('kad-replication-request', request, response);
             response.send({
-                error: 'payload-request error',
+                status: 'RECEIVED',
             });
         });
 
-        // add replication-request route
-        this.node.use('replication-request', (request, response, next) => {
-            this.log.info('replication-request received');
-            this.emitter.emit('replication-request', request, response);
-        });
-
-        // add replication-finished route
-        this.node.use('replication-finished', (request, response, next) => {
-            this.log.info('replication-finished received');
-            this.emitter.emit('replication-finished', request);
+        // async
+        this.node.use('kad-replication-finished', (request, response, next) => {
+            this.log.debug('kad-replication-finished received');
+            this.emitter.emit('kad-replication-finished', request);
             response.send({
-                status: 'OK',
+                status: 'RECEIVED',
             });
         });
 
-        // add replication-finished error handler
-        this.node.use('replication-finished', (err, request, response, next) => {
-            response.send({
-                error: 'replication-finished error',
-            });
-        });
-
+        // async
         this.node.use('kad-data-location-response', (request, response, next) => {
-            this.log.info('kad-data-location-response received');
+            this.log.debug('kad-data-location-response received');
             this.emitter.emit('kad-data-location-response', request, response);
+            response.send({
+                status: 'RECEIVED',
+            });
         });
 
+        // async
         this.node.use('kad-data-read-request', (request, response, next) => {
-            this.log.info('kad-data-read-request received');
+            this.log.debug('kad-data-read-request received');
             this.emitter.emit('kad-data-read-request', request, response);
+            response.send({
+                status: 'RECEIVED',
+            });
         });
 
+        // async
         this.node.use('kad-data-read-response', (request, response, next) => {
-            this.log.info('kad-data-read-response received');
+            this.log.debug('kad-data-read-response received');
             this.emitter.emit('kad-data-read-response', request, response);
+            response.send({
+                status: 'RECEIVED',
+            });
         });
 
+        // async
         this.node.use('kad-send-encrypted-key', (request, response, next) => {
-            this.log.info('kad-send-encrypted-key received');
+            this.log.debug('kad-send-encrypted-key received');
             this.emitter.emit('kad-send-encrypted-key', request, response);
+            response.send({
+                status: 'RECEIVED',
+            });
         });
 
+        // async
+        this.node.use('kad-encrypted-key-process-result', (request, response, next) => {
+            this.log.debug('kad-encrypted-key-process-result received');
+            this.emitter.emit('kad-encrypted-key-process-result', request, response);
+            response.send({
+                status: 'RECEIVED',
+            });
+        });
+
+        // async
         this.node.use('kad-verify-import-request', (request, response, next) => {
-            this.log.info('kad-verify-import-request received');
+            this.log.debug('kad-verify-import-request received');
             this.emitter.emit('kad-verify-import-request', request, response);
+            response.send({
+                status: 'RECEIVED',
+            });
         });
 
+        // async
         this.node.use('kad-verify-import-response', (request, response, next) => {
-            this.log.info('kad-verify-import-response received');
+            this.log.debug('kad-verify-import-response received');
             this.emitter.emit('kad-verify-import-response', request, response);
+            response.send({
+                status: 'RECEIVED',
+            });
         });
 
-        // add challenge-request route
-        this.node.use('challenge-request', (request, response, next) => {
-            this.log.info('challenge-request received');
+        // sync
+        this.node.use('kad-challenge-request', (request, response, next) => {
+            this.log.debug('kad-challenge-request received');
             this.emitter.emit('kad-challenge-request', request, response);
         });
 
-        // add challenge-request error handler
-        this.node.use('challenge-request', (err, request, response, next) => {
+        // error handler
+        this.node.use('kad-challenge-request', (err, request, response, next) => {
             response.send({
-                error: 'challenge-request error',
+                error: 'kad-challenge-request error',
             });
         });
 
-        // TODO remove temp add bid route
-        this.node.use('add-bid', (request, response, next) => {
-            this.log.info('add-bid');
-            const { bid } = request.params.message;
-            [bid.dhId] = request.contact;
+        // error handler
+        this.node.use('kad-payload-request', (err, request, response, next) => {
             response.send({
-                status: 'OK',
+                error: 'kad-payload-request error',
             });
         });
 
-        // TODO remove temp add bid route
-        this.node.use('add-bid', (err, request, response, next) => {
-            this.log.error('add-bid failed');
+        // error handler
+        this.node.use('kad-replication-finished', (err, request, response, next) => {
             response.send({
-                error: 'add-bid error',
-            });
-        });
-
-        // add kad-bidding-won route
-        this.node.use('kad-bidding-won', (request, response, next) => {
-            this.log.info('kad-bidding-won received');
-            this.emitter.emit('kad-bidding-won', request, response);
-        });
-
-        // add kad-bidding-won error handler
-        this.node.use('kad-bidding-won', (err, request, response, next) => {
-            response.send({
-                error: 'kad-bidding-won error',
+                error: 'kad-replication-finished error',
             });
         });
 
@@ -398,100 +490,135 @@ class Network {
 
             /**
              * Gets contact by ID
+             * @param retry Should retry to find it?
              * @param contactId Contact ID
              * @returns {{"{": Object}|Array}
              */
-            node.getContact = contactId => node.router.getContactByNodeId(contactId);
+            node.getContact = async (contactId, retry) => {
+                let contact = node.router.getContactByNodeId(contactId);
+                if (contact && contact.hostname) {
+                    return contact;
+                }
+                contact = await this.node.peercache.getExternalPeerInfo(contactId);
+                if (contact) {
+                    const contactInfo = KadenceUtils.parseContactURL(contact);
+                    // refresh bucket
+                    if (contactInfo) {
+                        // eslint-disable-next-line
+                        contact = contactInfo[1];
+                        this.node.router.addContactByNodeId(contactId, contact);
+                    }
+                }
+                contact = this.node.router.getContactByNodeId(contactId);
+                if (contact && contact.hostname) {
+                    return contact;
+                }
 
-            /**
-             * Sends payload request to DH
-             * @param message   Payload to be sent
-             * @param contactId  KADemlia contact ID to be sent to
-             * @param callback  Response/Error callback
-             */
-            node.payloadRequest = (message, contactId, callback) => {
-                const contact = node.getContact(contactId);
-                node.send('payload-request', { message }, [contactId, contact], callback);
+                await node.refreshContact(contactId, retry);
+                contact = this.node.router.getContactByNodeId(contactId);
+                if (contact && contact.hostname) {
+                    return contact;
+                }
+                return this.node.router.getContactByNodeId(contactId);
             };
 
             /**
-             * Sends replication request to the DC
-             * @param message
-             * @param contactId KADemlia contact ID to be sent to
-             * @param callback
+             * Tries to refresh buckets based on contact ID
+             * @param contactId
+             * @param retry
+             * @return {Promise}
              */
-            node.replicationRequest = (message, contactId, callback) => {
+            node.refreshContact = async (contactId, retry) => new Promise(async (resolve) => {
+                const _refresh = () => new Promise((resolve, reject) => {
+                    this.node.iterativeFindNode(contactId, (err, res) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            const contact = this.node.router.getContactByNodeId(contactId);
+                            if (contact && contact.hostname) {
+                                resolve(contact);
+                            } else {
+                                resolve(null);
+                            }
+                        }
+                    });
+                });
+
+                try {
+                    if (retry) {
+                        for (let i = 1; i <= 3; i += 1) {
+                            // eslint-disable-next-line no-await-in-loop
+                            const contact = await _refresh();
+                            if (contact) {
+                                resolve(contact);
+                                return;
+                            }
+                            // eslint-disable-next-line
+                            await sleep.sleep((2 ** i) * 1000);
+                        }
+                    } else {
+                        await _refresh(contactId, retry);
+                    }
+
+                    resolve(null);
+                } catch (e) {
+                    // failed to refresh buckets (should not happen)
+                }
+            });
+
+            node.payloadRequest = async (message, contactId, callback) => {
+                const contact = await node.getContact(contactId);
+                node.send('kad-payload-request', { message }, [contactId, contact], callback);
+            };
+
+            node.replicationRequest = async (message, contactId, callback) => {
                 // contactId = utilities.numberToHex(contactId).substring(2);
-                const contact = node.getContact(contactId);
-                node.send('replication-request', { message }, [contactId, contact], callback);
+                const contact = await node.getContact(contactId);
+                node.send('kad-replication-request', { message }, [contactId, contact], callback);
             };
 
-            /**
-             * Sends replication finished direct message
-             * @param message   Payload to be sent
-             * @param contactId KADemlia contact ID to be sent to
-             * @param callback  Response/Error callback
-             */
-            node.replicationFinished = (message, contactId, callback) => {
-                const contact = node.getContact(contactId);
-                node.send('replication-finished', { message }, [contactId, contact], callback);
+            node.replicationFinished = async (message, contactId, callback) => {
+                const contact = await node.getContact(contactId);
+                node.send('kad-replication-finished', { message }, [contactId, contact], callback);
             };
 
-            /**
-             * Sends challenge request direct message
-             * @param message   Payload to be sent
-             * @param contactId  KADemlia contact ID to be sent to
-             * @param callback  Response/Error callback
-             */
-            node.challengeRequest = (message, contactId, callback) => {
-                const contact = node.getContact(contactId);
-                node.send('challenge-request', { message }, [contactId, contact], callback);
+            node.challengeRequest = async (message, contactId, callback) => {
+                const contact = await node.getContact(contactId);
+                node.send('kad-challenge-request', { message }, [contactId, contact], callback);
             };
 
-            /**
-             * Sends add bid to DC
-             * TODO remove after SC intro
-             * @param message   Payload to be sent
-             * @param contactId  KADemlia contact ID to be sent to
-             * @param callback  Response/Error callback
-             */
-            node.addBid = (message, contactId, callback) => {
-                const contact = node.getContact(contactId);
-                node.send('add-bid', { message }, [contactId, contact], callback);
-            };
-
-            node.biddingWon = (message, contactId, callback) => {
-                const contact = node.getContact(contactId);
-                node.send('kad-bidding-won', { message }, [contactId, contact], callback);
-            };
-
-            node.sendDataLocationResponse = (message, contactId, callback) => {
-                const contact = node.getContact(contactId);
+            node.sendDataLocationResponse = async (message, contactId, callback) => {
+                const contact = await node.getContact(contactId);
                 node.send('kad-data-location-response', { message }, [contactId, contact], callback);
             };
 
-            node.dataReadRequest = (message, contactId, callback) => {
-                const contact = node.getContact(contactId);
+            node.dataReadRequest = async (message, contactId, callback) => {
+                const contact = await node.getContact(contactId);
                 node.send('kad-data-read-request', { message }, [contactId, contact], callback);
             };
 
-            node.sendDataReadResponse = (message, contactId, callback) => {
-                const contact = node.getContact(contactId);
+            node.sendDataReadResponse = async (message, contactId, callback) => {
+                const contact = await node.getContact(contactId);
                 node.send('kad-data-read-response', { message }, [contactId, contact], callback);
             };
 
-            node.sendEncryptedKey = (message, contactId, callback) => {
-                const contact = node.getContact(contactId);
+            node.sendEncryptedKey = async (message, contactId, callback) => {
+                const contact = await node.getContact(contactId);
                 node.send('kad-send-encrypted-key', { message }, [contactId, contact], callback);
             };
 
-            node.verifyImport = (message, contactId, callback) => {
-                const contact = node.getContact(contactId);
+            node.sendEncryptedKeyProcessResult = async (message, contactId, callback) => {
+                const contact = await node.getContact(contactId);
+                node.send('kad-encrypted-key-process-result', { message }, [contactId, contact], callback);
+            };
+
+            node.verifyImport = async (message, contactId, callback) => {
+                const contact = await node.getContact(contactId);
                 node.send('kad-verify-import-request', { message }, [contactId, contact], callback);
             };
 
-            node.sendVerifyImportResponse = (message, contactId, callback) => {
-                const contact = node.getContact(contactId);
+            node.sendVerifyImportResponse = async (message, contactId, callback) => {
+                const contact = await node.getContact(contactId);
                 node.send('kad-verify-import-response', { message }, [contactId, contact], callback);
             };
         });

@@ -15,6 +15,7 @@ const config = require('./modules/Config');
 const Challenger = require('./modules/Challenger');
 const RemoteControl = require('./modules/RemoteControl');
 const corsMiddleware = require('restify-cors-middleware');
+const BN = require('bn.js');
 
 const awilix = require('awilix');
 
@@ -22,9 +23,9 @@ const Graph = require('./modules/Graph');
 const Product = require('./modules/Product');
 
 const EventEmitter = require('./modules/EventEmitter');
-const DCService = require('./modules/DCService');
 const DHService = require('./modules/DHService');
 const DVService = require('./modules/DVService');
+const ProfileService = require('./modules/ProfileService');
 const DataReplication = require('./modules/DataReplication');
 
 const pjson = require('./package.json');
@@ -32,15 +33,81 @@ const pjson = require('./package.json');
 const log = Utilities.getLogger();
 const Web3 = require('web3');
 
+global.__basedir = __dirname;
+
 process.on('unhandledRejection', (reason, p) => {
-    console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+    if (reason.message.startsWith('Invalid JSON RPC response')) {
+        return;
+    }
+    log.error(`Unhandled Rejection:\n${reason.stack}`);
     // application specific logging, throwing an error, or other logic here
+});
+
+process.on('uncaughtException', (err) => {
+    if (process.env.NODE_ENV === 'test') {
+        log.error(`Caught exception: ${err}.\n ${err.stack}`);
+        process.exit(1);
+    }
+    log.error(`Caught exception: ${err}.\n ${err.stack}`);
+});
+
+process.on('warning', (warning) => {
+    log.warn(warning.name);
+    log.warn(warning.message);
+    log.warn(warning.stack);
+});
+
+process.on('exit', (code) => {
+    if (code !== 0) {
+        log.error(`Whoops, terminating with code: ${code}`);
+    } else {
+        log.debug(`Normal exiting with code: ${code}`);
+    }
 });
 
 /**
  * Main node object
  */
 class OTNode {
+    async getBalances(Utilities, selectedBlockchain, web3, config, initial) {
+        let enoughETH = false;
+        let enoughtTRAC = false;
+        try {
+            const etherBalance = await Utilities.getBalanceInEthers(
+                web3,
+                selectedBlockchain.wallet_address,
+            );
+            if (etherBalance <= 0) {
+                console.log('Please get some ETH in the node wallet fore running ot-node');
+                enoughETH = false;
+                if (initial) {
+                    process.exit(1);
+                }
+            } else {
+                enoughETH = true;
+                log.info(`Balance of ETH: ${etherBalance}`);
+            }
+
+            const atracBalance = await Utilities.getAlphaTracTokenBalance(
+                web3,
+                selectedBlockchain.wallet_address,
+                selectedBlockchain.token_contract_address,
+            );
+            if (atracBalance <= 0) {
+                enoughtTRAC = false;
+                console.log('Please get some ATRAC in the node wallet fore running ot-node');
+                if (initial) {
+                    process.exit(1);
+                }
+            } else {
+                enoughtTRAC = true;
+                log.info(`Balance of ATRAC: ${atracBalance}`);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+        config.enoughFunds = enoughETH && enoughtTRAC;
+    }
     /**
      * OriginTrail node system bootstrap function
      */
@@ -71,6 +138,15 @@ class OTNode {
             process.exit(1);
         }
 
+        // check for Updates
+        try {
+            log.info('Checking for updates');
+            await Utilities.checkForUpdates();
+        } catch (err) {
+            console.log(err);
+            process.exit(1);
+        }
+
         if (Utilities.isBootstrapNode()) {
             await this.startBootstrapNode();
             this.startRPC();
@@ -83,6 +159,8 @@ class OTNode {
                 const responseFromArango = await Utilities.getArangoDbVersion();
                 log.info(`Arango server version ${responseFromArango.version} is up and running`);
             } catch (err) {
+                log.error('Please make sure Arango server is up and running');
+                console.log(err);
                 process.exit(1);
             }
         }
@@ -126,14 +204,22 @@ class OTNode {
             injectionMode: awilix.InjectionMode.PROXY,
         });
 
+        container.loadModules(['modules/command/**/*.js', 'modules/controller/**/*.js'], {
+            formatName: 'camelCase',
+            resolverOptions: {
+                lifetime: awilix.Lifetime.SINGLETON,
+                register: awilix.asClass,
+            },
+        });
+
         container.register({
             emitter: awilix.asClass(EventEmitter).singleton(),
             network: awilix.asClass(Network).singleton(),
             graph: awilix.asClass(Graph).singleton(),
             product: awilix.asClass(Product).singleton(),
             dhService: awilix.asClass(DHService).singleton(),
-            dcService: awilix.asClass(DCService).singleton(),
             dvService: awilix.asClass(DVService).singleton(),
+            profileService: awilix.asClass(ProfileService).singleton(),
             config: awilix.asValue(config),
             web3: awilix.asValue(web3),
             importer: awilix.asClass(Importer).singleton(),
@@ -151,6 +237,7 @@ class OTNode {
         const emitter = container.resolve('emitter');
         const dhService = container.resolve('dhService');
         const remoteControl = container.resolve('remoteControl');
+
         emitter.initialize();
 
         // Connecting to graph database
@@ -167,43 +254,33 @@ class OTNode {
             process.exit(1);
         }
 
-        // Initialise API
-        this.startRPC(emitter);
+        // Fetching Houston access password
+        models.node_config.findOne({ where: { key: 'houston_password' } }).then((res) => {
+            log.notify('================================================================');
+            log.notify(`Houston password: ${res.value}`);
+            log.notify('================================================================');
+        });
 
         // Starting the kademlia
         const network = container.resolve('network');
         const blockchain = container.resolve('blockchain');
 
         await network.initialize();
+        models.node_config.update({ value: config.identity }, { where: { key: 'node_kademlia_id' } });
         await blockchain.initialize();
 
         // check does node_wallet has sufficient Ether and ATRAC tokens
         if (process.env.NODE_ENV !== 'test') {
-            try {
-                const etherBalance = await Utilities.getBalanceInEthers();
-                if (etherBalance <= 0) {
-                    console.log('Please get some ETH in the node wallet before running ot-node');
-                    process.exit(1);
-                } else {
-                    (
-                        log.info(`Initial balance of ETH: ${etherBalance}`)
-                    );
-                }
-
-                const atracBalance = await Utilities.getAlphaTracTokenBalance();
-                if (atracBalance <= 0) {
-                    console.log('Please get some ATRAC in the node wallet before running ot-node');
-                    process.exit(1);
-                } else {
-                    (
-                        log.info(`Initial balance of ATRAC: ${atracBalance}`)
-                    );
-                }
-            } catch (error) {
-                console.log(error);
-            }
+            await this.getBalances(Utilities, selectedBlockchain, web3, config, true);
+            setInterval(async () => {
+                await this.getBalances(Utilities, selectedBlockchain, web3, config);
+            }, 1800000);
+        } else {
+            config.enoughFunds = true;
         }
 
+        // Initialise API
+        this.startRPC(emitter);
 
         // Starting event listener on Blockchain
         this.listenBlockchainEvents(blockchain);
@@ -223,6 +300,13 @@ class OTNode {
             log.info(`Remote control enabled and listening on port ${config.remote_control_port}`);
             await remoteControl.connect();
         }
+
+        const challenger = container.resolve('challenger');
+        await challenger.startChallenging();
+
+        const commandExecutor = container.resolve('commandExecutor');
+        await commandExecutor.init();
+        await commandExecutor.replay();
     }
 
     /**
@@ -265,10 +349,11 @@ class OTNode {
                 blockchain.getAllPastEvents('BIDDING_CONTRACT');
                 blockchain.getAllPastEvents('READING_CONTRACT');
                 blockchain.getAllPastEvents('ESCROW_CONTRACT');
+                blockchain.getAllPastEvents('HUB_CONTRACT');
                 deadline = Date.now() + delay;
                 working = false;
             }
-        }, 1000);
+        }, 5000);
     }
 
     /**
@@ -279,14 +364,28 @@ class OTNode {
         const profileInfo = await blockchain.getProfile(config.node_wallet);
         if (profileInfo.active) {
             log.info(`Profile has already been created for ${identity}`);
-            return;
+            if (
+                (new BN(profileInfo.token_amount_per_byte_minute)
+                    .eq(new BN(config.dh_price))) &&
+                (new BN(profileInfo.stake_amount_per_byte_minute)
+                    .eq(new BN(config.dh_stake_factor))) &&
+                (new BN(profileInfo.read_stake_factor)
+                    .eq(new BN(config.read_stake_factor))) &&
+                (new BN(profileInfo.max_escrow_time_in_minutes)
+                    .eq(new BN(config.dh_max_time_mins)))
+            ) {
+                return;
+            }
+
+            log.notify('Profile\'s config differs. Updating profile...');
+        } else {
+            log.notify(`Profile is being created for ${identity}. This could take a while...`);
         }
 
-        log.notify(`Profile is being created for ${identity}. This could take a while...`);
         await blockchain.createProfile(
             config.identity,
-            config.dh_price,
-            config.dh_stake_factor,
+            new BN(config.dh_price, 10),
+            new BN(config.dh_stake_factor, 10),
             config.read_stake_factor,
             config.dh_max_time_mins,
         );
@@ -361,6 +460,7 @@ class OTNode {
         server.listen(parseInt(config.node_rpc_port, 10), config.node_rpc_ip, () => {
             log.notify(`API exposed at  ${server.url}`);
         });
+
         if (!Utilities.isBootstrapNode()) {
             // register API routes only if the node is not bootstrap
             this.exposeAPIRoutes(server, emitter);
@@ -375,7 +475,7 @@ class OTNode {
             const request_ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
             const remote_access = config.remote_access_whitelist;
 
-            if (remote_access.find(ip => Utilities.isIpEqual(ip, request_ip)) === undefined) {
+            if (!remote_access.includes(request_ip)) {
                 res.status(403);
                 res.send({
                     message: 'Unauthorized request',
@@ -393,7 +493,7 @@ class OTNode {
          * @param importtype - (GS1/WOT)
          */
         server.post('/api/import', (req, res) => {
-            log.trace('POST Import request received.');
+            log.api('POST: Import of data request received.');
 
             if (!authorize(req, res)) {
                 return;
@@ -427,10 +527,11 @@ class OTNode {
                 const queryObject = {
                     filepath: inputFile,
                     contact: req.contact,
+                    replicate: req.body.replicate,
                     response: res,
                 };
 
-                emitter.emit(`${importtype}-import-request`, queryObject);
+                emitter.emit(`api-${importtype}-import-request`, queryObject);
             } else if (req.body.importfile !== undefined) {
                 // Check if import data is provided in request body
                 const fileData = req.body.importfile;
@@ -444,10 +545,11 @@ class OTNode {
                     const queryObject = {
                         filepath: inputFile,
                         contact: req.contact,
+                        replicate: req.body.replicate,
                         response: res,
                     };
 
-                    emitter.emit(`${importtype}-import-request`, queryObject);
+                    emitter.emit(`api-${importtype}-import-request`, queryObject);
                 });
             } else {
                 // No import data provided
@@ -459,31 +561,37 @@ class OTNode {
         });
 
         server.post('/api/replication', (req, res) => {
-            log.trace('POST Replication request received.');
+            log.api('POST: Replication of imported data request received.');
 
             if (!authorize(req, res)) {
                 return;
             }
 
-
-            if (req.body !== undefined && req.body.import_id !== undefined) {
+            if (req.body !== undefined && req.body.import_id !== undefined && typeof req.body.import_id === 'string' &&
+                Utilities.validateNumberParameter(req.body.total_escrow_time_in_minutes) &&
+                Utilities.validateStringParameter(req.body.max_token_amount_per_dh) &&
+                Utilities.validateStringParameter(req.body.dh_min_stake_amount) &&
+                Utilities.validateNumberParameterAllowZero(req.body.dh_min_reputation)) {
                 const queryObject = {
                     import_id: req.body.import_id,
-                    contact: req.contact,
+                    total_escrow_time: req.body.total_escrow_time_in_minutes * 60000,
+                    max_token_amount: req.body.max_token_amount_per_dh,
+                    min_stake_amount: req.body.dh_min_stake_amount,
+                    min_reputation: req.body.dh_min_reputation,
                     response: res,
                 };
-                emitter.emit('create-offer', queryObject);
+                emitter.emit('api-create-offer', queryObject);
             } else {
-                log.error('Invalid request. You need to provide import ID');
+                log.error('Invalid request');
                 res.status(400);
                 res.send({
-                    message: 'Import ID not provided!',
+                    message: 'Invalid parameters!',
                 });
             }
         });
 
         server.get('/api/replication/:replication_id', (req, res) => {
-            log.trace('GET Replication status request received');
+            log.api('GET: Replication status request received');
 
             if (!authorize(req, res)) {
                 return;
@@ -501,7 +609,7 @@ class OTNode {
                     external_id: externalId,
                     response: res,
                 };
-                emitter.emit('offer-status', queryObject);
+                emitter.emit('api-offer-status', queryObject);
             }
         });
 
@@ -510,9 +618,9 @@ class OTNode {
          * @param QueryObject - ex. {uid: abc:123}
          */
         server.get('/api/trail', (req, res) => {
-            log.trace('GET Trail request received.');
+            log.api('GET: Trail request received.');
             const queryObject = req.query;
-            emitter.emit('trail', {
+            emitter.emit('api-trail', {
                 query: queryObject,
                 response: res,
             });
@@ -522,31 +630,16 @@ class OTNode {
          * @param Query params: dc_wallet, import_id
          */
         server.get('/api/fingerprint', (req, res) => {
-            log.trace('GET Fingerprint request received.');
+            log.api('GET: Fingerprint request received.');
             const queryObject = req.query;
-            emitter.emit('get_root_hash', {
+            emitter.emit('api-get_root_hash', {
                 query: queryObject,
                 response: res,
             });
         });
 
-        server.get('/api/network/query_by_id', (req, res) => {
-            log.trace('GET Query by ID received.');
-
-            const queryObject = req.query;
-            const query = [{
-                path: 'identifiers.id',
-                value: queryObject.id,
-                opcode: 'EQ',
-            }];
-            emitter.emit('network-query', {
-                query,
-                response: res,
-            });
-        });
-
-        server.get('/api/network/query/:query_param', (req, res) => {
-            log.trace('GET Query for status request received.');
+        server.get('/api/query/network/:query_param', (req, res) => {
+            log.api('GET: Query for status request received.');
             if (!req.params.query_param) {
                 res.status(400);
                 res.send({
@@ -554,14 +647,29 @@ class OTNode {
                 });
                 return;
             }
-            emitter.emit('network-query-status', {
+            emitter.emit('api-network-query-status', {
                 id: req.params.query_param,
                 response: res,
             });
         });
 
-        server.post('/api/network/query', (req, res) => {
-            log.trace('POST Query request received.');
+        server.get('/api/query/:query_id/responses', (req, res) => {
+            log.api('GET: Local query responses request received.');
+            if (!req.params.query_id) {
+                res.status(400);
+                res.send({
+                    message: 'Param query_id is required.',
+                });
+                return;
+            }
+            emitter.emit('api-network-query-responses', {
+                query_id: req.params.query_id,
+                response: res,
+            });
+        });
+
+        server.post('/api/query/network', (req, res) => {
+            log.api('POST: Network query request received.');
             if (!req.body) {
                 res.status(400);
                 res.send({
@@ -570,33 +678,144 @@ class OTNode {
                 return;
             }
             const { query } = req.body;
-            emitter.emit('network-query', {
-                query,
-                response: res,
-            });
+            if (query) {
+                emitter.emit('api-network-query', {
+                    query,
+                    response: res,
+                });
+            } else {
+                res.status(400);
+                res.send({
+                    message: 'Query required',
+                });
+            }
         });
 
         /**
          * Get vertices by query
          * @param queryObject
          */
-        server.get('/api/query', (req, res) => {
-            log.trace('GET Query request received.');
-            const queryObject = req.query;
-            emitter.emit('query', {
+        server.post('/api/query/local', (req, res) => {
+            log.api('GET: Local query request received.');
+
+            if (req.body == null || req.body.query == null) {
+                res.status(400);
+                res.send({ message: 'Bad request' });
+                return;
+            }
+
+
+            // TODO: Decrypt returned vertices
+            const queryObject = req.body.query;
+            emitter.emit('api-query', {
                 query: queryObject,
                 response: res,
             });
         });
+
+        server.get('/api/query/local/import/:import_id', (req, res) => {
+            log.api('GET: Local import request received.');
+
+            if (!req.params.import_id) {
+                res.status(400);
+                res.send({
+                    message: 'Param required.',
+                });
+                return;
+            }
+
+            emitter.emit('api-query-local-import', {
+                import_id: req.params.import_id,
+                response: res,
+            });
+        });
+
+        server.post('/api/query/local/import', (req, res) => {
+            log.api('GET: Local query import request received.');
+
+            if (req.body == null || req.body.query == null) {
+                res.status(400);
+                res.send({ message: 'Bad request' });
+                return;
+            }
+
+            const queryObject = req.body.query;
+            emitter.emit('api-get-imports', {
+                query: queryObject,
+                response: res,
+            });
+        });
+
+
+        server.post('/api/read/network', (req, res) => {
+            log.api('POST: Network read request received.');
+
+            if (req.body == null || req.body.query_id == null || req.body.reply_id == null
+              || req.body.import_id == null) {
+                res.status(400);
+                res.send({ message: 'Bad request' });
+                return;
+            }
+            const { query_id, reply_id, import_id } = req.body;
+
+            emitter.emit('api-choose-offer', {
+                query_id,
+                reply_id,
+                import_id,
+                response: res,
+            });
+        });
+
+
+        server.post('/api/deposit', (req, res) => {
+            log.api('POST: Deposit tokens request received.');
+
+            if (req.body !== null && typeof req.body.atrac_amount === 'number'
+                && req.body.atrac_amount > 0) {
+                const { atrac_amount } = req.body;
+                emitter.emit('api-deposit-tokens', {
+                    atrac_amount,
+                    response: res,
+                });
+            } else {
+                res.status(400);
+                res.send({ message: 'Bad request' });
+            }
+        });
+
+
+        server.post('/api/withdraw', (req, res) => {
+            log.api('POST: Withdraw tokens request received.');
+
+            if (req.body !== null && typeof req.body.atrac_amount === 'number'
+                && req.body.atrac_amount > 0) {
+                const { atrac_amount } = req.body;
+                emitter.emit('api-withdraw-tokens', {
+                    atrac_amount,
+                    response: res,
+                });
+            } else {
+                res.status(400);
+                res.send({ message: 'Bad request' });
+            }
+        });
     }
 }
 
-console.log('===========================================');
-console.log(`         OriginTrail Node v${pjson.version}`);
-console.log('===========================================');
+
+console.log(' ██████╗ ████████╗███╗   ██╗ ██████╗ ██████╗ ███████╗');
+console.log('██╔═══██╗╚══██╔══╝████╗  ██║██╔═══██╗██╔══██╗██╔════╝');
+console.log('██║   ██║   ██║   ██╔██╗ ██║██║   ██║██║  ██║█████╗');
+console.log('██║   ██║   ██║   ██║╚██╗██║██║   ██║██║  ██║██╔══╝');
+console.log('╚██████╔╝   ██║   ██║ ╚████║╚██████╔╝██████╔╝███████╗');
+console.log(' ╚═════╝    ╚═╝   ╚═╝  ╚═══╝ ╚═════╝ ╚═════╝ ╚══════╝');
+
+console.log('======================================================');
+console.log(`             OriginTrail Node v${pjson.version}`);
+console.log('======================================================');
+console.log('');
 
 const otNode = new OTNode();
 otNode.bootstrap().then(() => {
     log.info('OT Node started');
 });
-
