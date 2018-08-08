@@ -23,9 +23,9 @@ const Graph = require('./modules/Graph');
 const Product = require('./modules/Product');
 
 const EventEmitter = require('./modules/EventEmitter');
-const DCService = require('./modules/DCService');
 const DHService = require('./modules/DHService');
 const DVService = require('./modules/DVService');
+const ProfileService = require('./modules/ProfileService');
 const DataReplication = require('./modules/DataReplication');
 
 const pjson = require('./package.json');
@@ -33,18 +33,81 @@ const pjson = require('./package.json');
 const log = Utilities.getLogger();
 const Web3 = require('web3');
 
+global.__basedir = __dirname;
+
 process.on('unhandledRejection', (reason, p) => {
     if (reason.message.startsWith('Invalid JSON RPC response')) {
         return;
     }
-    console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+    log.error(`Unhandled Rejection:\n${reason.stack}`);
     // application specific logging, throwing an error, or other logic here
+});
+
+process.on('uncaughtException', (err) => {
+    if (process.env.NODE_ENV === 'test') {
+        log.error(`Caught exception: ${err}.\n ${err.stack}`);
+        process.exit(1);
+    }
+    log.error(`Caught exception: ${err}.\n ${err.stack}`);
+});
+
+process.on('warning', (warning) => {
+    log.warn(warning.name);
+    log.warn(warning.message);
+    log.warn(warning.stack);
+});
+
+process.on('exit', (code) => {
+    if (code !== 0) {
+        log.error(`Whoops, terminating with code: ${code}`);
+    } else {
+        log.debug(`Normal exiting with code: ${code}`);
+    }
 });
 
 /**
  * Main node object
  */
 class OTNode {
+    async getBalances(Utilities, selectedBlockchain, web3, config, initial) {
+        let enoughETH = false;
+        let enoughtTRAC = false;
+        try {
+            const etherBalance = await Utilities.getBalanceInEthers(
+                web3,
+                selectedBlockchain.wallet_address,
+            );
+            if (etherBalance <= 0) {
+                console.log('Please get some ETH in the node wallet fore running ot-node');
+                enoughETH = false;
+                if (initial) {
+                    process.exit(1);
+                }
+            } else {
+                enoughETH = true;
+                log.info(`Balance of ETH: ${etherBalance}`);
+            }
+
+            const atracBalance = await Utilities.getAlphaTracTokenBalance(
+                web3,
+                selectedBlockchain.wallet_address,
+                selectedBlockchain.token_contract_address,
+            );
+            if (atracBalance <= 0) {
+                enoughtTRAC = false;
+                console.log('Please get some ATRAC in the node wallet fore running ot-node');
+                if (initial) {
+                    process.exit(1);
+                }
+            } else {
+                enoughtTRAC = true;
+                log.info(`Balance of ATRAC: ${atracBalance}`);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+        config.enoughFunds = enoughETH && enoughtTRAC;
+    }
     /**
      * OriginTrail node system bootstrap function
      */
@@ -75,6 +138,15 @@ class OTNode {
             process.exit(1);
         }
 
+        // check for Updates
+        try {
+            log.info('Checking for updates');
+            await Utilities.checkForUpdates();
+        } catch (err) {
+            console.log(err);
+            process.exit(1);
+        }
+
         if (Utilities.isBootstrapNode()) {
             await this.startBootstrapNode();
             this.startRPC();
@@ -87,6 +159,7 @@ class OTNode {
                 const responseFromArango = await Utilities.getArangoDbVersion();
                 log.info(`Arango server version ${responseFromArango.version} is up and running`);
             } catch (err) {
+                log.error('Please make sure Arango server is up and running');
                 console.log(err);
                 process.exit(1);
             }
@@ -131,14 +204,22 @@ class OTNode {
             injectionMode: awilix.InjectionMode.PROXY,
         });
 
+        container.loadModules(['modules/command/**/*.js', 'modules/controller/**/*.js'], {
+            formatName: 'camelCase',
+            resolverOptions: {
+                lifetime: awilix.Lifetime.SINGLETON,
+                register: awilix.asClass,
+            },
+        });
+
         container.register({
             emitter: awilix.asClass(EventEmitter).singleton(),
             network: awilix.asClass(Network).singleton(),
             graph: awilix.asClass(Graph).singleton(),
             product: awilix.asClass(Product).singleton(),
             dhService: awilix.asClass(DHService).singleton(),
-            dcService: awilix.asClass(DCService).singleton(),
             dvService: awilix.asClass(DVService).singleton(),
+            profileService: awilix.asClass(ProfileService).singleton(),
             config: awilix.asValue(config),
             web3: awilix.asValue(web3),
             importer: awilix.asClass(Importer).singleton(),
@@ -190,34 +271,13 @@ class OTNode {
 
         // check does node_wallet has sufficient Ether and ATRAC tokens
         if (process.env.NODE_ENV !== 'test') {
-            try {
-                const etherBalance = await Utilities.getBalanceInEthers(
-                    web3,
-                    selectedBlockchain.wallet_address,
-                );
-                if (etherBalance <= 0) {
-                    console.log('Please get some ETH in the node wallet before running ot-node');
-                    process.exit(1);
-                } else {
-                    (
-                        log.info(`Initial balance of ETH: ${etherBalance}`)
-                    );
-                }
-
-                const atracBalance = await blockchain.getAlphaTracTokenBalance();
-                if (atracBalance <= 0) {
-                    console.log('Please get some ATRAC in the node wallet before running ot-node');
-                    process.exit(1);
-                } else {
-                    (
-                        log.info(`Initial balance of ATRAC: ${atracBalance}`)
-                    );
-                }
-            } catch (error) {
-                console.log(error);
-            }
+            await this.getBalances(Utilities, selectedBlockchain, web3, config, true);
+            setInterval(async () => {
+                await this.getBalances(Utilities, selectedBlockchain, web3, config);
+            }, 1800000);
+        } else {
+            config.enoughFunds = true;
         }
-
 
         // Initialise API
         this.startRPC(emitter);
@@ -243,6 +303,10 @@ class OTNode {
 
         const challenger = container.resolve('challenger');
         await challenger.startChallenging();
+
+        const commandExecutor = container.resolve('commandExecutor');
+        await commandExecutor.init();
+        await commandExecutor.replay();
     }
 
     /**
@@ -300,10 +364,24 @@ class OTNode {
         const profileInfo = await blockchain.getProfile(config.node_wallet);
         if (profileInfo.active) {
             log.info(`Profile has already been created for ${identity}`);
-            return;
+            if (
+                (new BN(profileInfo.token_amount_per_byte_minute)
+                    .eq(new BN(config.dh_price))) &&
+                (new BN(profileInfo.stake_amount_per_byte_minute)
+                    .eq(new BN(config.dh_stake_factor))) &&
+                (new BN(profileInfo.read_stake_factor)
+                    .eq(new BN(config.read_stake_factor))) &&
+                (new BN(profileInfo.max_escrow_time_in_minutes)
+                    .eq(new BN(config.dh_max_time_mins)))
+            ) {
+                return;
+            }
+
+            log.notify('Profile\'s config differs. Updating profile...');
+        } else {
+            log.notify(`Profile is being created for ${identity}. This could take a while...`);
         }
 
-        log.notify(`Profile is being created for ${identity}. This could take a while...`);
         await blockchain.createProfile(
             config.identity,
             new BN(config.dh_price, 10),
@@ -493,7 +571,7 @@ class OTNode {
                 Utilities.validateNumberParameter(req.body.total_escrow_time_in_minutes) &&
                 Utilities.validateStringParameter(req.body.max_token_amount_per_dh) &&
                 Utilities.validateStringParameter(req.body.dh_min_stake_amount) &&
-                Utilities.validateNumberParameter(req.body.dh_min_reputation)) {
+                Utilities.validateNumberParameterAllowZero(req.body.dh_min_reputation)) {
                 const queryObject = {
                     import_id: req.body.import_id,
                     total_escrow_time: req.body.total_escrow_time_in_minutes * 60000,
@@ -686,6 +764,40 @@ class OTNode {
                 import_id,
                 response: res,
             });
+        });
+
+
+        server.post('/api/deposit', (req, res) => {
+            log.api('POST: Deposit tokens request received.');
+
+            if (req.body !== null && typeof req.body.atrac_amount === 'number'
+                && req.body.atrac_amount > 0) {
+                const { atrac_amount } = req.body;
+                emitter.emit('api-deposit-tokens', {
+                    atrac_amount,
+                    response: res,
+                });
+            } else {
+                res.status(400);
+                res.send({ message: 'Bad request' });
+            }
+        });
+
+
+        server.post('/api/withdraw', (req, res) => {
+            log.api('POST: Withdraw tokens request received.');
+
+            if (req.body !== null && typeof req.body.atrac_amount === 'number'
+                && req.body.atrac_amount > 0) {
+                const { atrac_amount } = req.body;
+                emitter.emit('api-withdraw-tokens', {
+                    atrac_amount,
+                    response: res,
+                });
+            } else {
+                res.status(400);
+                res.send({ message: 'Bad request' });
+            }
         });
     }
 }
