@@ -366,15 +366,13 @@ contract Bidding {
 
 	function chooseBids(bytes32 import_id) public returns (uint256[] chosen_data_holders){
 
-		uint256[] memory parameters = new uint256[](9);
+		uint256[] memory parameters;
 		require(biddingStorage.getOffer_active(import_id) && !biddingStorage.getOffer_finalized(import_id), "Offer state not valid (either inactive or finalized)");
 		parameters[0] = biddingStorage.getOffer_replication_factor(import_id); // replication_factor
 
 		require(parameters[0].mul(3).add(1) <= biddingStorage.getOffer_bid_array_length(import_id), "Not enough bids to finalize offer");
 		require(biddingStorage.getOffer_offer_creation_timestamp(import_id) + 1 seconds < block.timestamp, "Trying to finalize offer too soon"); // TODO Vrati ovo na minute
 		
-		chosen_data_holders = new uint256[](parameters[0].mul(2).add(1));
-
 		parameters[1] = 0; // uint256 bid_index;
 		parameters[2] = 0; // uint256 current_index;
 
@@ -481,7 +479,7 @@ contract Bidding {
 	public view returns (uint256 ranking) {
 		uint256 data_hash = uint256(uint128(biddingStorage.getOffer_data_hash(import_id)));
 		
-		uint256[] memory amounts = new uint256[](5);
+		uint256[] memory amounts;
 		amounts[0] = profileStorage.getProfile_token_amount_per_byte_minute(DH_wallet) * scope;
 		amounts[1] = profileStorage.getProfile_stake_amount_per_byte_minute(DH_wallet) * scope;
 		amounts[2] = biddingStorage.getOffer_max_token_amount_per_DH(import_id);
