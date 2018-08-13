@@ -88,7 +88,8 @@ module.exports = async (deployer, network, accounts) => {
         .then(result => profile = result);
         await hub.setProfileAddress(profile.address);
 
-        await deployer.deploy(BiddingTest, hub.address, { gas: 9000000, from: accounts[0] })
+
+        await deployer.deploy(Bidding, hub.address, { gas: 9000000, from: accounts[0] })
         .then(result => bidding = result);
         await hub.setBiddingAddress(bidding.address);
 
@@ -230,33 +231,72 @@ module.exports = async (deployer, network, accounts) => {
         });
         break;
     case 'rinkeby':
-        await Hub.at('0xaf810f20e36de6dd64eb8fa2e8fac51d085c1de3');
+    try{
+        let hub = await ContractHub.at('0x688c693ba63e661403dc8b3624289f6c61d1228d');
 
-        await deployer.deploy(Profile, hub.address, { gas: 9000000, from: accounts[0] })
+        let storages = [];
+        storages[0] = deployer.deploy(ProfileStorage, hub.address, { gas: 4500000, from: accounts[0] })
+        .then(result => profileStorage = result);
+
+        storages[1] = await deployer.deploy(BiddingStorage, hub.address, { gas: 4500000, from: accounts[0] })
+        .then(result => biddingStorage = result);
+
+        storages[2]  = await deployer.deploy(EscrowStorage, hub.address, { gas: 4500000, from: accounts[0] })
+        .then(result => escrowStorage = result);
+
+        storages[3]  = await deployer.deploy(LitigationStorage, hub.address, { gas: 4500000, from: accounts[0] })
+        .then(result => litigationStorage = result);
+
+        storages[4]  = await deployer.deploy(ReadingStorage, hub.address, { gas: 4500000, from: accounts[0] })
+        .then(result => readingStorage = result);
+        await Promise.all(storages);
+
+        let setStorages = [];  
+        setStorages[0] = hub.setProfileStorageAddress(profileStorage.address);
+        setStorages[1] = hub.setBiddingStorageAddress(biddingStorage.address);
+        setStorages[2] = hub.setEscrowStorageAddress(escrowStorage.address);
+        setStorages[3] = hub.setLitigationStorageAddress(litigationStorage.address);
+        setStorages[4] = hub.setReadingStorageAddress(readingStorage.address);
+        await Promise.all(setStorages);
+
+        let contracts = [];
+        contracts[0] = deployer.deploy(Profile, hub.address, { gas: 4500000, from: accounts[0] })
         .then(result => profile = result);
-        await hub.setProfileAddress(profile.address);
-
-        await deployer.deploy(Bidding, hub.address, { gas: 9000000, from: accounts[0] })
+        
+        contracts[1] = deployer.deploy(Bidding, hub.address, { gas: 6000000, from: accounts[0] })
         .then(result => bidding = result);
-        await hub.setBiddingAddress(bidding.address);
-
-        await deployer.deploy(EscrowHolder, hub.address, { gas: 9000000, from: accounts[0] })
+        
+        contracts[2] = deployer.deploy(EscrowHolder, hub.address, { gas: 4500000, from: accounts[0] })
         .then(result => escrow = result);
-        await hub.setEscrowAddress(escrow.address);
-
-        await deployer.deploy(Litigation, hub.address, { gas: 9000000, from: accounts[0] })
+        
+        contracts[3] = deployer.deploy(Litigation, hub.address, { gas: 4500000, from: accounts[0] })
         .then(result => litigation = result);
-        await hub.setLitigationAddress(litigation.address);
-
-        await deployer.deploy(Reading, hub.address, { gas: 9000000, from: accounts[0] })
+        
+        contracts[4] = deployer.deploy(Reading, hub.address, { gas: 4500000, from: accounts[0] })
         .then(result => reading = result);
-        await hub.setReadingAddress(reading.address);
+        await Promise.all(storages);
 
-        await bidding.initiate();
-        await escrow.initiate();
-        await litigation.initiate();
+        let setContracts = [];
+        setContracts[0] = hub.setProfileAddress(profile.address);
+        setContracts[1] = hub.setBiddingAddress(bidding.address);
+        setContracts[2] = hub.setEscrowAddress(escrow.address);
+        setContracts[3] = hub.setLitigationAddress(litigation.address);
+        setContracts[4] = hub.setReadingAddress(reading.address);
+        await Promise.all(setContracts);
 
+        let initiators = [];
+        initiators[0] = bidding.initiate()
+        initiators[1] = escrow.initiate()
+        initiators[2] = litigation.initiate();
+        await Promise.all(initiators);
+    }
+    catch(e){
+        console.log(e);
+    }
+    finally{
+        console.log("\t\t\tExiting");
         break;
+    }
     default:
         console.warn('Please use one of the following network identifiers: ganache, test, or rinkeby');
         break;
