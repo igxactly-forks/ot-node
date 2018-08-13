@@ -100,7 +100,7 @@ class Ethereum {
      * Initializing Ethereum blockchain contracts
      */
     async initialize(emitter) {
-        const blockchainModel = await Storage.models.blockchain_data.findOne({
+        const blockchainModel = await Models.blockchain_data.findOne({
             where: {
                 id: 1,
             },
@@ -950,10 +950,8 @@ class Ethereum {
             this.log.trace('Check if close enough ... ');
             this.storageContract.methods.getProfile_balance(importId).call({
                 from: this.config.wallet_address,
-            }).then((resultat) => {
-                res[0] = resultat
-                this.storageContract.methods.getProfile_ranking(importId).call({
-                from: this.config.wallet_address,
+            }).then((res) => {
+                resolve(res);
             }).catch((e) => {
                 reject(e);
             });
