@@ -50,27 +50,27 @@ module.exports = async (deployer, network, accounts) => {
         await deployer.deploy(ContractHub).then(result => hub = result);
         console.log(hub.address);
 
-        await deployer.deploy(ProfileStorage, hub.address, { gas: 9000000, from: accounts[0] })
+        await deployer.deploy(ProfileStorage, hub.address, { gas: 6000000, from: accounts[0] })
         .then(result => profileStorage = result);
         // console.log(profileStorage.address);
         await hub.setProfileStorageAddress(profileStorage.address);
 
-        await deployer.deploy(BiddingStorage, hub.address, { gas: 9000000, from: accounts[0] })
+        await deployer.deploy(BiddingStorage, hub.address, { gas: 6000000, from: accounts[0] })
         .then(result => biddingStorage = result);
         // console.log(biddingStorage.address);
         await hub.setBiddingStorageAddress(biddingStorage.address);
 
-        await deployer.deploy(EscrowStorage, hub.address, { gas: 9000000, from: accounts[0] })
+        await deployer.deploy(EscrowStorage, hub.address, { gas: 6000000, from: accounts[0] })
         .then(result => escrowStorage = result);
         // console.log(escrowStorage.address)
         await hub.setEscrowStorageAddress(escrowStorage.address);
 
-        await deployer.deploy(LitigationStorage, hub.address, { gas: 9000000, from: accounts[0] })
+        await deployer.deploy(LitigationStorage, hub.address, { gas: 6000000, from: accounts[0] })
         .then(result => litigationStorage = result);
         // console.log(litigationStorage.address);
         await hub.setLitigationStorageAddress(litigationStorage.address);
 
-        await deployer.deploy(ReadingStorage, hub.address, { gas: 9000000, from: accounts[0] })
+        await deployer.deploy(ReadingStorage, hub.address, { gas: 6000000, from: accounts[0] })
         .then(result => readingStorage = result);
         // console.log(readingStorage.address);
         await hub.setReadingStorageAddress(readingStorage.address, { from: accounts[0] });
@@ -84,24 +84,24 @@ module.exports = async (deployer, network, accounts) => {
         .then(result => fingerprint = result);
         await hub.setFingerprintAddress(fingerprint.address);
 
-        await deployer.deploy(Profile, hub.address, { gas: 9000000, from: accounts[0] })
+        await deployer.deploy(Profile, hub.address, { gas: 6000000, from: accounts[0] })
         .then(result => profile = result);
         await hub.setProfileAddress(profile.address);
 
 
-        await deployer.deploy(Bidding, hub.address, { gas: 9000000, from: accounts[0] })
+        const tx = await deployer.deploy(Bidding, hub.address, { gas: 6000000, from: accounts[0] })
         .then(result => bidding = result);
         await hub.setBiddingAddress(bidding.address);
 
-        await deployer.deploy(EscrowHolder, hub.address, { gas: 9000000, from: accounts[0] })
+        await deployer.deploy(EscrowHolder, hub.address, { gas: 6000000, from: accounts[0] })
         .then(result => escrow = result);
         await hub.setEscrowAddress(escrow.address);
 
-        await deployer.deploy(Litigation, hub.address, { gas: 9000000, from: accounts[0] })
+        await deployer.deploy(Litigation, hub.address, { gas: 6000000, from: accounts[0] })
         .then(result => litigation = result);
         await hub.setLitigationAddress(litigation.address);
 
-        await deployer.deploy(Reading, hub.address, { gas: 9000000, from: accounts[0] })
+        await deployer.deploy(Reading, hub.address, { gas: 6000000, from: accounts[0] })
         .then(result => reading = result);
         await hub.setReadingAddress(reading.address);
 
@@ -121,31 +121,31 @@ module.exports = async (deployer, network, accounts) => {
             deployer.deploy(TestingUtilities);
             deployer.deploy(ContractHub).then((result) => {
             hub = result;
-            deployer.deploy(ProfileStorage, hub.address, { gas: 9000000, from: accounts[0] })
+            deployer.deploy(ProfileStorage, hub.address, { gas: 6000000, from: accounts[0] })
         .then((result) => {
             profileStorage = result;
             // console.log(profileStorage.address);
             hub.setProfileStorageAddress(profileStorage.address)
         .then(() => {
-            deployer.deploy(BiddingStorage, hub.address, { gas: 9000000, from: accounts[0] })
+            deployer.deploy(BiddingStorage, hub.address, { gas: 6000000, from: accounts[0] })
         .then((result) => {
             biddingStorage = result;
             // console.log(biddingStorage.address);
             hub.setBiddingStorageAddress(biddingStorage.address)
         .then(() => {
-            deployer.deploy(EscrowStorage, hub.address, { gas: 9000000, from: accounts[0] })
+            deployer.deploy(EscrowStorage, hub.address, { gas: 6000000, from: accounts[0] })
         .then((result) => {
             escrowStorage = result;
             // console.log(escrowStorage.address)
             hub.setEscrowStorageAddress(escrowStorage.address)
         .then(() => {
-            deployer.deploy(LitigationStorage, hub.address, { gas: 9000000, from: accounts[0] })
+            deployer.deploy(LitigationStorage, hub.address, { gas: 6000000, from: accounts[0] })
         .then((result) => {
             litigationStorage = result;
             // console.log(litigationStorage.address);
             hub.setLitigationStorageAddress(litigationStorage.address)
         .then(() => {
-            deployer.deploy(ReadingStorage, hub.address, { gas: 9000000, from: accounts[0] })
+            deployer.deploy(ReadingStorage, hub.address, { gas: 6000000, from: accounts[0] })
         .then((result) => {
             readingStorage = result;
             // console.log(readingStorage.address);
@@ -161,27 +161,27 @@ module.exports = async (deployer, network, accounts) => {
             fingerprint = result;
             hub.setFingerprintAddress(fingerprint.address)
         .then(() => {
-            deployer.deploy(Profile, hub.address, { gas: 9000000, from: accounts[0] })
+            deployer.deploy(Profile, hub.address, { gas: 6000000, from: accounts[0] })
         .then((result) => {
             profile = result;
             hub.setProfileAddress(profile.address)
         .then(() => {
-            deployer.deploy(Bidding, hub.address, { gas: 10000000, from: accounts[0] })
+            deployer.deploy(Bidding, hub.address, { gas: 6000000, from: accounts[0] })
         .then((result) => {
             bidding = result;
             hub.setBiddingAddress(bidding.address)
         .then(() => {
-            deployer.deploy(EscrowHolder, hub.address, { gas: 9000000, from: accounts[0] })
+            deployer.deploy(EscrowHolder, hub.address, { gas: 6000000, from: accounts[0] })
         .then((result) => {
             escrow = result;
             hub.setEscrowAddress(escrow.address)
         .then(() => {
-            deployer.deploy(Litigation, hub.address, { gas: 9000000, from: accounts[0] })
+            deployer.deploy(Litigation, hub.address, { gas: 6000000, from: accounts[0] })
         .then((result) => {
             litigation = result;
             hub.setLitigationAddress(litigation.address)
         .then(() => {
-            deployer.deploy(Reading, hub.address, { gas: 9000000, from: accounts[0] })
+            deployer.deploy(Reading, hub.address, { gas: 6000000, from: accounts[0] })
         .then((result) => {
             reading = result;
             hub.setReadingAddress(reading.address)
@@ -235,19 +235,19 @@ module.exports = async (deployer, network, accounts) => {
         let hub = await ContractHub.at('0x688c693ba63e661403dc8b3624289f6c61d1228d');
 
         let storages = [];
-        storages[0] = deployer.deploy(ProfileStorage, hub.address, { gas: 4500000, from: accounts[0] })
+        storages[0] = deployer.deploy(ProfileStorage, hub.address, { gas: 6000000, from: accounts[0] })
         .then(result => profileStorage = result);
 
-        storages[1] = await deployer.deploy(BiddingStorage, hub.address, { gas: 4500000, from: accounts[0] })
+        storages[1] = deployer.deploy(BiddingStorage, hub.address, { gas: 6000000, from: accounts[0] })
         .then(result => biddingStorage = result);
 
-        storages[2]  = await deployer.deploy(EscrowStorage, hub.address, { gas: 4500000, from: accounts[0] })
+        storages[2] = deployer.deploy(EscrowStorage, hub.address, { gas: 6000000, from: accounts[0] })
         .then(result => escrowStorage = result);
 
-        storages[3]  = await deployer.deploy(LitigationStorage, hub.address, { gas: 4500000, from: accounts[0] })
+        storages[3] = deployer.deploy(LitigationStorage, hub.address, { gas: 6000000, from: accounts[0] })
         .then(result => litigationStorage = result);
 
-        storages[4]  = await deployer.deploy(ReadingStorage, hub.address, { gas: 4500000, from: accounts[0] })
+        storages[4] = deployer.deploy(ReadingStorage, hub.address, { gas: 6000000, from: accounts[0] })
         .then(result => readingStorage = result);
         await Promise.all(storages);
 
@@ -260,19 +260,19 @@ module.exports = async (deployer, network, accounts) => {
         await Promise.all(setStorages);
 
         let contracts = [];
-        contracts[0] = deployer.deploy(Profile, hub.address, { gas: 4500000, from: accounts[0] })
+        contracts[0] = deployer.deploy(Profile, hub.address, { gas: 6000000, from: accounts[0] })
         .then(result => profile = result);
         
         contracts[1] = deployer.deploy(Bidding, hub.address, { gas: 6000000, from: accounts[0] })
         .then(result => bidding = result);
         
-        contracts[2] = deployer.deploy(EscrowHolder, hub.address, { gas: 4500000, from: accounts[0] })
+        contracts[2] = deployer.deploy(EscrowHolder, hub.address, { gas: 6000000, from: accounts[0] })
         .then(result => escrow = result);
         
-        contracts[3] = deployer.deploy(Litigation, hub.address, { gas: 4500000, from: accounts[0] })
+        contracts[3] = deployer.deploy(Litigation, hub.address, { gas: 6000000, from: accounts[0] })
         .then(result => litigation = result);
         
-        contracts[4] = deployer.deploy(Reading, hub.address, { gas: 4500000, from: accounts[0] })
+        contracts[4] = deployer.deploy(Reading, hub.address, { gas: 6000000, from: accounts[0] })
         .then(result => reading = result);
         await Promise.all(storages);
 
@@ -294,7 +294,7 @@ module.exports = async (deployer, network, accounts) => {
         console.log(e);
     }
     finally{
-        console.log("\t\t\tExiting");
+        console.log("\t\t\t Exiting");
         break;
     }
     default:
