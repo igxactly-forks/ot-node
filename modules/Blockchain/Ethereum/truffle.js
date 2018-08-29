@@ -53,6 +53,7 @@ module.exports = {
             network_id: 4,
             gas: 4500000, // Gas limit used for deploys
             websockets: true,
+            skipDryRun: true,
         },
     },
 };
