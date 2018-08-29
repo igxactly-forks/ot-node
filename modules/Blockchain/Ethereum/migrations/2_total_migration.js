@@ -234,61 +234,56 @@ module.exports = async (deployer, network, accounts) => {
     try{
         let hub = await ContractHub.at('0x688c693ba63e661403dc8b3624289f6c61d1228d');
 
-        let storages = [];
-        storages[0] = deployer.deploy(ProfileStorage, hub.address, { gas: 6000000, from: accounts[0] })
-        .then(result => profileStorage = result);
+        profileStorage = await deployer.deploy(ProfileStorage, hub.address, { gas: 6000000, from: accounts[0] });
 
-        storages[1] = deployer.deploy(BiddingStorage, hub.address, { gas: 6000000, from: accounts[0] })
-        .then(result => biddingStorage = result);
+        biddingStorage = await deployer.deploy(BiddingStorage, hub.address, { gas: 6000000, from: accounts[0] });
 
-        storages[2] = deployer.deploy(EscrowStorage, hub.address, { gas: 6000000, from: accounts[0] })
-        .then(result => escrowStorage = result);
-
-        storages[3] = deployer.deploy(LitigationStorage, hub.address, { gas: 6000000, from: accounts[0] })
-        .then(result => litigationStorage = result);
-
-        storages[4] = deployer.deploy(ReadingStorage, hub.address, { gas: 6000000, from: accounts[0] })
-        .then(result => readingStorage = result);
-        await Promise.all(storages);
-
-        let setStorages = [];  
-        setStorages[0] = hub.setProfileStorageAddress(profileStorage.address);
-        setStorages[1] = hub.setBiddingStorageAddress(biddingStorage.address);
-        setStorages[2] = hub.setEscrowStorageAddress(escrowStorage.address);
-        setStorages[3] = hub.setLitigationStorageAddress(litigationStorage.address);
-        setStorages[4] = hub.setReadingStorageAddress(readingStorage.address);
-        await Promise.all(setStorages);
-
-        let contracts = [];
-        contracts[0] = deployer.deploy(Profile, hub.address, { gas: 6000000, from: accounts[0] })
-        .then(result => profile = result);
+        escrowStorage = await deployer.deploy(EscrowStorage, hub.address, { gas: 6000000, from: accounts[0] });
         
-        contracts[1] = deployer.deploy(Bidding, hub.address, { gas: 6000000, from: accounts[0] })
-        .then(result => bidding = result);
-        
-        contracts[2] = deployer.deploy(EscrowHolder, hub.address, { gas: 6000000, from: accounts[0] })
-        .then(result => escrow = result);
-        
-        contracts[3] = deployer.deploy(Litigation, hub.address, { gas: 6000000, from: accounts[0] })
-        .then(result => litigation = result);
-        
-        contracts[4] = deployer.deploy(Reading, hub.address, { gas: 6000000, from: accounts[0] })
-        .then(result => reading = result);
-        await Promise.all(storages);
+        litigationStorage = await deployer.deploy(LitigationStorage, hub.address, { gas: 6000000, from: accounts[0] });
 
-        let setContracts = [];
-        setContracts[0] = hub.setProfileAddress(profile.address);
-        setContracts[1] = hub.setBiddingAddress(bidding.address);
-        setContracts[2] = hub.setEscrowAddress(escrow.address);
-        setContracts[3] = hub.setLitigationAddress(litigation.address);
-        setContracts[4] = hub.setReadingAddress(reading.address);
-        await Promise.all(setContracts);
+        readingStorage = await deployer.deploy(ReadingStorage, hub.address, { gas: 6000000, from: accounts[0] });
 
-        let initiators = [];
-        initiators[0] = bidding.initiate()
-        initiators[1] = escrow.initiate()
-        initiators[2] = litigation.initiate();
-        await Promise.all(initiators);
+        console.log('\tSetting ProfileStorage address in ContractHub...');
+        await hub.setProfileStorageAddress(profileStorage.address);
+        console.log('\tSetting BiddingStorage address in ContractHub...');
+        await hub.setBiddingStorageAddress(biddingStorage.address);
+        console.log('\tSetting EscrowStorage address in ContractHub...');
+        await hub.setEscrowStorageAddress(escrowStorage.address);
+        console.log('\tSetting LitigationStorage address in ContractHub...');
+        await hub.setLitigationStorageAddress(litigationStorage.address);
+        console.log('\tSetting ReadingStorage address in ContractHub...');
+        await hub.setReadingStorageAddress(readingStorage.address);
+
+        profile = await deployer.deploy(Profile, hub.address, { gas: 6000000, from: accounts[0] });
+
+        bidding = await deployer.deploy(Bidding, hub.address, { gas: 6000000, from: accounts[0] });
+
+        escrow = await deployer.deploy(EscrowHolder, hub.address, { gas: 6000000, from: accounts[0] });
+
+        litigation = await deployer.deploy(Litigation, hub.address, { gas: 6000000, from: accounts[0] });
+
+        reading = await deployer.deploy(Reading, hub.address, { gas: 6000000, from: accounts[0] });
+
+        console.log('\tSetting Profile address in ContractHub...');
+        await hub.setProfileAddress(profile.address);
+        console.log('\tSetting Profile address in ContractHub...');
+        await hub.setBiddingAddress(bidding.address);
+        console.log('\tSetting Profile address in ContractHub...');
+        await hub.setEscrowAddress(escrow.address);
+        console.log('\tSetting Profile address in ContractHub...');
+        await hub.setLitigationAddress(litigation.address);
+        console.log('\tSetting Profile address in ContractHub...');
+        await hub.setReadingAddress(reading.address);
+
+        console.log('\tCalling initiate function for Bidding in ContractHub...');
+        await bidding.initiate()
+        console.log('\tCalling initiate function for Bidding in ContractHub...');
+        await escrow.initiate()
+        console.log('\tCalling initiate function for Bidding in ContractHub...');
+        await litigation.initiate();
+
+        console.log('\t\t New contracts deployed and set in hub successfully');
     }
     catch(e){
         console.log(e);
