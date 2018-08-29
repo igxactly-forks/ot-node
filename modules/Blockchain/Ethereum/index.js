@@ -110,7 +110,7 @@ class Ethereum {
         blockchainModel.profile_contract_address = await this.getProfileAddress();
         blockchainModel.bidding_contract_address = await this.getBiddingAddress();
         blockchainModel.escrow_contract_address = await this.getEscrowAddress();
-        blockchainModel.litigation_contract_address = await this.getLitigationddress();
+        blockchainModel.litigation_contract_address = await this.getLitigationAddress();
         blockchainModel.reading_contract_address = await this.getReadingAddress();
 
         blockchainModel.profile_storage_contract_address = await this.getProfileStorageAddress();
