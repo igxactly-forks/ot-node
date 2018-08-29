@@ -283,7 +283,7 @@ module.exports = async (deployer, network, accounts) => {
         console.log('\tCalling initiate function for Bidding in ContractHub...');
         await litigation.initiate();
 
-        console.log('\t\t New contracts deployed and set in hub successfully');
+        console.log('\n\n\t\t New contracts deployed and set in hub successfully');
     }
     catch(e){
         console.log(e);
