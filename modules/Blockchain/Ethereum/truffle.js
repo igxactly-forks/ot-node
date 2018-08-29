@@ -55,5 +55,15 @@ module.exports = {
             websockets: true,
             skipDryRun: true,
         },
+
+        hub: {
+            host: 'localhost', // Connect to geth on the specified
+            port: 8545,
+            provider: () => new HDWalletProvider(mnemonic, `https://rinkeby.infura.io/${process.env.RINKEBY_ACCESS_KEY}`),
+            network_id: 4,
+            gas: 4500000, // Gas limit used for deploys
+            websockets: true,
+            skipDryRun: true,
+        },
     },
 };

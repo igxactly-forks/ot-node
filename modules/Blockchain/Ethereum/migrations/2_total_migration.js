@@ -292,6 +292,9 @@ module.exports = async (deployer, network, accounts) => {
         console.log("\t\t\t Exiting");
         break;
     }
+    case "hub":
+        let hub = await deployer.deploy(ContractHub);
+        break;
     default:
         console.warn('Please use one of the following network identifiers: ganache, test, or rinkeby');
         break;
