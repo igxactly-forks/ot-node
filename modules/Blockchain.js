@@ -165,8 +165,8 @@ class Blockchain {
      * @param {number} - importId
      * @returns {Promise}
      */
-    cancelEscrow(dhWallet, importId) {
-        return this.blockchain.cancelEscrow(dhWallet, importId);
+    cancelEscrow(dhWallet, importId, dhIsSender) {
+        return this.blockchain.cancelEscrow(dhWallet, importId, dhIsSender);
     }
 
     /**
