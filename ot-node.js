@@ -167,7 +167,7 @@ function notifyEvent(message, metadata, subsystem) {
  * Main node object
  */
 class OTNode {
-    async getBalances(Utilities, selectedBlockchain, web3, config, initial) {
+    async getBalances(Utilities, selectedBlockchain, blockchain, web3, config, initial) {
         let enoughETH = false;
         let enoughtTRAC = false;
         try {
@@ -186,11 +186,7 @@ class OTNode {
                 log.info(`Balance of ETH: ${etherBalance}`);
             }
 
-            const atracBalance = await Utilities.getAlphaTracTokenBalance(
-                web3,
-                selectedBlockchain.wallet_address,
-                selectedBlockchain.token_contract_address,
-            );
+            const atracBalance = await blockchain.getAlphaTracTokenBalance();
             if (atracBalance <= 0) {
                 enoughtTRAC = false;
                 console.log('Please get some ATRAC in the node wallet fore running ot-node');
@@ -400,9 +396,9 @@ class OTNode {
 
         // check does node_wallet has sufficient Ether and ATRAC tokens
         if (process.env.NODE_ENV !== 'test') {
-            await this.getBalances(Utilities, selectedBlockchain, web3, config, true);
+            await this.getBalances(Utilities, selectedBlockchain, blockchain, web3, config, true);
             setInterval(async () => {
-                await this.getBalances(Utilities, selectedBlockchain, web3, config);
+                await this.getBalances(Utilities, selectedBlockchain, blockchain, web3, config);
             }, 1800000);
         } else {
             config.enoughFunds = true;
@@ -477,9 +473,11 @@ class OTNode {
         setInterval(() => {
             if (!working && Date.now() > deadline) {
                 working = true;
+                blockchain.getAllPastEvents('PROFILE_CONTRACT');
                 blockchain.getAllPastEvents('BIDDING_CONTRACT');
                 blockchain.getAllPastEvents('READING_CONTRACT');
                 blockchain.getAllPastEvents('ESCROW_CONTRACT');
+                blockchain.getAllPastEvents('LITIGATION_CONTRACT');
                 blockchain.getAllPastEvents('HUB_CONTRACT');
                 deadline = Date.now() + delay;
                 working = false;
@@ -521,13 +519,13 @@ class OTNode {
             config.dh_max_time_mins,
         );
         const event = await blockchain.subscribeToEvent('ProfileCreated', null, 5 * 60 * 1000, null, (eventData) => {
-            if (eventData.node_id) {
-                return eventData.node_id.includes(identity);
+            if (eventData.wallet) {
+                return eventData.wallet.includes(config.node_wallet);
             }
             return false;
         });
         if (event) {
-            log.notify(`Profile created for node ${identity}`);
+            log.notify(`Profile created for node ${config.node_wallet}`);
         } else {
             log.error('Profile could not be confirmed in timely manner. Please, try again later.');
             process.exit(1);
