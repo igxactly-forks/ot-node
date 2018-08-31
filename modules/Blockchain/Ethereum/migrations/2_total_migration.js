@@ -47,62 +47,50 @@ const recepients = [];
 module.exports = async (deployer, network, accounts) => {
     switch (network) {
     case 'ganache':
-        await deployer.deploy(ContractHub).then(result => hub = result);
-        console.log(hub.address);
+        let hub = await deployer.deploy(ContractHub).then( () => console.log("NEJKARNFDJKSAFNKLDSJFDLK"));
+        // console.log(hub.address);
 
-        await deployer.deploy(ProfileStorage, hub.address, { gas: 6000000, from: accounts[0] })
-        .then(result => profileStorage = result);
+        profileStorage = await deployer.deploy(ProfileStorage, hub.address, { gas: 6000000, from: accounts[0] });
         // console.log(profileStorage.address);
         await hub.setProfileStorageAddress(profileStorage.address);
 
-        await deployer.deploy(BiddingStorage, hub.address, { gas: 6000000, from: accounts[0] })
-        .then(result => biddingStorage = result);
+        biddingStorage = await deployer.deploy(BiddingStorage, hub.address, { gas: 6000000, from: accounts[0] });
         // console.log(biddingStorage.address);
         await hub.setBiddingStorageAddress(biddingStorage.address);
 
-        await deployer.deploy(EscrowStorage, hub.address, { gas: 6000000, from: accounts[0] })
-        .then(result => escrowStorage = result);
+        escrowStorage = await deployer.deploy(EscrowStorage, hub.address, { gas: 6000000, from: accounts[0] });
         // console.log(escrowStorage.address)
         await hub.setEscrowStorageAddress(escrowStorage.address);
 
-        await deployer.deploy(LitigationStorage, hub.address, { gas: 6000000, from: accounts[0] })
-        .then(result => litigationStorage = result);
+        litigationStorage = await deployer.deploy(LitigationStorage, hub.address, { gas: 6000000, from: accounts[0] });
         // console.log(litigationStorage.address);
         await hub.setLitigationStorageAddress(litigationStorage.address);
 
-        await deployer.deploy(ReadingStorage, hub.address, { gas: 6000000, from: accounts[0] })
-        .then(result => readingStorage = result);
+        readingStorage = await deployer.deploy(ReadingStorage, hub.address, { gas: 6000000, from: accounts[0] });
         // console.log(readingStorage.address);
         await hub.setReadingStorageAddress(readingStorage.address, { from: accounts[0] });
 
 
-        await deployer.deploy(TracToken, accounts[0], accounts[1], accounts[2])
-        .then(result => token = result);
+        token = await deployer.deploy(TracToken, accounts[0], accounts[1], accounts[2]);
         await hub.setTokenAddress(token.address);
 
-        await deployer.deploy(OTFingerprintStore)
-        .then(result => fingerprint = result);
+        fingerprint = await deployer.deploy(OTFingerprintStore);
         await hub.setFingerprintAddress(fingerprint.address);
 
-        await deployer.deploy(Profile, hub.address, { gas: 6000000, from: accounts[0] })
-        .then(result => profile = result);
+        profile = await deployer.deploy(Profile, hub.address, { gas: 6000000, from: accounts[0] });
         await hub.setProfileAddress(profile.address);
 
 
-        const tx = await deployer.deploy(Bidding, hub.address, { gas: 6000000, from: accounts[0] })
-        .then(result => bidding = result);
+        bidding = await deployer.deploy(Bidding, hub.address, { gas: 6000000, from: accounts[0] });
         await hub.setBiddingAddress(bidding.address);
 
-        await deployer.deploy(EscrowHolder, hub.address, { gas: 6000000, from: accounts[0] })
-        .then(result => escrow = result);
+        escrow = await deployer.deploy(EscrowHolder, hub.address, { gas: 6000000, from: accounts[0] });
         await hub.setEscrowAddress(escrow.address);
 
-        await deployer.deploy(Litigation, hub.address, { gas: 6000000, from: accounts[0] })
-        .then(result => litigation = result);
+        litigation = await deployer.deploy(Litigation, hub.address, { gas: 6000000, from: accounts[0] });
         await hub.setLitigationAddress(litigation.address);
 
-        await deployer.deploy(Reading, hub.address, { gas: 6000000, from: accounts[0] })
-        .then(result => reading = result);
+        reading = await deployer.deploy(Reading, hub.address, { gas: 6000000, from: accounts[0] });
         await hub.setReadingAddress(reading.address);
 
         await bidding.initiate();
