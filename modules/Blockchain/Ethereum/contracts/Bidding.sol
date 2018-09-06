@@ -1,25 +1,25 @@
 pragma solidity ^0.4.23;
 
 library MyMath {
-	function mul(uint256 a, uint256 b) internal pure returns (uint256) {
+	function muls(uint256 a, uint256 b) internal pure returns (uint256) {
 		uint256 c = a * b;
 		assert(a == 0 || c / a == b);
 		return c;
 	}
 
-	function div(uint256 a, uint256 b) internal pure returns (uint256) {
+	function divs(uint256 a, uint256 b) internal pure returns (uint256) {
 		// assert(b > 0); // Solidity automatically throws when dividing by 0
 		uint256 c = a / b;
 		// assert(a == b * c + a % b); // There is no case in which this doesn't hold
 		return c;
 	}
 
-	function sub(uint256 a, uint256 b) internal pure returns (uint256) {
+	function subs(uint256 a, uint256 b) internal pure returns (uint256) {
 		assert(b <= a);
 		return a - b;
 	}
 
-	function add(uint256 a, uint256 b) internal pure returns (uint256) {
+	function adds(uint256 a, uint256 b) internal pure returns (uint256) {
 		uint256 c = a + b;
 		assert(c >= a);
 		return c;
@@ -88,7 +88,8 @@ contract ProfileStorage {
 }
 
 contract BiddingStorage {
-	
+	enum OfferStatus {inactive, active, cancelled, finalized}
+
 	function getOffer_DC_wallet(bytes32 import_id) public view returns(address);
 	function getOffer_max_token_amount_per_DH(bytes32 import_id) public view returns(uint);
 	function getOffer_min_stake_amount_per_DH(bytes32 import_id) public view returns(uint);
@@ -100,9 +101,9 @@ contract BiddingStorage {
 	function getOffer_first_bid_index(bytes32 import_id) public view returns(uint);
 	function getOffer_bid_array_length(bytes32 import_id) public view returns(uint);
 	function getOffer_replication_factor(bytes32 import_id) public view returns(uint);
+	function getOffer_replication_modifier(bytes32 import_id) public view returns(uint);
 	function getOffer_offer_creation_timestamp(bytes32 import_id) public view returns(uint);
-	function getOffer_active(bytes32 import_id) public view returns(bool);
-	function getOffer_finalized(bytes32 import_id) public view returns(bool);
+	function getOffer_status(bytes32 import_id) public view returns(OfferStatus);
 
 	function setOffer_DC_wallet(bytes32 import_id, address DC_wallet) public;
 	function setOffer_max_token_amount_per_DH(bytes32 import_id, uint max_token_amount_per_DH) public;
@@ -115,9 +116,9 @@ contract BiddingStorage {
 	function setOffer_first_bid_index(bytes32 import_id, uint first_bid_index) public;
 	function setOffer_bid_array_length(bytes32 import_id, uint bid_array_length) public;
 	function setOffer_replication_factor(bytes32 import_id, uint replication_factor) public;
+	function setOffer_replication_modifier(bytes32 import_id, uint replication_modifier) public;
 	function setOffer_offer_creation_timestamp(bytes32 import_id, uint offer_creation_timestamp) public;
-	function setOffer_active(bytes32 import_id, bool active) public;
-	function setOffer_finalized(bytes32 import_id, bool finalized) public;
+	function setOffer_status(bytes32 import_id, OfferStatus status) public;
 
 	function getBid_DH_wallet(bytes32 import_id, uint bid_index) public view returns (address);
 	function getBid_DH_node_id(bytes32 import_id, uint bid_index) public view returns (bytes32);
@@ -147,6 +148,7 @@ contract Bidding {
 
 	ProfileStorage public profileStorage;
 	BiddingStorage public biddingStorage;
+	uint256 replication_modifier;
 
 	constructor(address hub_address)
 	public{
@@ -157,6 +159,7 @@ contract Bidding {
 	function initiate() public {
 		profileStorage = ProfileStorage(hub.profileStorageAddress());
 		biddingStorage = BiddingStorage(hub.biddingStorageAddress());
+		replication_modifier = 1;
 	}
 
 	/*    ----------------------------- EVENTS -----------------------------     */
@@ -192,14 +195,14 @@ contract Bidding {
 		address[] predetermined_DH_wallet,
 		bytes32[] predetermined_DH_node_id)
 	public {
-		require(biddingStorage.getOffer_active(import_id) == false);
+		require(biddingStorage.getOffer_status(import_id) == BiddingStorage.OfferStatus.active);
 		require(max_token_amount_per_DH > 0 && total_escrow_time_in_minutes > 0 && data_size_in_bytes > 0);
 
 
 		uint DC_balance = profileStorage.getProfile_balance(msg.sender);
-		require(DC_balance >= max_token_amount_per_DH.mul(predetermined_DH_wallet.length.mul(2).add(1)));
+		require(DC_balance >= max_token_amount_per_DH.muls(predetermined_DH_wallet.length.muls(2).adds(replication_modifier)));
 		
-		DC_balance = DC_balance.sub(max_token_amount_per_DH.mul(predetermined_DH_wallet.length.mul(2).add(1)));
+		DC_balance = DC_balance.subs(max_token_amount_per_DH.muls(predetermined_DH_wallet.length.muls(2).adds(replication_modifier)));
 		profileStorage.setProfile_balance(msg.sender, DC_balance);
 
 		//Writing the predetermined DC into the bid list
@@ -221,9 +224,9 @@ contract Bidding {
 		biddingStorage.setOffer_first_bid_index(import_id, uint(-1));
 		biddingStorage.setOffer_bid_array_length(import_id, predetermined_DH_wallet.length);
 		biddingStorage.setOffer_replication_factor(import_id, predetermined_DH_wallet.length);
+		biddingStorage.setOffer_replication_modifier(import_id, replication_modifier);
 		biddingStorage.setOffer_offer_creation_timestamp(import_id, block.timestamp);
-		biddingStorage.setOffer_active(import_id, true);
-		biddingStorage.setOffer_finalized(import_id, false);
+		biddingStorage.setOffer_status(import_id, BiddingStorage.OfferStatus.active);
 
 		emit OfferCreated(import_id, DC_node_id, total_escrow_time_in_minutes, 
 			max_token_amount_per_DH, min_stake_amount_per_DH, min_reputation,
@@ -233,20 +236,19 @@ contract Bidding {
 	function cancelOffer(bytes32 import_id)
 	public{
 		
-		require(biddingStorage.getOffer_active(import_id) 
-			&& biddingStorage.getOffer_DC_wallet(import_id) == msg.sender 
-			&& biddingStorage.getOffer_finalized(import_id) == false);
+		require(biddingStorage.getOffer_status(import_id) == BiddingStorage.OfferStatus.active, "Offer not active!");
+		require(biddingStorage.getOffer_DC_wallet(import_id) == msg.sender, "Sender not offer creator!");
 
 		uint max_token_amount_per_DH = biddingStorage.getOffer_max_token_amount_per_DH(import_id);
 		uint replication_factor = biddingStorage.getOffer_replication_factor(import_id);
-
+		uint this_replication_modifier = biddingStorage.getOffer_replication_modifier(import_id);
 		// Returns the alloted token amount back to DC
-		uint max_total_token_amount = max_token_amount_per_DH.mul(replication_factor.mul(2).add(1));
-		uint DC_balance = profileStorage.getProfile_balance(msg.sender);
-		DC_balance = DC_balance.add(max_total_token_amount);
+		uint max_total_token_amount = max_token_amount_per_DH.muls(replication_factor.muls(2).adds(this_replication_modifier));
+		uint256 DC_balance = profileStorage.getProfile_balance(msg.sender);
+		DC_balance = DC_balance.adds(max_total_token_amount);
 		profileStorage.setProfile_balance(msg.sender, DC_balance);
 
-		biddingStorage.setOffer_active(import_id, false);
+		biddingStorage.setOffer_status(import_id, BiddingStorage.OfferStatus.cancelled);
 		emit OfferCanceled(import_id);
 	}
 
@@ -258,8 +260,8 @@ contract Bidding {
 
 		//Check if the the DH meets the filters DC set for the offer
 		uint scope = biddingStorage.getOffer_total_escrow_time_in_minutes(import_id) * biddingStorage.getOffer_data_size_in_bytes(import_id);
-		uint token_amount_for_escrow = profileStorage.getProfile_token_amount_per_byte_minute(msg.sender).mul(scope);
-		uint stake_amount_for_escrow = profileStorage.getProfile_stake_amount_per_byte_minute(msg.sender).mul(scope);
+		uint token_amount_for_escrow = profileStorage.getProfile_token_amount_per_byte_minute(msg.sender).muls(scope);
+		uint stake_amount_for_escrow = profileStorage.getProfile_stake_amount_per_byte_minute(msg.sender).muls(scope);
 
 		//Write the required data for the bid
 		biddingStorage.setBid(import_id, bid_index, msg.sender, DH_node_id, 
@@ -268,7 +270,7 @@ contract Bidding {
 	}
 
 	function bidRequirements(bytes32 import_id, address wallet) internal view returns(bool passed_requirements) {
-		require(biddingStorage.getOffer_active(import_id) && !biddingStorage.getOffer_finalized(import_id));
+		require(biddingStorage.getOffer_status(import_id) == BiddingStorage.OfferStatus.active, "Offer not active!");
 
 		uint max_token_amount_per_DH = biddingStorage.getOffer_max_token_amount_per_DH(import_id);
 		uint min_stake_amount_per_DH = biddingStorage.getOffer_min_stake_amount_per_DH(import_id);
@@ -281,7 +283,7 @@ contract Bidding {
 		uint max_escrow_time_in_minutes = profileStorage.getProfile_max_escrow_time_in_minutes(wallet);
 
 		//Check if the the DH meets the filters DC set for the offer
-		uint scope = data_size_in_bytes.mul(total_escrow_time_in_minutes);
+		uint scope = data_size_in_bytes.muls(total_escrow_time_in_minutes);
 		if(total_escrow_time_in_minutes > max_escrow_time_in_minutes) return false;
 		if(max_token_amount_per_DH  < token_amount_per_byte_minute * scope) return false;
 		if(min_stake_amount_per_DH  > stake_amount_per_byte_minute * scope) return false;
@@ -296,8 +298,8 @@ contract Bidding {
 		require(biddingStorage.getOffer_min_reputation(import_id) <= profileStorage.getProfile_reputation(msg.sender), "DH reputation too low");
 
 		uint256 scope = biddingStorage.getOffer_data_size_in_bytes(import_id) * biddingStorage.getOffer_total_escrow_time_in_minutes(import_id);
-		uint256 token_amount_for_escrow = profileStorage.getProfile_token_amount_per_byte_minute(msg.sender).mul(scope);
-		uint256 stake_amount_for_escrow = profileStorage.getProfile_stake_amount_per_byte_minute(msg.sender).mul(scope);
+		uint256 token_amount_for_escrow = profileStorage.getProfile_token_amount_per_byte_minute(msg.sender).muls(scope);
+		uint256 stake_amount_for_escrow = profileStorage.getProfile_stake_amount_per_byte_minute(msg.sender).muls(scope);
 
 		uint this_bid_index = biddingStorage.getOffer_bid_array_length(import_id);
 		
@@ -353,7 +355,7 @@ contract Bidding {
 		// Update offer
 		biddingStorage.setOffer_bid_array_length(import_id, this_bid_index + 1);
 		uint replication_factor = biddingStorage.getOffer_replication_factor(import_id);
-		if(this_bid_index + 1 >= replication_factor.mul(3).add(1)) emit FinalizeOfferReady(import_id);
+		if(this_bid_index + 1 >= replication_factor.muls(3).adds(biddingStorage.getOffer_replication_modifier(import_id))) emit FinalizeOfferReady(import_id);
 
 		emit AddedBid(import_id, msg.sender, DH_node_id, this_bid_index);
 	}
@@ -367,18 +369,19 @@ contract Bidding {
 	function chooseBids(bytes32 import_id) public returns (uint256[] chosen_data_holders){
 
 		uint256[] memory parameters;
-		require(biddingStorage.getOffer_active(import_id) && !biddingStorage.getOffer_finalized(import_id), "Offer state not valid (either inactive or finalized)");
+		require(biddingStorage.getOffer_status(import_id) == BiddingStorage.OfferStatus.active, "Offer not active!");
 		parameters[0] = biddingStorage.getOffer_replication_factor(import_id); // replication_factor
+		parameters[9] = biddingStorage.getOffer_replication_modifier(import_id);  // replication_modifier
 
-		require(parameters[0].mul(3).add(1) <= biddingStorage.getOffer_bid_array_length(import_id), "Not enough bids to finalize offer");
+		require(parameters[0].muls(3).adds(parameters[9]) <= biddingStorage.getOffer_bid_array_length(import_id), "Not enough bids to finalize offer");
 		require(biddingStorage.getOffer_offer_creation_timestamp(import_id) + 1 seconds < block.timestamp, "Trying to finalize offer too soon"); // TODO Vrati ovo na minute
 		
 		parameters[1] = 0; // uint256 bid_index;
 		parameters[2] = 0; // uint256 current_index;
 
 		parameters[3] = 0; // uint256 token_amount_sent = 0;
-		parameters[4] = biddingStorage.getOffer_max_token_amount_per_DH(import_id).mul(parameters[0].mul(2).add(1)); 
-		// uint256 max_total_token_amount = biddingStorage.getOffer_max_token_amount_per_DH(import_id).mul(parameters[0].mul(2).add(1));
+		parameters[4] = biddingStorage.getOffer_max_token_amount_per_DH(import_id).muls(parameters[0].muls(2).adds(parameters[9])); 
+		// uint256 max_total_token_amount = biddingStorage.getOffer_max_token_amount_per_DH(import_id).muls(parameters[0].muls(2).adds(1));
 
 		parameters[5] = 0; // token_amount_for_escrow
 		parameters[6] = 0; // stake_amount_for_escrow
@@ -397,7 +400,7 @@ contract Bidding {
 				escrow.initiateEscrow(msg.sender, biddingStorage.getBid_DH_wallet(import_id, parameters[1]), import_id, 
 					parameters[5], parameters[6], parameters[7], parameters[8]);
 
-				parameters[3] = parameters[3].add(parameters[5]);
+				parameters[3] = parameters[3].adds(parameters[5]);
 
 				biddingStorage.setBid_chosen(import_id, parameters[1], true);
 				chosen_data_holders[parameters[2]] = parameters[1];
@@ -409,7 +412,7 @@ contract Bidding {
 
 		//Sending escrow requests to network bids
 		parameters[1] = biddingStorage.getOffer_first_bid_index(import_id);
-		while(parameters[2] < parameters[0].mul(2).add(1)) {
+		while(parameters[2] < parameters[0].muls(2).adds(parameters[9])) {
 			uint256 next_bid = biddingStorage.getBid_next_bid_index(import_id, parameters[1]);
 
 			while(parameters[1] != uint(-1) && !biddingStorage.getBid_active(import_id, parameters[1])){
@@ -427,7 +430,7 @@ contract Bidding {
 				escrow.initiateEscrow(msg.sender, biddingStorage.getBid_DH_wallet(import_id, parameters[1]), import_id, 
 					parameters[5], parameters[6], parameters[7], parameters[8]);
 
-				parameters[3] = parameters[3].add(parameters[5]);
+				parameters[3] = parameters[3].adds(parameters[5]);
 
 				// Set bid to chosen
 				biddingStorage.setBid_chosen(import_id, parameters[1], true);
@@ -445,12 +448,12 @@ contract Bidding {
 
 		}
 
-		// Update offer (set finalized flag to true)
-		biddingStorage.setOffer_finalized(import_id, true);
+		// Update offer (set status to finalized)
+		biddingStorage.setOffer_status(import_id, BiddingStorage.OfferStatus.finalized);
 
 		// Return the unused tokens back to DC
 		uint DC_balance = profileStorage.getProfile_balance(msg.sender);
-		DC_balance = DC_balance.add(parameters[4].sub(parameters[3]));
+		DC_balance = DC_balance.adds(parameters[4].subs(parameters[3]));
 		profileStorage.setProfile_balance(msg.sender, DC_balance);
 		
 		emit OfferFinalized(import_id); 
