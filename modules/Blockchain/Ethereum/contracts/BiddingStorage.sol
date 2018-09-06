@@ -1,48 +1,11 @@
 pragma solidity ^0.4.23;
 
-/**
-* @title Ownable
-* @dev The Ownable contract has an owner address, and provides basic authorization control
-* functions, this simplifies the implementation of "user permissions".
-*/
-contract Ownable {
-	address public owner;
-
-	event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-
-    /**
-    * @dev The Ownable constructor sets the original `owner` of the contract to the sender
-    * account.
-    */
-    constructor () public {
-    	owner = msg.sender;
-    }
-
-    /**
-    * @dev Throws if called by any account other than the owner.
-    */
-    modifier onlyOwner() {
-    	require(msg.sender == owner);
-    	_;
-    }
-
-    /**
-    * @dev Allows the current owner to transfer control of the contract to a newOwner.
-    * @param newOwner The address to transfer ownership to.
-    */
-    function transferOwnership(address newOwner) public onlyOwner {
-    	require(newOwner != address(0));
-    	emit OwnershipTransferred(owner, newOwner);
-    	owner = newOwner;
-    }
-}
-
-
-contract ContractHub is Ownable {
+contract ContractHub {
 	address public biddingAddress;
+	address public owner;
 }
 
-contract BiddingStorage is Ownable{
+contract BiddingStorage {
 	ContractHub public hub;
 
 	constructor(address hub_address) public {
@@ -52,14 +15,14 @@ contract BiddingStorage is Ownable{
 
 	modifier onlyContracts() {
 		require(
-			msg.sender == hub.owner()
-			|| msg.sender == hub.biddingAddress());
+			msg.sender == hub.owner() || msg.sender == hub.biddingAddress());
 		_;
 	}
 
 	event OfferChange(bytes32 import_id);
 	event BidChange(bytes32 import_id, uint bid_index);
 	
+	enum OfferStatus {inactive, active, cancelled, finalized}
 	struct OfferDefinition{
 		address DC_wallet;
 
@@ -79,11 +42,12 @@ contract BiddingStorage is Ownable{
 		uint bid_array_length;
 
 		uint replication_factor;
-		
+		uint replication_modifier;
+
 		uint256 offer_creation_timestamp;
-		bool active;
-		bool finalized;
+		OfferStatus status;
 	}
+
 	mapping(bytes32 => OfferDefinition) public offer; // offer[import_id]
 
 	function getOffer_DC_wallet(bytes32 import_id) public view returns(address) {
@@ -122,11 +86,11 @@ contract BiddingStorage is Ownable{
 	function getOffer_offer_creation_timestamp(bytes32 import_id) public view returns(uint) {
 		return offer[import_id].offer_creation_timestamp;
 	}
-	function getOffer_active(bytes32 import_id) public view returns(bool) {
-		return offer[import_id].active;
+	function getOffer_status(bytes32 import_id) public view returns(OfferStatus) {
+		return offer[import_id].status;
 	}
-	function getOffer_finalized(bytes32 import_id) public view returns(bool) {
-		return offer[import_id].finalized;
+	function getOffer_replication_modifier(bytes32 import_id) public view returns(uint256){
+		return offer[import_id].replication_modifier;
 	}
 	
 	
@@ -207,6 +171,13 @@ contract BiddingStorage is Ownable{
 
 		emit OfferChange(import_id);
 	}
+	function setOffer_replication_modifier(bytes32 import_id, uint replication_modifier) 
+	public onlyContracts{
+		if(offer[import_id].replication_modifier != replication_modifier)
+		offer[import_id].replication_modifier = replication_modifier;
+
+		emit OfferChange(import_id);
+	}
 	function setOffer_offer_creation_timestamp(bytes32 import_id, uint offer_creation_timestamp) 
 	public onlyContracts{
 		if(offer[import_id].offer_creation_timestamp != offer_creation_timestamp)
@@ -214,17 +185,10 @@ contract BiddingStorage is Ownable{
 
 		emit OfferChange(import_id);
 	}
-	function setOffer_active(bytes32 import_id, bool active) 
+	function setOffer_status(bytes32 import_id, OfferStatus status) 
 	public onlyContracts{
-		if(offer[import_id].active != active)
-		offer[import_id].active = active;
-
-		emit OfferChange(import_id);
-	}
-	function setOffer_finalized(bytes32 import_id, bool finalized) 
-	public onlyContracts{
-		if(offer[import_id].finalized != finalized)
-		offer[import_id].finalized = finalized;
+		if(offer[import_id].status != status)
+		offer[import_id].status = status;
 
 		emit OfferChange(import_id);
 	}
