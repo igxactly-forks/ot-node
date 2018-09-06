@@ -1,5 +1,6 @@
 /* eslint indent: 0 */
 /* eslint-disable max-len, no-undef */
+var BN = require('BN.js');
 var TracToken = artifacts.require('TracToken');
 var OTFingerprintStore = artifacts.require('OTFingerprintStore');
 
@@ -20,34 +21,35 @@ var LitigationStorage = artifacts.require('LitigationStorage');
 var ReadingStorage = artifacts.require('ReadingStorage');
 var TestingUtilities = artifacts.require('TestingUtilities');
 
-let hub;
-
-let profile;
-let bidding;
-let escrow;
-let litigation;
-let reading;
-
-let token;
-let fingerprint;
-
-let profileStorage;
-let biddingStorage;
-let escrowStorage;
-let litigationStorage;
-let readingStorage;
-
-let DC_wallet;
-let DH_wallet;
-
-const amountToMint = 5e25;
-const amounts = [];
-const recepients = [];
 
 module.exports = async (deployer, network, accounts) => {
+    let hub;
+
+    let profile;
+    let bidding;
+    let escrow;
+    let litigation;
+    let reading;
+
+    let token;
+    let fingerprint;
+
+    let profileStorage;
+    let biddingStorage;
+    let escrowStorage;
+    let litigationStorage;
+    let readingStorage;
+
+    let DC_wallet;
+    let DH_wallet;
+
+    const amountToMint = new BN('50000000000000000000000000', 10);
+    const amounts = [];
+    const recepients = [];
+
     switch (network) {
     case 'ganache':
-        let hub = await deployer.deploy(ContractHub).then( () => console.log("NEJKARNFDJKSAFNKLDSJFDLK"));
+        await deployer.deploy(ContractHub).then((result) => hub = result);
         // console.log(hub.address);
 
         profileStorage = await deployer.deploy(ProfileStorage, hub.address, { gas: 6000000, from: accounts[0] });
@@ -79,7 +81,6 @@ module.exports = async (deployer, network, accounts) => {
 
         profile = await deployer.deploy(Profile, hub.address, { gas: 6000000, from: accounts[0] });
         await hub.setProfileAddress(profile.address);
-
 
         bidding = await deployer.deploy(Bidding, hub.address, { gas: 6000000, from: accounts[0] });
         await hub.setBiddingAddress(bidding.address);
@@ -220,7 +221,7 @@ module.exports = async (deployer, network, accounts) => {
         break;
     case 'rinkeby':
     try{
-        let hub = await ContractHub.at('0x688c693ba63e661403dc8b3624289f6c61d1228d');
+        hub = await ContractHub.at('0x688c693ba63e661403dc8b3624289f6c61d1228d');
 
         profileStorage = await deployer.deploy(ProfileStorage, hub.address, { gas: 6000000, from: accounts[0] });
 
@@ -281,7 +282,7 @@ module.exports = async (deployer, network, accounts) => {
         break;
     }
     case "hub":
-        let hub = await deployer.deploy(ContractHub);
+        hub = await deployer.deploy(ContractHub);
         break;
     default:
         console.warn('Please use one of the following network identifiers: ganache, test, or rinkeby');
