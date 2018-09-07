@@ -195,7 +195,7 @@ contract Bidding {
 		address[] predetermined_DH_wallet,
 		bytes32[] predetermined_DH_node_id)
 	public {
-		require(biddingStorage.getOffer_status(import_id) == BiddingStorage.OfferStatus.active);
+		require(biddingStorage.getOffer_status(import_id) != BiddingStorage.OfferStatus.active);
 		require(max_token_amount_per_DH > 0 && total_escrow_time_in_minutes > 0 && data_size_in_bytes > 0);
 
 
@@ -366,9 +366,11 @@ contract Bidding {
 		biddingStorage.setBid_active(import_id, bid_index, false);
 	}
 
+	event Broj(uint256 broj);
+
 	function chooseBids(bytes32 import_id) public returns (uint256[] chosen_data_holders){
 
-		uint256[] memory parameters;
+		uint256[] memory parameters = new uint256[](10);
 		require(biddingStorage.getOffer_status(import_id) == BiddingStorage.OfferStatus.active, "Offer not active!");
 		parameters[0] = biddingStorage.getOffer_replication_factor(import_id); // replication_factor
 		parameters[9] = biddingStorage.getOffer_replication_modifier(import_id);  // replication_modifier
@@ -389,6 +391,8 @@ contract Bidding {
 		parameters[8] = biddingStorage.getOffer_litigation_interval_in_minutes(import_id); // litigation_interval_in_minutes
 		EscrowHolder escrow = EscrowHolder(hub.escrowAddress());
 		
+		chosen_data_holders = new uint256[](parameters[0].muls(2).adds(parameters[9]));
+
 		//Sending escrow requests to predetermined bids
 		for(parameters[1] = 0; parameters[1] < parameters[0]; parameters[1] = parameters[1] + 1){
 
@@ -441,7 +445,7 @@ contract Bidding {
 
 				emit BidTaken(import_id, biddingStorage.getBid_DH_wallet(import_id, parameters[1]));
 			}
-			else{
+			else {
 				// Set bid to inactive
 				biddingStorage.setBid_active(import_id, parameters[1], false);
 			}
@@ -482,14 +486,13 @@ contract Bidding {
 	public view returns (uint256 ranking) {
 		uint256 data_hash = uint256(uint128(biddingStorage.getOffer_data_hash(import_id)));
 		
-		uint256[] memory amounts;
-		amounts[0] = profileStorage.getProfile_token_amount_per_byte_minute(DH_wallet) * scope;
-		amounts[1] = profileStorage.getProfile_stake_amount_per_byte_minute(DH_wallet) * scope;
+		uint256[] memory amounts = new uint[](5);
+		amounts[0] = profileStorage.getProfile_token_amount_per_byte_minute(DH_wallet).muls(scope);
+		amounts[1] = profileStorage.getProfile_stake_amount_per_byte_minute(DH_wallet).muls(scope);
 		amounts[2] = biddingStorage.getOffer_max_token_amount_per_DH(import_id);
 		amounts[3] = biddingStorage.getOffer_min_stake_amount_per_DH(import_id);
 		amounts[4] = biddingStorage.getOffer_min_reputation(import_id);
 		if(amounts[1] == 0) amounts[1] = 1;
-
 
 		uint256 number_of_escrows = profileStorage.getProfile_number_of_escrows(DH_wallet);
 		uint256 reputation = profileStorage.getProfile_reputation(DH_wallet);
