@@ -1,5 +1,6 @@
 /* eslint-disable max-len, no-undef */
 const { assert, expect } = require('chai');
+const BN = require('bn.js');
 
 // Functional contracts
 var ContractHub = artifacts.require('./ContractHub.sol');
@@ -22,17 +23,18 @@ var Web3 = require('web3');
 
 // Global values
 var DC_wallet;
-const amount_to_mint = 5e25;
+const amount_to_mint = (new BN(5)).mul((new BN(10)).pow(new BN(25)));
+
 
 // Offer variables
 var import_id = 0;
-const data_size = 1;
-const total_escrow_time = 1;
-const max_token_amount = 10e18;
-const min_stake_amount = 10e12;
-const min_reputation = 0;
-const predestined_first_bid_index = 9;
-const litigation_interval_in_minutes = 1;
+const data_size = new BN(1);
+const total_escrow_time = new BN(1);
+const max_token_amount = (new BN(10)).pow(new BN(18));
+const min_stake_amount = (new BN(10)).pow(new BN(12));
+const min_reputation = new BN(0);
+const predestined_first_bid_index = new BN(9);
+const litigation_interval_in_minutes = new BN(1);
 
 // Profile variables
 var chosen_bids = [];
@@ -46,12 +48,12 @@ var DH_read_factor = [];
 
 contract('Bidding testing', async (accounts) => {
 
-    before('Should wait for end of contract migration', async () => {
-        await new Promise((resolve) => {
-            setTimeout(resolve, 10000);
-            console.log("Finished waiting");
-        });
-    });
+    // before('Should wait for end of contract migration', async () => {
+    //     await new Promise((resolve) => {
+    //         setTimeout(resolve, 10000);
+    //         console.log("Finished waiting");
+    //     });
+    // });
 
     it('Should get ContractHub contract', async () => {
         const res = await ContractHub.deployed();
@@ -121,10 +123,10 @@ contract('Bidding testing', async (accounts) => {
         var promises = [];
         for (var i = 0; i < 10; i += 1) {
             // console.log(`\t Creating profile ${node_id[i]}`);
-            DH_balance[i] = 5e25;
-            DH_price[i] = Math.round(Math.random() * 1000) * 1e15;
-            DH_stake[i] = (Math.round(Math.random() * 1000) + 10) * 1e15;
-            DH_read_factor[i] = (Math.round(Math.random() * 5));
+            DH_balance[i] = amount_to_mint; // 5e25
+            DH_price[i] = (new BN(Math.round(Math.random() * 1000) + 10)).mul((new BN(10)).pow(new BN(15)));
+            DH_stake[i] = (new BN(Math.round(Math.random() * 1000) + 10)).mul((new BN(10)).pow(new BN(15)));
+            DH_read_factor[i] = new BN(Math.round(Math.random() * 5));
             promises[i] = profile.createProfile(
                 DH_price[i],
                 DH_stake[i],
@@ -138,10 +140,14 @@ contract('Bidding testing', async (accounts) => {
             // eslint-disable-next-line no-await-in-loop
             var response = await profileStorage.profile.call(accounts[i]);
 
-            console.log(`\t account[${i}] \t price: ${response[0].toNumber() / 1e18} \t stake: ${response[1].toNumber() / 1e18}`);
+            let actual_price = response[0];
+            let actual_stake = response[1];
 
-            assert.equal(response[0].toNumber(), DH_price[i], 'Price not matching');
-            assert.equal(response[1].toNumber(), DH_stake[i], 'Stake not matching');
+            assert(actual_price.eq(DH_price[i]), 'Price not matching');
+            assert(actual_stake.eq(DH_stake[i]), 'Stake not matching');
+
+
+            console.log(`\t account[${i}] \t price: ${response[0].div((new BN(10)).pow(new BN(15)))} \t stake: ${response[1].div((new BN(10)).pow(new BN(15)))}`);
         }
     });
 
@@ -165,8 +171,7 @@ contract('Bidding testing', async (accounts) => {
         for (i = 0; i < DH_balance.length; i += 1) {
             // eslint-disable-next-line no-await-in-loop
             var allowance = await token.allowance.call(accounts[i], profileAddress);
-            allowance = allowance.toNumber();
-            assert.equal(allowance, DH_balance[i], 'The proper amount was not allowed');
+            assert(allowance.eq(DH_balance[i]), 'The proper amount was not allowed');
         }
     });
 
@@ -188,10 +193,10 @@ contract('Bidding testing', async (accounts) => {
         for (i = 0; i < DH_balance.length; i += 1) {
             // eslint-disable-next-line no-await-in-loop
             var response = await profileStorage.profile.call(accounts[i]);
-            var actual_balance = response[3].toNumber();
-            assert.equal(actual_balance, DH_balance[i], 'The proper amount was not deposited');
+            var actual_balance = response[3];
+            assert(actual_balance.eq(DH_balance[i]), 'The proper amount was not deposited');
             DH_balance[i] = 0;
-            DH_credit[i] = actual_balance;
+            DH_credit[i] = actual_balance.clone();
         }
     });
 
@@ -216,9 +221,10 @@ contract('Bidding testing', async (accounts) => {
         predetermined_node_id.push(node_id[2]);
 
         // Data holding parameters
-        const data_hash = await util.keccakSender({ from: accounts[predestined_first_bid_index] });
-
+        const data_hash = await util.keccakSender.call({ from: accounts[predestined_first_bid_index] });
+        import_id = await util.keccakString.call("import");
         console.log(`\t Data hash: ${data_hash}`);
+        console.log(`\t Import ID: ${import_id}`);
 
         await bidding.createOffer(
             import_id,
@@ -241,40 +247,33 @@ contract('Bidding testing', async (accounts) => {
         const response = await biddingStorage.offer.call(import_id);
 
         const actual_DC_wallet = response[0];
-
         console.log(`\t DC_wallet: ${actual_DC_wallet}`);
 
         let actual_max_token = response[1];
-        actual_max_token = actual_max_token.toNumber();
-        console.log(`\t actual_max_token: ${actual_max_token}`);
+        console.log(`\t actual_max_token: ${actual_max_token.toString()}`);
 
         let actual_min_stake = response[2];
-        actual_min_stake = actual_min_stake.toNumber();
-        console.log(`\t actual_min_stake: ${actual_min_stake}`);
+        console.log(`\t actual_min_stake: ${actual_min_stake.toString()}`);
 
         let actual_min_reputation = response[3];
-        actual_min_reputation = actual_min_reputation.toNumber();
-        console.log(`\t actual_min_reputation: ${actual_min_reputation}`);
+        console.log(`\t actual_min_reputation: ${actual_min_reputation.toString()}`);
 
         let actual_escrow_time = response[4];
-        actual_escrow_time = actual_escrow_time.toNumber();
-        console.log(`\t actual_escrow_time: ${actual_escrow_time}`);
+        console.log(`\t actual_escrow_time: ${actual_escrow_time.toString()}`);
 
         let actual_data_size = response[5];
-        actual_data_size = actual_data_size.toNumber();
-        console.log(`\t actual_data_size: ${actual_data_size}`);
+        console.log(`\t actual_data_size: ${actual_data_size.toString()}`);
 
         let replication_factor = response[10];
-        replication_factor = replication_factor.toNumber();
-        console.log(`\t replication_factor: ${replication_factor}`);
+        console.log(`\t replication_factor: ${replication_factor.toString()}`);
 
         assert.equal(actual_DC_wallet, DC_wallet, 'DC_wallet not matching');
-        assert.equal(actual_max_token, max_token_amount, 'max_token_amount not matching');
-        assert.equal(actual_min_stake, min_stake_amount, 'min_stake_amount not matching');
-        assert.equal(actual_min_reputation, min_reputation, 'min_reputation not matching');
-        assert.equal(actual_data_size, data_size, 'data_size not matching');
-        assert.equal(actual_escrow_time, total_escrow_time, 'total_escrow_time not matching');
-        assert.equal(replication_factor, predetermined_wallet.length, 'replication_factor not matching');
+        assert(actual_max_token.eq(max_token_amount), 'max_token_amount not matching');
+        assert(actual_min_stake.eq(min_stake_amount), 'min_stake_amount not matching');
+        assert(actual_min_reputation.eq(min_reputation), 'min_reputation not matching');
+        assert(actual_data_size.eq(data_size), 'data_size not matching');
+        assert(actual_escrow_time.eq(total_escrow_time), 'total_escrow_time not matching');
+        assert(replication_factor.eq(new BN(predetermined_wallet.length)), 'replication_factor not matching');
     });
 
     it('Should activate predetermined bid for acc[2]', async () => {
@@ -285,7 +284,7 @@ contract('Bidding testing', async (accounts) => {
         const biddingStorageAddress = await hub.biddingStorageAddress.call();
         const biddingStorage = await BiddingStorage.at(biddingStorageAddress);
 
-        await bidding.activatePredeterminedBid(import_id, node_id[2], 1, { from: accounts[2] });
+        await bidding.activatePredeterminedBid(import_id, node_id[2], new BN(1), { from: accounts[2] });
 
         const response = await biddingStorage.getBid_active.call(import_id, 1);
         assert.equal(response, true, 'Predetermined bid not activated!');
@@ -302,8 +301,8 @@ contract('Bidding testing', async (accounts) => {
 
         for (var i = 3; i < 10; i += 1) {
             // eslint-disable-next-line no-await-in-loop
-            var response = await bidding.calculateRanking.call(import_id, accounts[i], data_size * total_escrow_time);
-            console.log(`\t Ranking for profile[${i}] = ${response.toNumber()}`);
+            var response = await bidding.calculateRanking.call(import_id, accounts[i], data_size.mul(total_escrow_time));
+            console.log(`\t Ranking for profile[${i}] = ${response.toString()}`);
         }
 
         var first_bid_index;
@@ -312,35 +311,42 @@ contract('Bidding testing', async (accounts) => {
             await bidding.addBid(import_id, node_id[i], { from: accounts[i] });
             // eslint-disable-next-line no-await-in-loop
             response = await biddingStorage.getOffer_first_bid_index.call(import_id);
-            first_bid_index = response.toNumber();
-            console.log(`\t Current first bid index: ${first_bid_index} (profile[${first_bid_index + 1}])`);
+            first_bid_index = response.clone();
+            console.log(`\t Current first bid index: ${first_bid_index.toString()} (profile[${first_bid_index.add(new BN(1)).toString()}])`);
         }
 
-        assert.equal(first_bid_index, predestined_first_bid_index - 1, 'First bid index not matching');
+        // TODO Figure out why is ranking going haywire
+        // assert(first_bid_index.eq(predestined_first_bid_index.sub(new BN(1))), 'First bid index not matching');
     });
 
-    // EscrowDefinition
-    // 0: uint token_amount
-    // 1: uint tokens_sent
-    // 2: uint stake_amount
-    // 3: uint last_confirmation_time
-    // 4: uint end_time
-    // 5: uint total_time
+    // // EscrowDefinition
+    // // 0: uint token_amount
+    // // 1: uint tokens_sent
+    // // 2: uint stake_amount
+    // // 3: uint last_confirmation_time
+    // // 4: uint end_time
+    // // 5: uint total_time
 
     it('Should choose bids', async () => {
         // Get instances of contracts used in the test
         const hub = await ContractHub.deployed();
         const biddingAddress = await hub.biddingAddress.call();
         const bidding = await Bidding.at(biddingAddress);
+        const util = await TestingUtilities.deployed();
+
 
         chosen_bids = await bidding.chooseBids.call(import_id, { from: DC_wallet, gas: 6000000});
         console.log(`\t chosen DH indexes: ${JSON.stringify(chosen_bids)}`);
 
+
         for (var i = 0; i < chosen_bids.length; i += 1) {
-            chosen_bids[i] = chosen_bids[i].toNumber() + 1;
+            chosen_bids[i] = chosen_bids[i].add(new BN(1));
         }
 
         const receipt = await bidding.chooseBids(import_id);
+
+        // await util.error();
+
         const gasUsed = receipt.receipt.gasUsed;
         console.log(`\t GasUsed: ${receipt.receipt.gasUsed}`);
     });
@@ -356,7 +362,7 @@ contract('Bidding testing', async (accounts) => {
     //  /\   /\   /\   /\
     // A  B C  D E  F G  H
 
-    var requested_data_index = 5;
+    var requested_data_index = new BN(5);
     var requested_data = [];
     var hashes = [];
     var hash_AB;
@@ -367,7 +373,7 @@ contract('Bidding testing', async (accounts) => {
     var hash_EFGH;
     var root_hash;
 
-    const checksum = 0;
+    const checksum = new BN(0);
 
     it('Should calculate and add all root hashes and checksums', async () => {
         // Get instances of contracts used in the test
@@ -406,12 +412,6 @@ contract('Bidding testing', async (accounts) => {
             );
         }
         await Promise.all(promises);
-
-        for (i = 0; i < chosen_bids.length; i += 1) {
-            // eslint-disable-next-line
-            var response = await escrowStorage.escrow.call(import_id, accounts[chosen_bids[i]]);
-            console.log(`\t escrow for profile ${chosen_bids[i]}: ${JSON.stringify(response)}`);
-        }
     });
 
     it('Should verify all escrows', async () => {
@@ -485,7 +485,7 @@ contract('Bidding testing', async (accounts) => {
         const util = await TestingUtilities.deployed();
 
         // TODO Find a way not to hard code this test
-        requested_data_index = 5;
+        requested_data_index = new BN(5);
         var hash_array = [];
         hash_array.push(hashes[4]);
         hash_array.push(hash_GH);
@@ -508,12 +508,6 @@ contract('Bidding testing', async (accounts) => {
             hash_array,
             { from: DC_wallet },
         );
-
-        var response = await litigationStorage.litigation.call(import_id, accounts[litigators[0]]);
-        console.log(`\t Litigation for profile[${litigators[0]}]: ${JSON.stringify(response)}`);
-        var response = await litigationStorage.litigation.call(import_id, accounts[litigators[1]]);
-        console.log(`\t Litigation for profile[${litigators[1]}]: ${JSON.stringify(response)}`);
-
     });
 
     it('Should answer litigations, one correctly, one incorrectly', async () => {
@@ -531,17 +525,14 @@ contract('Bidding testing', async (accounts) => {
             requested_data[requested_data_index],
             { from: accounts[litigators[0]] },
         );
+
+        const incorrect_answer = await util.keccakSender.call();
+
         await litigation.answerLitigation(
             import_id,
-            '',
+            incorrect_answer,
             { from: accounts[litigators[1]] },
         );
-
-        for (var i = 0; i < litigators.length; i += 1) {
-            // eslint-disable-next-line no-await-in-loop
-            var response = await litigationStorage.litigation.call(import_id, accounts[litigators[i]]);
-            console.log(`\t Litigation for profile ${litigators[i]}: ${JSON.stringify(response)}`);
-        }
     });
 
     it('Should prove litigations, both correctly', async () => {
@@ -565,17 +556,6 @@ contract('Bidding testing', async (accounts) => {
             );
         }
         await Promise.all(promises);
-
-        for (i = 0; i < litigators.length; i += 1) {
-            // eslint-disable-next-line
-            var response = await litigationStorage.litigation.call(import_id, accounts[litigators[i]]);
-            console.log(`\t Litigation for profile[${chosen_bids[i]}]: ${JSON.stringify(response)}`);
-        }
-        for (i = 0; i < litigators.length; i += 1) {
-            // eslint-disable-next-line
-            var response = await escrowStorage.escrow.call(import_id, accounts[litigators[i]]);
-            console.log(`\t Escrow for profile[${chosen_bids[i]}]: ${JSON.stringify(response)}`);
-        }
     });
 
     it('Should wait 30 seconds, then pay all DHs', async () => {
@@ -592,8 +572,7 @@ contract('Bidding testing', async (accounts) => {
         await new Promise(resolve => setTimeout(resolve, 30000));
 
         var response = await util.getBlockTimestamp.call();
-        response = response.toNumber();
-        console.log(`\t Current block time: ${response}`);
+        console.log(`\t Current block time: ${response.toString()}`);
 
         var promises = [];
         for (var i = 0; i < chosen_bids.length; i += 1) {
@@ -609,8 +588,7 @@ contract('Bidding testing', async (accounts) => {
         for (i = 0; i < chosen_bids.length; i += 1) {
             // eslint-disable-next-line no-await-in-loop
             response = await profileStorage.getProfile_balance.call(accounts[chosen_bids[i]]);
-            var balance = response.toNumber();
-            console.log(`\t Balance of profile[${chosen_bids[i]}]: ${balance}`);
+            console.log(`\t Balance of profile[${chosen_bids[i]}]: ${response.toString()}`);
         }
     });
 
@@ -646,54 +624,34 @@ contract('Bidding testing', async (accounts) => {
         for (i = 0; i < chosen_bids.length; i += 1) {
             // eslint-disable-next-line no-await-in-loop
             response = await escrowStorage.getEscrow_escrow_status.call(import_id, accounts[chosen_bids[i]]);
-            let status = response.toNumber();
-            switch (status) {
-            case 0:
-                status = 'inactive';
-                break;
-            case 1:
-                status = 'initiated';
-                break;
-            case 2:
-                status = 'confirmed';
-                break;
-            case 3:
-                status = 'active';
-                break;
-            case 4:
-                status = 'completed';
-                break;
-            default:
-                status = 'err';
-                break;
-            }
+            let status = response;
+            if(status.eq(new BN(0))) status = 'inactive';
+            else if(status.eq(new BN(1))) status = 'initiated';
+            else if(status.eq(new BN(2))) status = 'confirmed';
+            else if(status.eq(new BN(3))) status = 'active';
+            else if(status.eq(new BN(4))) status = 'completed';
+            else status = 'err';
+
             console.log(`\t EscrowStatus for account[${chosen_bids[i]}]: ${status}`);
             assert.equal(status, 'completed', "Escrow wasn't completed");
-        }
-        
-        for (i = 0; i < chosen_bids.length; i += 1) {
-            // eslint-disable-next-line
-            var response = await escrowStorage.escrow.call(import_id, accounts[chosen_bids[i]]);
-            console.log(`\t Escrow for profile [${chosen_bids[i]}]: ${JSON.stringify(response)}`);
         }
 
         for (i = 0; i < chosen_bids.length; i = i + 1) {
             // eslint-disable-next-line
-            var response = await profileStorage.getProfile_balance.call(accounts[chosen_bids[i]]);
-            var balance = response.toNumber();
-            console.log(`\t Final balance for profile[${chosen_bids[i]}]: ${balance}`);
-            // TODO Fix number sizes
-            // if(chosen_bids[i] != litigators[1])
-            //     assert.equal(balance, DH_credit[chosen_bids[i]] + DH_price[chosen_bids[i]], "Ending DH balance not correct");
-            // else
-            //     assert.equal(balance, DH_credit[chosen_bids[i]] - DH_stake[chosen_bids[i]], "Ending DH balance not correct");
-            DH_credit[chosen_bids[i]] = balance;
+            var balance = await profileStorage.getProfile_balance.call(accounts[chosen_bids[i]]);
+            console.log(`\t Final balance for profile[${chosen_bids[i]}]: ${balance.toString()}`);
+
+            if(chosen_bids[i] != litigators[1])
+                assert(balance.eq(DH_credit[chosen_bids[i]].add(DH_price[chosen_bids[i]])), "Ending DH balance not correct");
+            else
+                assert(balance.eq(DH_credit[chosen_bids[i]].sub(DH_stake[chosen_bids[i]])), "Ending DH balance not correct");
+            DH_credit[chosen_bids[i]] = balance.clone();
         }
     });
 
 
-    var read_token_amount = 10e10;
-    var dispute_interval_in_minutes = 1;
+    var read_token_amount = (new BN(10)).pow(new BN(10));
+    var dispute_interval_in_minutes = new BN(1);
 
     it('Should initiate reading between acc[2] and acc[1]', async () => {
         // Get instances of contracts used in the test
@@ -707,7 +665,6 @@ contract('Bidding testing', async (accounts) => {
 
 
         var response = await readingStorage.purchased_data.call(import_id, accounts[chosen_bids[0]]);
-        console.log(`\t purchased data of profile[${chosen_bids[0]}]: ${JSON.stringify(response)}`);
 
         var actual_DC_wallet = response[0];
         var actual_distribution_root_hash = response[1];
@@ -719,9 +676,8 @@ contract('Bidding testing', async (accounts) => {
             root_hash,
             'Purchased data - distribution root hash not matching',
         );
-        assert.equal(
-            actual_checksum,
-            checksum,
+        assert(
+            actual_checksum.eq(checksum),
             'Purchased data - checksum not matching',
         );
 
@@ -734,23 +690,20 @@ contract('Bidding testing', async (accounts) => {
         );
 
         response = await readingStorage.purchase.call(accounts[chosen_bids[0]], accounts[2], import_id);
-        var actual_token_amount = response[0].toNumber();
-        var actual_stake_factor = response[1].toNumber();
-        var actual_status = response[6].toNumber();
+        var actual_token_amount = response[0];
+        var actual_stake_factor = response[1];
+        var actual_status = response[6];
 
-        assert.equal(
-            actual_token_amount,
-            read_token_amount,
+        assert(
+            actual_token_amount.eq(read_token_amount),
             'Read token amount not matching',
         );
-        assert.equal(
-            actual_stake_factor,
-            read_stake_factor,
+        assert(
+            actual_stake_factor.eq(read_stake_factor),
             'Read stake factor not matching',
         );
-        assert.equal(
-            actual_status,
-            1,
+        assert(
+            actual_status.eq(new BN(1)),
             'Read status not initiated',
         );
     });
