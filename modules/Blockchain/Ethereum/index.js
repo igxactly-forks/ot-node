@@ -1101,12 +1101,12 @@ class Ethereum {
         const options = {
             gasLimit: this.web3.utils.toHex(this.config.gas_limit),
             gasPrice: this.web3.utils.toHex(this.config.gas_price),
-            to: this.biddingContractAddress,
+            to: this.profileContractAddress,
         };
 
         this.log.trace(`Calling - depositToken(${amount.toString()})`);
         return this.transactions.queueTransaction(
-            this.biddingContractAbi, 'depositToken',
+            this.profileContractAbi, 'depositToken',
             [amount], options,
         );
     }
@@ -1120,12 +1120,12 @@ class Ethereum {
         const options = {
             gasLimit: this.web3.utils.toHex(this.config.gas_limit),
             gasPrice: this.web3.utils.toHex(this.config.gas_price),
-            to: this.biddingContractAddress,
+            to: this.profileContractAddress,
         };
 
         this.log.trace(`Calling - withdrawToken(${amount.toString()})`);
         return this.transactions.queueTransaction(
-            this.biddingContractAbi, 'withdrawToken',
+            this.profileContractAbi, 'withdrawToken',
             [amount], options,
         );
     }
@@ -1152,17 +1152,17 @@ class Ethereum {
      */
     async getEscrow(importId, dhWallet) {
         this.log.trace(`Asking escrow for import ${importId} and dh ${dhWallet}.`);
-        return this.storageContract.methods.escrow(importId, dhWallet).call();
+        return this.escrowStorageContract.methods.escrow(importId, dhWallet).call();
     }
 
     async getPurchase(dhWallet, dvWallet, importId) {
         this.log.trace(`Asking purchase for import (purchase[${dhWallet}][${dvWallet}][${importId}].`);
-        return this.storageContract.methods.purchase(dhWallet, dvWallet, importId).call();
+        return this.readingStorageContract.methods.purchase(dhWallet, dvWallet, importId).call();
     }
 
     async getPurchasedData(importId, wallet) {
         this.log.trace(`Asking purchased data for import ${importId} and wallet ${wallet}.`);
-        return this.storageContract.methods.purchased_data(importId, wallet).call();
+        return this.readingStorageContract.methods.purchased_data(importId, wallet).call();
     }
 
     initiatePurchase(importId, dhWallet, tokenAmount, stakeFactor) {
