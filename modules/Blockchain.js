@@ -201,6 +201,7 @@ class Blockchain {
         minReputation,
         dataHash,
         dataSize,
+        litigationInterval,
         predeterminedDhWallets,
         predeterminedDhNodeIds,
     ) {
@@ -212,6 +213,7 @@ class Blockchain {
             minReputation,
             dataHash,
             dataSize,
+            litigationInterval,
             predeterminedDhWallets,
             predeterminedDhNodeIds,
         );

@@ -632,6 +632,7 @@ class Ethereum {
         minReputation,
         dataHash,
         dataSize,
+        litigationInterval,
         predeterminedDhWallets,
         predeterminedDhNodeIds,
     ) {
@@ -640,7 +641,8 @@ class Ethereum {
             gasPrice: this.web3.utils.toHex(this.config.gas_price),
             to: this.biddingContractAddress,
         };
-        this.log.trace(`createOffer (${importId}, ${nodeId}, ${totalEscrowTime}, ${maxTokenAmount}, ${MinStakeAmount}, ${minReputation}, ${dataHash}, ${dataSize}, ${JSON.stringify(predeterminedDhWallets)}, ${JSON.stringify(predeterminedDhNodeIds)})`);
+        this.log.trace(`createOffer (${importId}, ${nodeId}, ${totalEscrowTime}, ${maxTokenAmount}, ${MinStakeAmount}, ${minReputation}, ${dataHash}, ${dataSize}, ${litigationInterval}, ${JSON.stringify(predeterminedDhWallets)}, ${JSON.stringify(predeterminedDhNodeIds)})`);
+
         return this.transactions.queueTransaction(
             this.biddingContractAbi, 'createOffer',
             [
@@ -652,6 +654,7 @@ class Ethereum {
                 minReputation,
                 dataHash,
                 dataSize,
+                litigationInterval,
                 predeterminedDhWallets,
                 predeterminedDhNodeIds.map(id => Utilities.normalizeHex(id)),
             ],

@@ -38,6 +38,7 @@ class DCOfferCreateBlockchainCommand extends Command {
         const profileBalance = new BN(profile.balance, 10);
 
         const replicationModifier = await this.blockchain.getReplicationModifier();
+        const litigationInterval = new BN(15, 10); // TODO Add litigationInterval as command argument
 
         const condition = maxTokenAmount
             .mul((new BN((dhWallets.length * 2)).add(new BN(replicationModifier, 10))))
@@ -58,6 +59,7 @@ class DCOfferCreateBlockchainCommand extends Command {
             minReputation,
             rootHash,
             importSizeInBytes,
+            litigationInterval,
             dhWallets,
             dhIds,
         );
