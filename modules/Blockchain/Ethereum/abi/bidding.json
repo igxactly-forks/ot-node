@@ -176,6 +176,20 @@
     "type": "function"
   },
   {
+    "constant": true,
+    "inputs": [],
+    "name": "replication_modifier",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "constant": false,
     "inputs": [
       {

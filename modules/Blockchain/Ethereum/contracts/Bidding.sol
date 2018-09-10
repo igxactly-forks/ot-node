@@ -148,7 +148,7 @@ contract Bidding {
 
 	ProfileStorage public profileStorage;
 	BiddingStorage public biddingStorage;
-	uint256 replication_modifier;
+	uint256 public replication_modifier;
 
 	constructor(address hub_address)
 	public{
