@@ -416,5 +416,17 @@
     ],
     "name": "OfferFinalized",
     "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "name": "broj",
+        "type": "uint256"
+      }
+    ],
+    "name": "Broj",
+    "type": "event"
   }
 ]

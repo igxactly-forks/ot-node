@@ -22,6 +22,25 @@
 		"type": "function"
 	},
 	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			}
+		],
+		"name": "getOffer_status",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint8"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"constant": false,
 		"inputs": [
 			{
@@ -29,11 +48,11 @@
 				"type": "bytes32"
 			},
 			{
-				"name": "finalized",
-				"type": "bool"
+				"name": "replication_modifier",
+				"type": "uint256"
 			}
 		],
-		"name": "setOffer_finalized",
+		"name": "setOffer_replication_modifier",
 		"outputs": [],
 		"payable": false,
 		"stateMutability": "nonpayable",
@@ -290,25 +309,6 @@
 				"type": "bytes32"
 			}
 		],
-		"name": "getOffer_finalized",
-		"outputs": [
-			{
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [
-			{
-				"name": "import_id",
-				"type": "bytes32"
-			}
-		],
 		"name": "getOffer_first_bid_index",
 		"outputs": [
 			{
@@ -488,20 +488,6 @@
 		"type": "function"
 	},
 	{
-		"constant": true,
-		"inputs": [],
-		"name": "owner",
-		"outputs": [
-			{
-				"name": "",
-				"type": "address"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
 		"constant": false,
 		"inputs": [
 			{
@@ -531,6 +517,24 @@
 				"type": "bytes32"
 			},
 			{
+				"name": "status",
+				"type": "uint8"
+			}
+		],
+		"name": "setOffer_status",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			},
+			{
 				"name": "replication_factor",
 				"type": "uint256"
 			}
@@ -539,25 +543,6 @@
 		"outputs": [],
 		"payable": false,
 		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [
-			{
-				"name": "import_id",
-				"type": "bytes32"
-			}
-		],
-		"name": "getOffer_active",
-		"outputs": [
-			{
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -620,24 +605,6 @@
 		"type": "function"
 	},
 	{
-		"constant": false,
-		"inputs": [
-			{
-				"name": "import_id",
-				"type": "bytes32"
-			},
-			{
-				"name": "active",
-				"type": "bool"
-			}
-		],
-		"name": "setOffer_active",
-		"outputs": [],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
 		"constant": true,
 		"inputs": [
 			{
@@ -686,28 +653,6 @@
 				"type": "uint256"
 			},
 			{
-				"name": "next_bid_index",
-				"type": "uint256"
-			}
-		],
-		"name": "setBidNextBidIndex",
-		"outputs": [],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"constant": false,
-		"inputs": [
-			{
-				"name": "import_id",
-				"type": "bytes32"
-			},
-			{
-				"name": "index",
-				"type": "uint256"
-			},
-			{
 				"name": "chosen",
 				"type": "bool"
 			}
@@ -716,6 +661,25 @@
 		"outputs": [],
 		"payable": false,
 		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "import_id",
+				"type": "bytes32"
+			}
+		],
+		"name": "getOffer_replication_modifier",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -990,16 +954,16 @@
 				"type": "uint256"
 			},
 			{
+				"name": "replication_modifier",
+				"type": "uint256"
+			},
+			{
 				"name": "offer_creation_timestamp",
 				"type": "uint256"
 			},
 			{
-				"name": "active",
-				"type": "bool"
-			},
-			{
-				"name": "finalized",
-				"type": "bool"
+				"name": "status",
+				"type": "uint8"
 			}
 		],
 		"payable": false,
@@ -1057,20 +1021,6 @@
 			}
 		],
 		"name": "setOffer_litigation_interval_in_minutes",
-		"outputs": [],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"constant": false,
-		"inputs": [
-			{
-				"name": "newOwner",
-				"type": "address"
-			}
-		],
-		"name": "transferOwnership",
 		"outputs": [],
 		"payable": false,
 		"stateMutability": "nonpayable",
@@ -1151,23 +1101,6 @@
 			}
 		],
 		"name": "BidChange",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"name": "previousOwner",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"name": "newOwner",
-				"type": "address"
-			}
-		],
-		"name": "OwnershipTransferred",
 		"type": "event"
 	}
 ]
